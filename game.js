@@ -38,6 +38,11 @@ const TILE_ASSETS = {
     'assets/tiles/tilemap_color5.png',
   ],
 };
+const BALANCE_PROFILES = {
+  arcade:   { enemyPressure: 0.85, extractionPressure: 0.85, antiKite: 0.9 },
+  standard: { enemyPressure: 1.0,  extractionPressure: 1.0,  antiKite: 1.0 },
+  hardcore: { enemyPressure: 1.15, extractionPressure: 1.2,  antiKite: 1.15 },
+};
 
 /* =====================================================================
  § 1. UTILS  (src/core/utils.js)
@@ -82,6 +87,8 @@ const SaveSystem = {
     selectedZone: 'docks',
     unlockedClasses: ['soldier', 'techhunter', 'biorunner'],
     unlockedZones: ['docks'],
+    perfMode: 'auto',            // auto | on | off
+    balancePreset: 'standard',   // arcade | standard | hardcore
     metaUpgrades: {},            // id -> rank
     bestRun: null,               // { kills, level, time, zone }
     codex: { enemies: {}, weapons: {}, items: {} },
@@ -972,16 +979,21 @@ class Enemy {
     const p = Game.player;
     const dx = p.x - this.x, dy = p.y - this.y;
     const d = Math.hypot(dx, dy);
+    const playerStill = Math.abs(p.vx) + Math.abs(p.vy) < 25;
+    const antiKiteMul = (World.getBalanceProfile && World.getBalanceProfile().antiKite) || 1;
 
     if (this.ranged) {
-      // Ranger keeps distance
-      const ideal = this.ranged.range * 0.7;
-      const moveDir = d > ideal ? 1 : -0.4;
-      this.vx = (dx / (d || 1)) * this.speed * moveDir;
-      this.vy = (dy / (d || 1)) * this.speed * moveDir;
+      // Ranged enemies strafe a bit and punish static kiting.
+      const ideal = this.ranged.range * 0.68;
+      const moveDir = d > ideal ? 1 : -0.35;
+      const strafeDir = (Math.sin(World.time * 1.8 + this.wobblePhase) > 0) ? 1 : -1;
+      const nx = dx / (d || 1), ny = dy / (d || 1);
+      const baseSpeed = this.speed * (playerStill ? (1 + 0.12 * antiKiteMul) : 1);
+      this.vx = nx * baseSpeed * moveDir + (-ny) * baseSpeed * 0.18 * strafeDir;
+      this.vy = ny * baseSpeed * moveDir + (nx) * baseSpeed * 0.18 * strafeDir;
       this.attackCD -= dt;
       if (d < this.ranged.range && this.attackCD <= 0) {
-        this.attackCD = this.ranged.cooldown;
+        this.attackCD = this.ranged.cooldown * (playerStill ? (1 - 0.15 * antiKiteMul) : 1);
         const ang = Math.atan2(dy, dx);
         Projectiles.spawn({
           x: this.x, y: this.y, angle: ang,
@@ -993,12 +1005,20 @@ class Enemy {
         });
       }
     } else {
-      // Chase with wobble for organic movement
+      // Melee: less passive wobble, more forward pressure.
       this.wobblePhase += this.wobbleSpeed * dt;
-      var wobble = Math.sin(this.wobblePhase) * 0.4;
+      var wobble = Math.sin(this.wobblePhase) * 0.22;
       var chaseAng = Math.atan2(dy, dx) + wobble;
-      this.vx = Math.cos(chaseAng) * this.speed;
-      this.vy = Math.sin(chaseAng) * this.speed;
+      var pressMul = playerStill ? (1 + 0.2 * antiKiteMul) : 1;
+      if (this.type === 'stalker') {
+        pressMul *= (d > 170 ? (1 + 0.3 * antiKiteMul) : (1 + 0.12 * antiKiteMul));
+      } else if (this.type === 'hulk') {
+        pressMul *= (d > 230 ? (1 + 0.25 * antiKiteMul) : (1 + 0.05 * antiKiteMul));
+      } else if (this.elite || this.boss) {
+        pressMul *= (1 + 0.15 * antiKiteMul);
+      }
+      this.vx = Math.cos(chaseAng) * this.speed * pressMul;
+      this.vy = Math.sin(chaseAng) * this.speed * pressMul;
     }
 
     this.x += this.vx * dt;
@@ -1587,6 +1607,8 @@ const World = {
   spawnInterval: 1.2,
   maxEnemies: 35,
   bossSpawned: false,
+  sectorFlashTimer: 0,
+  lastSectorLabel: '',
   map: null,
   useTileRoom: true,
   sectorPools: [
@@ -1767,6 +1789,10 @@ const World = {
   getActiveSectorTier() {
     return Math.min(this.sectorPools.length - 1, this.getUnlockedDoorCount());
   },
+  getBalanceProfile() {
+    var key = (Game && Game.balancePreset) ? Game.balancePreset : 'standard';
+    return BALANCE_PROFILES[key] || BALANCE_PROFILES.standard;
+  },
   getEnemyPoolForTier(tier) {
     const idx = Utils.clamp(tier, 0, this.sectorPools.length - 1);
     const pool = this.sectorPools[idx].filter(function(id) { return !!ENEMIES[id]; });
@@ -1801,6 +1827,8 @@ const World = {
     this.spawnGateWave(door, waveSize, elite, tier);
     Game.cameraShake(8 + idx * 2, 0.2 + idx * 0.08);
     Game.announce('SECTOR BREACH: ' + (idx + 1) + '/4');
+    this.sectorFlashTimer = 1.3;
+    this.lastSectorLabel = 'SECTOR ' + (idx + 1) + ' UNLOCKED';
   },
   isOutsidePlayable(wx, wy, pad) {
     if (this.useTileRoom && this.map) {
@@ -1844,6 +1872,8 @@ const World = {
   reset() {
     this.time = 0; this.spawnTimer = 0; this.spawnInterval = 1.2;
     this.maxEnemies = 35; this.bossSpawned = false; this._eliteDone = false; this._lastSpike = 0;
+    this.sectorFlashTimer = 0;
+    this.lastSectorLabel = '';
     this.currentBiomeIdx = 0;
     this._lastBiomeIdx = 0;
     this.progressionEvalTimer = 0;
@@ -1855,6 +1885,7 @@ const World = {
   },
   update(dt) {
     this.time += dt;
+    if (this.sectorFlashTimer > 0) this.sectorFlashTimer -= dt;
     this.progressionEvalTimer -= dt;
     if (this.progressionEvalTimer <= 0) {
       this.progressionEvalTimer = this.progressionEvalInterval;
@@ -1868,9 +1899,11 @@ const World = {
       }
     }
 
-    // gradually ramp spawn rate & cap
-    this.spawnInterval = Math.max(0.2, 1.2 - this.time * 0.006);
-    this.maxEnemies = Math.min(100, 35 + Math.floor(this.time / 8));
+    // Ramp pacing toward consistent 10-15 min runs.
+    var tier = this.getActiveSectorTier();
+    var bp = this.getBalanceProfile();
+    this.spawnInterval = Math.max(0.32, (1.25 - this.time * 0.0045 - tier * 0.03) / bp.enemyPressure);
+    this.maxEnemies = Math.min(85, Math.floor((28 + Math.floor(this.time / 11) + tier * 3) * bp.enemyPressure));
 
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0 && Enemies.list.length < this.maxEnemies) {
@@ -1882,7 +1915,7 @@ const World = {
     var minute = Math.floor(this.time / 60);
     if (minute > 0 && minute !== this._lastSpike) {
       this._lastSpike = minute;
-      var surgeCount = 5 + minute * 2;
+      var surgeCount = Math.min(12, Math.floor((3 + minute) * bp.enemyPressure));
       var spikeTier = Math.min(this.sectorPools.length - 1, this.getActiveSectorTier() + 1);
       var spikePool = this.getEnemyPoolForTier(spikeTier);
       for (var si = 0; si < surgeCount; si++) {
@@ -2102,6 +2135,37 @@ const UI = {
     Utils.el('#bestRun').textContent = best
       ? `Lv ${best.level} · ${best.kills} · ${Utils.formatTime(best.time)}`
       : '—';
+    const perfBtn = Utils.el('#btnPerfMode');
+    if (perfBtn) {
+      const labels = { auto: 'AUTO', on: 'ON', off: 'OFF' };
+      const mode = (Game.save && Game.save.perfMode) || 'auto';
+      perfBtn.textContent = 'MOBILE PERF: ' + (labels[mode] || 'AUTO');
+    }
+    const perfHintEl = Utils.el('#perfHint');
+    if (perfHintEl) {
+      const mode = (Game.save && Game.save.perfMode) || 'auto';
+      const perfHints = {
+        auto: 'Mobile Perf Auto: detecta dispositivo y ajusta calidad automáticamente.',
+        on: 'Mobile Perf On: prioriza estabilidad (menos FX y carga visual).',
+        off: 'Mobile Perf Off: prioriza calidad visual (más carga de render).',
+      };
+      perfHintEl.textContent = perfHints[mode] || perfHints.auto;
+    }
+    const balBtn = Utils.el('#btnBalanceMode');
+    if (balBtn) {
+      const mode = (Game.save && Game.save.balancePreset) || 'standard';
+      balBtn.textContent = 'BALANCE: ' + mode.toUpperCase();
+    }
+    const hintEl = Utils.el('#balanceHint');
+    if (hintEl) {
+      const mode = (Game.save && Game.save.balancePreset) || 'standard';
+      const hints = {
+        arcade: 'Arcade: menos presión, runs más relajadas y accesibles.',
+        standard: 'Standard: ritmo equilibrado para runs consistentes.',
+        hardcore: 'Hardcore: más presión enemiga y extracción más exigente.',
+      };
+      hintEl.textContent = hints[mode] || hints.standard;
+    }
   },
 
   renderClassScreen() {
@@ -2246,6 +2310,12 @@ const UI = {
       exHud.classList.toggle('active', Utils.dist(p.x, p.y, ExtractionZone.x, ExtractionZone.y) < ExtractionZone.radius);
       var exDist = Math.floor(Utils.dist(p.x, p.y, ExtractionZone.x, ExtractionZone.y));
       Utils.el('#extractDist').textContent = exDist + 'm';
+      var threatEl = Utils.el('#extractThreat');
+      if (threatEl) {
+        var label = ExtractionZone.pressureLevel >= 3 ? 'THREAT: CRITICAL' : (ExtractionZone.pressureLevel >= 2 ? 'THREAT: HIGH' : 'THREAT: LOW');
+        threatEl.textContent = label;
+        threatEl.style.color = ExtractionZone.pressureLevel >= 3 ? '#fb7185' : (ExtractionZone.pressureLevel >= 2 ? '#fbbf24' : '#4ade80');
+      }
     } else {
       exHud.classList.add('hidden');
     }
@@ -2409,6 +2479,8 @@ var ExtractionZone = {
   radius: 60,
   active: false,
   standTimer: 0,
+  pressureLevel: 0,
+  _lastPressureLevel: 0,
   standRequired: 4,   // seconds standing in zone to extract
   spawnTime: 45,       // seconds into run before extraction appears
   relocateInterval: 90, // moves every N seconds after first spawn
@@ -2418,6 +2490,8 @@ var ExtractionZone = {
   reset: function() {
     this.active = false;
     this.standTimer = 0;
+    this.pressureLevel = 0;
+    this._lastPressureLevel = 0;
     this._lastRelocate = 0;
     this._relocateCheckTimer = 0;
   },
@@ -2458,19 +2532,34 @@ var ExtractionZone = {
       if (this.standTimer >= this.standRequired) {
         Game.onExtraction();
       }
-      // === TASK 2: spawn pressure while extracting ===
+      // Extraction pressure scales with commitment + sector tier.
+      var capturePct = Utils.clamp(this.standTimer / this.standRequired, 0, 1);
+      var sectorTier = World.getActiveSectorTier ? World.getActiveSectorTier() : 0;
+      var pressureMul = (World.getBalanceProfile ? World.getBalanceProfile().extractionPressure : 1);
+      var spawnInterval = Math.max(0.7, (1.4 - capturePct * 0.5 - sectorTier * 0.06) / pressureMul);
+      var spawnCountBase = (capturePct < 0.35 ? 1 : 2) + Math.floor(sectorTier / 2) + (capturePct > 0.65 ? 1 : 0);
+      var spawnCount = Math.max(1, Math.floor(spawnCountBase * pressureMul));
+      var pressureScore = capturePct + sectorTier * 0.25 + (pressureMul - 1) * 0.5;
+      this.pressureLevel = pressureScore >= 1.5 ? 3 : (pressureScore >= 1.0 ? 2 : (pressureScore >= 0.6 ? 1 : 0));
+      if (this.pressureLevel > this._lastPressureLevel && this.pressureLevel >= 2) {
+        AudioBus.play('hit');
+        Game.announce(this.pressureLevel >= 3 ? 'EXTRACTION THREAT: CRITICAL' : 'EXTRACTION THREAT: HIGH');
+      }
+      this._lastPressureLevel = this.pressureLevel;
       this._extractSpawnTimer = (this._extractSpawnTimer || 0) - dt;
       if (this._extractSpawnTimer <= 0) {
-        this._extractSpawnTimer = 1.2; // spawn extra enemies every 1.2s while extracting
-        for (var es = 0; es < 3; es++) {
+        this._extractSpawnTimer = spawnInterval;
+        for (var es = 0; es < spawnCount; es++) {
           var epos = World.randomSpawnPoint();
-          Enemies.spawn(Utils.choice(['stalker', 'grunt', 'sniper']), epos.x, epos.y);
+          Enemies.spawn(Utils.choice(['stalker', 'grunt', 'sniper', 'bomber']), epos.x, epos.y);
         }
       }
     } else {
       this.standTimer = Math.max(0, this.standTimer - dt * 2);
       this._lastHP = p.hp;
       this._extractSpawnTimer = 0;
+      this.pressureLevel = Math.max(0, this.pressureLevel - 1);
+      this._lastPressureLevel = this.pressureLevel;
     }
   },
 
@@ -2505,9 +2594,10 @@ var ExtractionZone = {
     ctx.fillStyle = '#4ade80';
     ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 2, 0, Math.PI * 2); ctx.fill();
 
-    // Zone ring
+    // Zone ring with pressure color cue.
     ctx.globalAlpha = inZone ? 0.7 : 0.35;
-    ctx.strokeStyle = '#4ade80';
+    var ringColor = this.pressureLevel >= 3 ? '#fb7185' : (this.pressureLevel >= 2 ? '#fbbf24' : '#4ade80');
+    ctx.strokeStyle = ringColor;
     ctx.lineWidth = inZone ? 3 : 2;
     ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * pulse, 0, Math.PI * 2); ctx.stroke();
 
@@ -2536,6 +2626,10 @@ var ExtractionZone = {
     if (inZone) {
       ctx.fillStyle = '#ffffff';
       ctx.fillText(Math.ceil(this.standRequired - this.standTimer) + 's', this.x, this.y + 4);
+      if (this.pressureLevel >= 2) {
+        ctx.fillStyle = this.pressureLevel >= 3 ? '#fb7185' : '#fbbf24';
+        ctx.fillText(this.pressureLevel >= 3 ? 'CRITICAL' : 'HIGH THREAT', this.x, this.y + 20);
+      }
     }
 
     ctx.restore();
@@ -2646,14 +2740,24 @@ const Game = {
   shakeAmt: 0, shakeTime: 0,
   announceText: '', announceTime: 0,
   runItems: [],  // collected but not equipped
+  showPerfOverlay: true,
+  frameMsEma: 16.7,
+  fpsEma: 60,
+  perfGovernorTimer: 0,
+  perfGovernorLowMs: 17.0,
+  perfGovernorHighMs: 22.0,
+  perfGovernorState: 'normal',
+  mobileMode: false,
+  balancePreset: 'standard',
 
   init() {
     this.canvas = Utils.el('#game');
     this.ctx = this.canvas.getContext('2d');
+    this.save = SaveSystem.load();
+    this.balancePreset = this.save.balancePreset || 'standard';
+    this.applyDevicePreset();
     this.resize();
     window.addEventListener('resize', () => this.resize());
-
-    this.save = SaveSystem.load();
     Input.init();
     AudioBus.init();
     World.initTileAssets();
@@ -2665,8 +2769,46 @@ const Game = {
     // Pre-render idle loop so the canvas is never blank behind menus
     this.idleLoop();
   },
+  applyDevicePreset() {
+    var ua = navigator.userAgent || '';
+    var touchCapable = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    this.mobileMode = /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (touchCapable && Math.min(window.innerWidth, window.innerHeight) < 900);
+    var mode = (this.save && this.save.perfMode) || 'auto';
+    var useMobilePreset = mode === 'on' || (mode === 'auto' && this.mobileMode);
+
+    // Baseline defaults.
+    LOW_FX_MODE = false;
+    this.showPerfOverlay = true;
+    UI.hudTickInterval = 0.1;
+    VFX.maxParticles = 900;
+    VFX.maxNumbers = 90;
+    VFX.maxRings = 80;
+
+    if (!useMobilePreset) return;
+
+    // Mobile-first defaults: start stable, then governor can recover quality if possible.
+    LOW_FX_MODE = true;
+    this.showPerfOverlay = false;
+    UI.hudTickInterval = 0.16;
+    VFX.maxParticles = 320;
+    VFX.maxNumbers = 60;
+    VFX.maxRings = 60;
+  },
+  cyclePerfMode() {
+    const order = ['auto', 'on', 'off'];
+    const current = (this.save && this.save.perfMode) || 'auto';
+    const idx = order.indexOf(current);
+    const next = order[(idx + 1 + order.length) % order.length];
+    this.save.perfMode = next;
+    SaveSystem.save(this.save);
+    this.applyDevicePreset();
+    this.resize();
+    UI.renderMainMenu();
+    this.announce('MOBILE PERF: ' + next.toUpperCase());
+  },
   resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dprCap = this.mobileMode ? 1.5 : 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
     this.width = window.innerWidth;
     this.height = window.innerHeight;
     this.canvas.width = this.width * dpr;
@@ -2681,6 +2823,10 @@ const Game = {
     Utils.el('#btnZone').onclick  = () => { UI.show('zoneScreen');  UI.renderZoneScreen(); };
     Utils.el('#btnMeta').onclick  = () => { UI.show('metaScreen');  UI.renderMetaScreen(); };
     Utils.el('#btnCodex').onclick = () => { UI.show('codexScreen'); UI.renderCodex('enemies'); };
+    const perfBtn = Utils.el('#btnPerfMode');
+    if (perfBtn) perfBtn.onclick = () => this.cyclePerfMode();
+    const balBtn = Utils.el('#btnBalanceMode');
+    if (balBtn) balBtn.onclick = () => this.cycleBalancePreset();
     Utils.el('#btnReset').onclick = () => {
       if (confirm('Reset all progress? This cannot be undone.')) {
         SaveSystem.reset();
@@ -2711,7 +2857,24 @@ const Game = {
     };
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this.running) this.togglePause();
+      if (e.key === 'F3') {
+        this.showPerfOverlay = !this.showPerfOverlay;
+        e.preventDefault();
+      }
+      if (e.key === 'F4') {
+        this.cycleBalancePreset();
+        e.preventDefault();
+      }
     });
+  },
+  cycleBalancePreset() {
+    var order = ['arcade', 'standard', 'hardcore'];
+    var idx = order.indexOf(this.balancePreset);
+    this.balancePreset = order[(idx + 1 + order.length) % order.length];
+    this.save.balancePreset = this.balancePreset;
+    SaveSystem.save(this.save);
+    UI.renderMainMenu();
+    this.announce('BALANCE: ' + this.balancePreset.toUpperCase());
   },
 
   /* ---------------- Meta helpers ---------------- */
@@ -2734,6 +2897,10 @@ const Game = {
     this.runItems = [];
     this.camX = 0; this.camY = 0;
     this.announceText = ''; this.announceTime = 0;
+    this.frameMsEma = 16.7;
+    this.fpsEma = 60;
+    this.perfGovernorTimer = 0;
+    this.perfGovernorState = LOW_FX_MODE ? 'degraded' : 'normal';
 
     World.setZone(this.save.selectedZone);
     World.reset();
@@ -2888,9 +3055,12 @@ const Game = {
   loop(now) {
     if (!this.running) return;
     try {
-      var dt = (now - this.lastFrame) / 1000;
+      var rawFrameMs = now - this.lastFrame;
+      var dt = rawFrameMs / 1000;
       this.lastFrame = now;
       dt = Math.min(dt, 0.05);
+      this.frameMsEma = Utils.lerp(this.frameMsEma, rawFrameMs, 0.1);
+      this.fpsEma = 1000 / Math.max(1, this.frameMsEma);
 
       // === Slow-mo scaling ===
       if (this.slowMoTimer > 0) {
@@ -2936,7 +3106,30 @@ const Game = {
     if (this.shakeTime > 0) this.shakeTime -= dt;
     else this.shakeAmt *= 0.8;
 
+    this.updatePerfGovernor(dt);
     UI.updateHUD(dt);
+  },
+  updatePerfGovernor(dt) {
+    this.perfGovernorTimer -= dt;
+    if (this.perfGovernorTimer > 0) return;
+    this.perfGovernorTimer = 0.6;
+    if (!this.running) return;
+
+    // Hysteresis to avoid mode flapping.
+    if (this.frameMsEma > this.perfGovernorHighMs && this.perfGovernorState !== 'degraded') {
+      this.perfGovernorState = 'degraded';
+      LOW_FX_MODE = true;
+      VFX.maxParticles = 360;
+      VFX.maxNumbers = 70;
+      World.maxEnemies = Math.min(World.maxEnemies, 72);
+      this.announce('PERF MODE: STABLE');
+    } else if (this.frameMsEma < this.perfGovernorLowMs && this.perfGovernorState !== 'normal') {
+      this.perfGovernorState = 'normal';
+      LOW_FX_MODE = false;
+      VFX.maxParticles = 900;
+      VFX.maxNumbers = 90;
+      this.announce('PERF MODE: QUALITY');
+    }
   },
 
   render() {
@@ -2974,6 +3167,50 @@ const Game = {
       ctx.fillText(this.announceText, this.width / 2, this.height * 0.25 + 7);
       ctx.restore();
     }
+    if (World.sectorFlashTimer > 0 && World.lastSectorLabel) {
+      ctx.save();
+      var t = Utils.clamp(World.sectorFlashTimer / 1.3, 0, 1);
+      ctx.globalAlpha = t * 0.55;
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(8, 8, this.width - 16, this.height - 16);
+      ctx.globalAlpha = t;
+      ctx.fillStyle = '#22d3ee';
+      ctx.font = 'bold 14px ui-monospace, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(World.lastSectorLabel, this.width - 16, 28);
+      ctx.restore();
+    }
+    if (this.showPerfOverlay) this.renderPerfOverlay(ctx);
+  },
+  renderPerfOverlay(ctx) {
+    const selectedPerfMode = ((this.save && this.save.perfMode) || 'auto').toUpperCase();
+    const lines = [
+      'FPS ' + this.fpsEma.toFixed(1) + ' | ' + this.frameMsEma.toFixed(2) + 'ms',
+      'EN ' + Enemies.list.length + '  PR ' + Projectiles.list.length + '  PK ' + Pickups.list.length,
+      'FX ' + VFX.particles.length + '/' + VFX.maxParticles + '  DR ' + World.getUnlockedDoorCount() + '/4',
+      'MODE ' + this.perfGovernorState.toUpperCase() + (LOW_FX_MODE ? ' (LOW_FX)' : ' (FULL_FX)'),
+      'PREF ' + selectedPerfMode,
+      'BAL ' + this.balancePreset.toUpperCase() + '  (F4 cycle)',
+      'HUD F3 toggle',
+    ];
+    ctx.save();
+    const x = 10;
+    const y = 10;
+    const w = 290;
+    const h = 124;
+    ctx.fillStyle = 'rgba(5,10,18,0.72)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(148,163,184,0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+    ctx.font = '12px ui-monospace, monospace';
+    ctx.textAlign = 'left';
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillStyle = i === 0 ? '#67e8f9' : (i === 3 ? '#fbbf24' : (i === 4 ? '#86efac' : (i === 5 ? '#fca5a5' : '#e2e8f0')));
+      ctx.fillText(lines[i], x + 10, y + 18 + i * 16);
+    }
+    ctx.restore();
   },
 
   /* ---------------- Idle menu loop (decorative canvas behind menu) ---------------- */

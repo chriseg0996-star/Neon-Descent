@@ -786,6 +786,7 @@ h3 {
           <div class="extract-hud hidden" id="extractHud">
             <div class="extract-label">EXTRACT</div>
             <div class="extract-dist" id="extractDist">--m</div>
+            <div class="extract-label" id="extractThreat">THREAT: LOW</div>
           </div>
           <button class="inv-btn" id="btnInvOpen" aria-label="Inventory">
             <span>⬟</span><span class="inv-count" id="invCountHud">0</span>
@@ -827,10 +828,14 @@ h3 {
           <button class="btn" id="btnZone">ZONE</button>
           <button class="btn" id="btnMeta">META TREE</button>
           <button class="btn" id="btnCodex">CODEX</button>
+          <button class="btn" id="btnPerfMode">MOBILE PERF: AUTO</button>
+          <button class="btn" id="btnBalanceMode">BALANCE: STANDARD</button>
           <button class="btn ghost" id="btnReset">RESET DATA</button>
         </div>
+        <div class="footer-note" id="perfHint">Mobile Perf Auto: detecta dispositivo y ajusta calidad automáticamente.</div>
+        <div class="footer-note" id="balanceHint">Standard: ritmo equilibrado para runs consistentes.</div>
 
-        <div class="footer-note">v0.1 · foundation build</div>
+        <div class="footer-note">v0.1.0-mvp · progressive extraction shooter</div>
       </div>
     </div>
 
@@ -901,6 +906,7 @@ h3 {
       <div class="modal-inner narrow">
         <h3>PAUSED</h3>
         <div class="pause-stats" id="pauseStats"></div>
+        <div class="footer-note">Quick keys: F3 = perf overlay · F4 = balance preset</div>
         <div class="pause-btns">
           <button class="btn primary" id="btnResume">RESUME</button>
           <button class="btn" id="btnAbandon">ABANDON RUN</button>
