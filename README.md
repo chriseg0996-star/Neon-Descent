@@ -13,7 +13,7 @@ Neon Descent is a fast, progressive top-down extraction shooter built in vanilla
 
 ## Current State
 
-`v0.1.6-mvp`
+`v0.1.7-mvp`
 
 This build is a public MVP polish update focused on readability, menu/HUD cleanup, combat feel, and performance tuning under heavier weapon and VFX load.
 

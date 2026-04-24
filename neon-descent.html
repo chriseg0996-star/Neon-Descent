@@ -870,10 +870,53 @@ canvas#game {
   transform: translate(-50%, -50%);
   box-shadow: 0 0 20px rgba(34,211,238,0.4);
 }
+.ability-btn {
+  position: absolute;
+  right: 24px;
+  bottom: 92px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  background: radial-gradient(circle at 30% 30%, rgba(251,191,36,0.28), rgba(120,77,7,0.3));
+  color: #fff3cf;
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.22) inset, 0 0 22px rgba(251,191,36,0.16);
+  z-index: 8;
+  touch-action: manipulation;
+}
+.ability-btn.ready {
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.35) inset, 0 0 30px rgba(251,191,36,0.35);
+}
+.ability-btn.cooldown {
+  border-color: var(--line);
+  color: var(--ink-dim);
+  background: rgba(7,17,31,0.82);
+  box-shadow: none;
+}
 
 /* Show joystick on touch devices */
 @media (pointer: coarse) {
   .hud:not(.hidden) .joystick { display: block; }
+  .hud:not(.hidden) .ability-btn { display: flex; }
+  .hud-top { align-items: flex-start; }
+  .hud-left { max-width: 52vw; }
+  .zone-tag { max-width: 46vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hud-right { flex-wrap: wrap; gap: 3px; justify-content: flex-end; max-width: 44vw; }
+  .hud-right .stat-pill:nth-child(2),
+  .hud-right .stat-pill:nth-child(3) { display: none; }
+  .hud-right .stat-pill { padding: 3px 6px; }
+  .hud-bottom { align-items: flex-end; }
+  .hud-left-stack { max-width: min(260px, calc(100vw - 108px)); }
+  .weapon-stats, .perk-strip, .kill-counter { display: none; }
+  .weapon-card { padding: 6px 8px 6px 6px; gap: 8px; }
+  .weapon-name { font-size: 11px; }
+  .weapon-sub { font-size: 8px; letter-spacing: 0.1em; }
 }
 
 /* ================================================================
@@ -1118,6 +1161,7 @@ h3 {
         <div class="joystick-base"></div>
         <div class="joystick-stick" id="joystickStick"></div>
       </div>
+      <button id="btnAbilityMobile" class="ability-btn ready" aria-label="Use ability">ABILITY</button>
     </div>
 
     <!-- ============ MAIN MENU ============ -->
@@ -1176,7 +1220,7 @@ h3 {
           <div class="footer-note" id="balanceHint">Standard: ritmo equilibrado para runs consistentes.</div>
         </div>
 
-        <div class="footer-note menu-version">v0.1.6-mvp · progressive extraction shooter</div>
+        <div class="footer-note menu-version">v0.1.7-mvp · progressive extraction shooter</div>
       </div>
     </div>
 
@@ -2246,7 +2290,7 @@ const OPERATIONS = {
     zoneId: 'nexus',
     tier: 'OP-01',
     unlockLevel: 1,
-    rewardTime: 360,
+    rewardTime: 420,
     desc: 'A compact mechanic-heavy breach through the Broken Nexus vault lattice.',
     encounters: ['SYNC PAD', 'ANCHOR BREAK', 'SAFE SECTOR', 'THE WARDEN'],
     affixes: ['volatile', 'pulse'],
@@ -2462,6 +2506,7 @@ const LootSystem = {
 const Input = {
   keys: {},
   move: { x: 0, y: 0 },
+  abilityQueued: false,
   touchActive: false,
   touchStart: null,
   touchCurrent: null,
@@ -2479,6 +2524,11 @@ const Input = {
     // Touch joystick — bind to document, check gameActive before handling
     this.joystickEl = Utils.el('#joystick');
     this.stickEl = Utils.el('#joystickStick');
+    this.abilityBtn = Utils.el('#btnAbilityMobile');
+    if (this.abilityBtn) {
+      this.abilityBtn.addEventListener('touchstart', e => { e.preventDefault(); this.triggerAbility(); }, { passive: false });
+      this.abilityBtn.addEventListener('click', e => { e.preventDefault(); this.triggerAbility(); });
+    }
     document.addEventListener('touchstart', e => this.onTouchStart(e), { passive: false });
     document.addEventListener('touchmove',  e => this.onTouchMove(e),  { passive: false });
     document.addEventListener('touchend',   e => this.onTouchEnd(e),   { passive: false });
@@ -2487,8 +2537,15 @@ const Input = {
   setGameActive(v) { this.gameActive = v; },
   reset() {
     this.move = { x: 0, y: 0 };
+    this.abilityQueued = false;
     this.touchActive = false;
     if (this.joystickEl) this.joystickEl.classList.remove('active');
+  },
+  triggerAbility() { this.abilityQueued = true; },
+  consumeAbility() {
+    var queued = this.abilityQueued;
+    this.abilityQueued = false;
+    return queued;
   },
   update() {
     // Keyboard input
@@ -2749,8 +2806,8 @@ class Player {
     // Cooldowns
     if (this.abilityCD > 0) this.abilityCD -= dt;
 
-    // Ability trigger (space / tap not bound to touch yet; simple keyboard demo)
-    if (Input.keys[' '] && this.abilityCD <= 0) this.useAbility();
+    // Ability trigger
+    if ((Input.keys[' '] || Input.consumeAbility()) && this.abilityCD <= 0) this.useAbility();
 
     // === ORBITAL WEAPON SYSTEM ===
     if (this.orbitals > 0) {
@@ -3293,6 +3350,18 @@ class Enemy {
         ctx.closePath(); break;
     }
     ctx.fill(); ctx.stroke();
+    if (this.operationAnchor || this.operationMiniBoss) {
+      ctx.fillStyle = this.operationAnchor ? '#fbbf24' : '#4ade80';
+      ctx.font = 'bold 10px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.operationAnchor ? 'ANCHOR' : 'BREACH GUARD', this.x, this.y - this.radius - 12);
+    }
+    if (this.operationBoss && this.invulnerable) {
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 10px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('SHIELDED', this.x, this.y - this.radius - 18);
+    }
 
     // HP bar for bosses / elites
     if (this.boss || (this.elite && this.hp < this.maxHP)) {
@@ -4192,6 +4261,12 @@ const UI = {
     Utils.el('#abilityLabel').textContent = p.cls.ability ? p.cls.ability.name.toUpperCase() : 'ABILITY';
     Utils.el('#abilityText').textContent = abilityReady ? 'READY' : `${p.abilityCD.toFixed(1)}s`;
     abilityPill.classList.toggle('ready', abilityReady);
+    const mobileAbilityBtn = Utils.el('#btnAbilityMobile');
+    if (mobileAbilityBtn) {
+      mobileAbilityBtn.textContent = abilityReady ? (p.cls.ability ? p.cls.ability.name.toUpperCase() : 'ABILITY') : Math.ceil(p.abilityCD).toString();
+      mobileAbilityBtn.classList.toggle('ready', abilityReady);
+      mobileAbilityBtn.classList.toggle('cooldown', !abilityReady);
+    }
     Utils.el('#moveBonusText').textContent = signedPct(moveBonus);
     Utils.el('#fireBonusText').textContent = signedPct(fireBonus);
     Utils.el('#sizeBonusText').textContent = signedPct(sizeBonus);
@@ -4550,7 +4625,7 @@ var OperationSystem = {
   collapseTelegraph: null,
   beamState: null,
   bossRef: null,
-  bossThresholds: [0.66, 0.33],
+  bossThresholds: [0.75, 0.5, 0.25],
   pendingBossThreshold: 0,
   _lastSectorTick: -1,
   _lastCollapseSecond: -1,
@@ -4577,6 +4652,9 @@ var OperationSystem = {
     this.pendingBossThreshold = 0;
     this._lastSectorTick = -1;
     this._lastCollapseSecond = -1;
+    this.briefingTimer = 0;
+    this.briefingTitle = '';
+    this.briefingBody = '';
     if (!this.active) return;
     this.beginStage(0);
   },
@@ -4618,18 +4696,27 @@ var OperationSystem = {
     this._lastCollapseSecond = -1;
     Enemies.clear();
     if (index === 0) {
-      this.objectiveText = 'SYNC PAD 0%';
+      this.objectiveText = 'STAND INSIDE THE SYNC PAD UNTIL IT REACHES 100%.';
+      this.briefingTitle = 'SYNC PAD';
+      this.briefingBody = 'Hold the green circle. More enemies nearby slows progress.';
     } else if (index === 1) {
-      this.objectiveText = 'ELIMINATE RELAY ANCHORS';
+      this.objectiveText = 'DESTROY ALL RELAY ANCHORS. THEY ARE MARKED AND TANKIER THAN NORMAL MOBS.';
+      this.briefingTitle = 'ANCHOR BREAK';
+      this.briefingBody = 'Find and kill every yellow anchor before the room stabilizes.';
       this.spawnAnchorWave();
     } else if (index === 2) {
-      this.objectiveText = 'SAFE SECTOR 0%';
+      this.objectiveText = 'STAY INSIDE THE GREEN SAFE SLICE WHILE FINISHING THE ESCORT FIGHT.';
+      this.briefingTitle = 'SAFE SECTOR';
+      this.briefingBody = 'The green wedge rotates. Staying outside it damages you.';
       this.spawnEscortWave();
     } else if (index === 3) {
-      this.objectiveText = 'DODGE MECHANICS · BURN THE WARDEN';
+      this.objectiveText = 'BREAK SHIELDS, DODGE THE BEAM, AND AVOID COLLAPSING SECTORS.';
+      this.briefingTitle = 'THE WARDEN';
+      this.briefingBody = 'Kill shield anchors when they spawn, then punish the boss.';
       this.spawnBoss();
     }
-    Game.announce(this.stageStatusText());
+    this.briefingTimer = 4.5;
+    Game.announce(this.stageStatusText() + ' · ' + this.briefingTitle);
   },
 
   completeStage: function() {
@@ -4644,26 +4731,29 @@ var OperationSystem = {
   },
 
   spawnAnchorWave: function() {
-    this.spawnTaggedEnemy('elite_grunt', -180, -120, 1.35, { operationAnchor: true, radius: 20, maxHP: 145, hp: 145, color: '#111827', accent: '#fbbf24' });
-    this.spawnTaggedEnemy('hulk', 180, -90, 1.42, { operationAnchor: true, radius: 24, maxHP: 170, hp: 170, color: '#1f2937', accent: '#22d3ee' });
-    this.spawnTaggedEnemy('elite_grunt', 0, 210, 1.38, { operationAnchor: true, radius: 20, maxHP: 145, hp: 145, color: '#111827', accent: '#c084fc' });
+    this.spawnTaggedEnemy('elite_grunt', -180, -120, 1.45, { operationAnchor: true, radius: 20, maxHP: 175, hp: 175, color: '#111827', accent: '#fbbf24' });
+    this.spawnTaggedEnemy('hulk', 180, -90, 1.55, { operationAnchor: true, radius: 24, maxHP: 220, hp: 220, color: '#1f2937', accent: '#22d3ee' });
+    this.spawnTaggedEnemy('elite_grunt', 0, 210, 1.48, { operationAnchor: true, radius: 20, maxHP: 175, hp: 175, color: '#111827', accent: '#c084fc' });
+    this.spawnTaggedEnemy('sniper', -30, -220, 1.5);
+    this.spawnTaggedEnemy('stalker', 210, 180, 1.45);
   },
 
   spawnEscortWave: function() {
-    this.spawnTaggedEnemy('elite_grunt', 0, -160, 1.45, { operationMiniBoss: true, maxHP: 180, hp: 180, accent: '#4ade80' });
-    this.spawnTaggedEnemy('sniper', -210, 120, 1.35);
-    this.spawnTaggedEnemy('stalker', 220, 110, 1.35);
+    this.spawnTaggedEnemy('elite_grunt', 0, -160, 1.58, { operationMiniBoss: true, maxHP: 260, hp: 260, accent: '#4ade80' });
+    this.spawnTaggedEnemy('sniper', -210, 120, 1.42);
+    this.spawnTaggedEnemy('stalker', 220, 110, 1.45);
+    this.spawnTaggedEnemy('bomber', 140, -220, 1.42);
   },
 
   spawnBoss: function() {
-    this.bossRef = this.spawnTaggedEnemy('boss_warden', 0, -120, 1.55, { operationBoss: true, maxHP: 1250, hp: 1250 });
+    this.bossRef = this.spawnTaggedEnemy('boss_warden', 0, -120, 1.75, { operationBoss: true, maxHP: 1850, hp: 1850 });
     if (this.bossRef) {
-      this.bossRef.maxHP = 1250;
-      this.bossRef.hp = 1250;
-      this.bossRef.speed = 48;
+      this.bossRef.maxHP = 1850;
+      this.bossRef.hp = 1850;
+      this.bossRef.speed = 56;
       this.bossRef.invulnerable = false;
     }
-    this.beamState = { timer: 2.6, active: false, angle: -Math.PI / 2 };
+    this.beamState = { timer: 2.1, active: false, angle: -Math.PI / 2 };
   },
 
   nearbyEnemies: function(x, y, r) {
@@ -4758,29 +4848,36 @@ var OperationSystem = {
     if (!this.active) return;
     this.timer += dt;
     this.stageTimer += dt;
+    if (this.briefingTimer > 0) this.briefingTimer -= dt;
     this.rewardTimer = Math.max(0, this.current.rewardTime - this.timer);
     this.updateHazards(dt);
     if (this.affix === 'pulse') {
       this.pulseTimer -= dt;
       if (this.pulseTimer <= 0) {
-        this.pulseTimer = 9;
+        this.pulseTimer = 7;
         this.hazards.push({ type: 'pulse', t: 0, duration: 1.2, maxRadius: 520, hit: false });
       }
     }
     if (this.stageIndex === 0) {
-      this.objectiveText = 'SYNC PAD ' + Math.floor((this.stageProgress / 6.5) * 100) + '%';
+      this.objectiveText = 'SYNC PAD ' + Math.floor((this.stageProgress / 11) * 100) + '% · HOLD THE GREEN CIRCLE';
       this.enemySpawnTimer -= dt;
       if (this.enemySpawnTimer <= 0) {
-        this.enemySpawnTimer = 2.3;
+        this.enemySpawnTimer = 1.9;
         this.spawnTaggedEnemy(Utils.choice(['grunt', 'stalker', 'sniper']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale());
         this.spawnTaggedEnemy(Utils.choice(['grunt', 'stalker', 'bomber']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale());
+        if (this.stageTimer > 5) this.spawnTaggedEnemy(Utils.choice(['stalker', 'sniper']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale() + 0.08);
       }
       var inPad = Utils.dist(Game.player.x, Game.player.y, 0, 0) < 92;
       if (inPad) this.stageProgress += dt * (this.nearbyEnemies(0, 0, 130) > 3 ? 0.6 : 1);
       else this.stageProgress = Math.max(0, this.stageProgress - dt * 0.5);
-      if (this.stageProgress >= 6.5) this.completeStage();
+      if (this.stageProgress >= 11) this.completeStage();
     } else if (this.stageIndex === 1) {
-      this.objectiveText = 'ELIMINATE RELAY ANCHORS';
+      this.objectiveText = 'ELIMINATE RELAY ANCHORS · YELLOW TARGETS';
+      this.enemySpawnTimer -= dt;
+      if (this.enemySpawnTimer <= 0) {
+        this.enemySpawnTimer = 3.8;
+        this.spawnTaggedEnemy(Utils.choice(['stalker', 'sniper', 'grunt']), -240 + Math.random() * 480, -240 + Math.random() * 480, this.enemyScale() + 0.06);
+      }
       if (!Enemies.list.some(function(e) { return e.alive && e.operationAnchor; })) this.completeStage();
     } else if (this.stageIndex === 2) {
       this.sectorAngle += dt * 0.8;
@@ -4794,23 +4891,23 @@ var OperationSystem = {
         this.mechanicPenalty += 1;
       }
       if (this.enemySpawnTimer <= 0) {
-        this.enemySpawnTimer = 3.4;
-        this.spawnTaggedEnemy(Utils.choice(['stalker', 'sniper']), -220 + Math.random() * 440, -220 + Math.random() * 440, this.enemyScale());
+        this.enemySpawnTimer = 2.8;
+        this.spawnTaggedEnemy(Utils.choice(['stalker', 'sniper', 'bomber']), -220 + Math.random() * 440, -220 + Math.random() * 440, this.enemyScale());
       } else {
         this.enemySpawnTimer -= dt;
       }
       var miniAlive = Enemies.list.some(function(e) { return e.alive && e.operationMiniBoss; });
-      this.objectiveText = 'SAFE SECTOR ' + Math.min(100, Math.floor((this.stageProgress / 7.5) * 100)) + '%';
-      if (this.stageProgress >= 7.5 && !miniAlive) this.completeStage();
+      this.objectiveText = 'SAFE SECTOR ' + Math.min(100, Math.floor((this.stageProgress / 12) * 100)) + '% · STAY INSIDE GREEN';
+      if (this.stageProgress >= 12 && !miniAlive) this.completeStage();
     } else if (this.stageIndex === 3) {
       this.updateBossMechanics(dt);
-      this.objectiveText = this.bossRef && this.bossRef.invulnerable ? 'BREAK SHIELD ANCHORS' : 'DODGE MECHANICS · BURN THE WARDEN';
+      this.objectiveText = this.bossRef && this.bossRef.invulnerable ? 'BREAK SHIELD ANCHORS · BOSS IS IMMUNE' : 'DODGE MECHANICS · BURN THE WARDEN';
       if (!this.bossRef || !this.bossRef.alive) this.completeStage();
     }
   },
 
   buildRewardReport: function() {
-    var tier = this.rewardTimer > 120 ? 3 : (this.rewardTimer > 45 ? 2 : 1);
+    var tier = this.rewardTimer > 180 ? 3 : (this.rewardTimer > 70 ? 2 : 1);
     var bracket = tier === 3 ? 'GOLD' : (tier === 2 ? 'SILVER' : 'BRONZE');
     return {
       credits: 80 + tier * 45,
@@ -4879,6 +4976,23 @@ var OperationSystem = {
       ctx.lineTo(this.bossRef.x + Math.cos(this.beamState.angle) * 470, this.bossRef.y + Math.sin(this.beamState.angle) * 470);
       ctx.stroke();
     }
+    ctx.restore();
+  },
+
+  renderScreenOverlay: function(ctx) {
+    if (!this.active || this.briefingTimer <= 0) return;
+    var alpha = Math.min(1, this.briefingTimer / 0.35);
+    ctx.save();
+    ctx.globalAlpha = Math.min(0.92, alpha);
+    ctx.fillStyle = 'rgba(4, 10, 18, 0.86)';
+    ctx.fillRect(20, 86, ctx.canvas.width / (window.devicePixelRatio || 1) - 40, 70);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 16px ui-monospace, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(this.briefingTitle, 34, 114);
+    ctx.fillStyle = '#d7e6f5';
+    ctx.font = '12px ui-monospace, monospace';
+    ctx.fillText(this.briefingBody, 34, 138);
     ctx.restore();
   },
 };
@@ -5418,6 +5532,7 @@ const Game = {
       ctx.fillText(this.announceText, this.width / 2, this.height * 0.25 + 7);
       ctx.restore();
     }
+    OperationSystem.renderScreenOverlay(ctx);
   },
 
   /* ---------------- Idle menu loop (decorative canvas behind menu) ---------------- */
