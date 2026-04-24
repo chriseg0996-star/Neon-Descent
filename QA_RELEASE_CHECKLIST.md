@@ -1,4 +1,4 @@
-# QA Release Checklist (v0.1.5-mvp)
+# QA Release Checklist (v0.1.6-mvp)
 
 ## Core Flow
 
