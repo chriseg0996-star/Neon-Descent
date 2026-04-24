@@ -100,20 +100,22 @@ canvas#game {
 .menu-bg {
   position: absolute; inset: 0;
   background:
-    radial-gradient(circle at 20% 80%, rgba(34,211,238,0.08), transparent 40%),
-    radial-gradient(circle at 80% 20%, rgba(192,132,252,0.05), transparent 40%);
+    linear-gradient(135deg, rgba(34,211,238,0.08), transparent 42%),
+    radial-gradient(circle at 72% 18%, rgba(251,191,36,0.06), transparent 34%);
   pointer-events: none;
 }
 .menu-content {
   position: relative; z-index: 1;
-  display: flex; flex-direction: column; align-items: center; gap: 28px;
-  width: 100%; max-width: 440px;
+  display: grid;
+  gap: 18px;
+  width: 100%; max-width: 520px;
+  align-content: center;
 }
 .brand { text-align: center; }
 .brand-mark {
-  font-size: 36px; color: var(--accent);
+  font-size: 24px; color: var(--accent);
   text-shadow: 0 0 24px var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   animation: pulse 2.4s ease-in-out infinite;
 }
 @keyframes pulse { 50% { opacity: 0.6; transform: scale(0.92); } }
@@ -121,7 +123,7 @@ canvas#game {
 .brand-title {
   font-family: var(--display);
   font-weight: 900;
-  font-size: clamp(32px, 8vw, 54px);
+  font-size: clamp(34px, 7vw, 56px);
   letter-spacing: 0.08em;
   line-height: 0.9;
   color: var(--ink);
@@ -138,33 +140,40 @@ canvas#game {
 .brand-sub {
   font-family: var(--mono);
   color: var(--ink-faint);
-  font-size: 11px;
-  letter-spacing: 0.3em;
-  margin-top: 10px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  margin-top: 8px;
   text-transform: uppercase;
 }
 
 .meta-strip {
-  display: flex; gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(34,211,238,0.12);
+  border: 1px solid var(--line-soft);
   width: 100%;
 }
 .meta-item {
   flex: 1; background: var(--bg-1);
-  padding: 10px 8px; text-align: center;
+  padding: 8px 8px; text-align: center;
   display: flex; flex-direction: column; gap: 2px;
 }
 .meta-item .lbl {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: 0.2em; color: var(--ink-faint);
+  font-family: var(--mono); font-size: 8px;
+  letter-spacing: 0.14em; color: var(--ink-faint);
 }
 .meta-item span:last-child {
   font-family: var(--display); font-weight: 700;
-  color: var(--accent); font-size: 16px;
+  color: var(--accent); font-size: 15px;
 }
 
-.menu-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.menu-btns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
 
 .btn {
   font-family: var(--display); font-weight: 700;
@@ -181,23 +190,53 @@ canvas#game {
 .btn:hover { background: var(--bg-3); border-color: var(--accent-deep); color: var(--accent); }
 .btn:active { transform: translateY(1px); }
 .btn.primary {
+  grid-column: 1 / -1;
   background: linear-gradient(180deg, var(--accent-deep) 0%, #065968 100%);
   border-color: var(--accent);
   color: #eafcff;
   box-shadow: 0 0 0 1px var(--accent) inset, 0 0 24px rgba(34,211,238,0.25);
 }
 .btn.primary:hover { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%); }
+.menu-btns .btn:not(.primary):not(.ghost) {
+  padding: 11px 10px;
+  font-size: 11px;
+  letter-spacing: 0.13em;
+}
+#btnPerfMode,
+#btnBalanceMode {
+  color: var(--ink-dim);
+  border-color: var(--line-soft);
+  background: rgba(7,17,31,0.62);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
 .btn.ghost {
+  grid-column: 1 / -1;
   background: transparent;
   color: var(--ink-faint);
   border-color: var(--line-soft);
-  font-size: 11px;
+  font-size: 10px;
+  padding: 9px 12px;
 }
 .btn.ghost:hover { color: var(--warn); border-color: var(--warn-deep); }
 
 .footer-note {
   font-family: var(--mono); font-size: 10px;
   color: var(--ink-faint); letter-spacing: 0.2em;
+}
+.menu-hints {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+.menu-hints .footer-note {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  opacity: 0.72;
+}
+.menu-version {
+  text-align: center;
+  opacity: 0.55;
 }
 
 /* ================================================================
@@ -325,10 +364,32 @@ canvas#game {
 
 /* ========== META TREE ========== */
 .meta-grid {
-  display: grid; gap: 8px;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  display: grid; gap: 12px;
+  grid-template-columns: 1fr;
   padding: 14px;
   overflow-y: auto;
+}
+.meta-branch {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(11,26,43,0.95) 0%, rgba(5,10,18,0.95) 100%);
+}
+.meta-branch-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; gap: 12px; align-items: center;
+}
+.meta-branch-title {
+  font-family: var(--display); font-weight: 700;
+  letter-spacing: 0.14em; font-size: 14px;
+}
+.meta-branch-sub {
+  font-family: var(--mono); font-size: 10px; color: var(--ink-faint);
+  letter-spacing: 0.12em; margin-top: 4px;
+}
+.meta-branch-body {
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  padding: 12px;
 }
 .meta-node {
   background: var(--bg-2);
@@ -340,6 +401,12 @@ canvas#game {
 }
 .meta-node:hover { border-color: var(--accent-deep); }
 .meta-node.maxed { border-color: var(--good); background: rgba(74,222,128,0.05); }
+.meta-node.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.meta-node.unlock { border-color: rgba(34,211,238,0.45); }
+.meta-node.keystone { border-color: rgba(251,191,36,0.45); }
 .meta-node-name {
   font-family: var(--display); font-weight: 700;
   font-size: 12px; letter-spacing: 0.12em;
@@ -353,6 +420,11 @@ canvas#game {
 }
 .meta-node-cost { color: var(--gold); }
 .meta-node.cannot .meta-node-cost { color: var(--warn); }
+.meta-node-req {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--ink-faint); margin-top: 4px;
+  letter-spacing: 0.08em;
+}
 
 /* ========== CODEX ========== */
 .codex-tabs {
@@ -388,6 +460,61 @@ canvas#game {
 }
 .codex-entry-sub { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
 
+/* ========== WORKSHOP ========== */
+.workshop-body {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  overflow-y: auto;
+}
+.workshop-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+.workshop-card {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  padding: 12px;
+}
+.workshop-title {
+  font-family: var(--display); font-weight: 700;
+  letter-spacing: 0.14em; font-size: 13px;
+  color: var(--accent);
+}
+.workshop-copy {
+  font-size: 12px; color: var(--ink-dim); line-height: 1.4;
+  margin-top: 6px;
+}
+.material-row, .mastery-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; padding: 8px 0; border-top: 1px solid var(--line-soft);
+  font-family: var(--mono); font-size: 11px;
+}
+.material-row:first-child, .mastery-row:first-child { border-top: none; padding-top: 0; }
+.material-label, .mastery-name { color: var(--ink); }
+.material-value, .mastery-level { color: var(--gold); }
+.material-note, .mastery-note {
+  font-family: var(--mono); font-size: 10px; color: var(--ink-faint);
+  margin-top: 3px;
+}
+.workshop-manifest {
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+.manifest-chip {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: rgba(7,17,31,0.9);
+  font-family: var(--mono); font-size: 10px; color: var(--ink);
+}
+.upgrade-lockline {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--gold);
+  margin-top: 6px;
+}
+
 /* ================================================================
    IN-GAME HUD
 ================================================================ */
@@ -411,16 +538,16 @@ canvas#game {
 }
 .zone-tag { color: var(--ink-dim); margin-top: 4px; font-size: 10px; }
 
-.hud-right { display: flex; gap: 6px; align-items: flex-start; }
+.hud-right { display: flex; gap: 4px; align-items: flex-start; }
 .stat-pill {
-  font-family: var(--mono); font-size: 11px;
-  padding: 5px 8px;
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 7px;
   background: rgba(7,17,31,0.85);
   border: 1px solid var(--line);
   backdrop-filter: blur(4px);
   display: flex; gap: 6px; align-items: center;
 }
-.stat-pill .lbl { color: var(--ink-faint); font-size: 9px; letter-spacing: 0.15em; }
+.stat-pill .lbl { color: var(--ink-faint); font-size: 8px; letter-spacing: 0.12em; }
 .stat-pill span:last-child { color: var(--accent); font-weight: 700; }
 
 .icon-btn {
@@ -434,22 +561,25 @@ canvas#game {
 .icon-btn:hover { color: var(--accent); border-color: var(--accent-deep); }
 
 .hud-bars {
-  position: absolute; top: 56px; left: 12px; right: 12px;
+  position: static;
   display: flex; flex-direction: column; gap: 4px;
-  max-width: 320px;
+  width: 100%;
+  max-width: 420px;
+  z-index: 1;
 }
 .bar {
-  position: relative; height: 14px;
+  position: relative; height: 16px;
   background: var(--bg-1);
   border: 1px solid var(--line);
   overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.22);
 }
 .bar-fill {
   position: absolute; inset: 0; right: auto;
   transition: width 0.15s ease-out;
 }
 .hp-bar .bar-fill { background: linear-gradient(90deg, var(--warn-deep) 0%, var(--warn) 100%); }
-.xp-bar { height: 8px; }
+.xp-bar { height: 9px; }
 .xp-bar .bar-fill { background: linear-gradient(90deg, var(--accent-deep) 0%, var(--accent) 100%); }
 .bar-label {
   position: absolute; inset: 0;
@@ -463,13 +593,20 @@ canvas#game {
   display: flex; justify-content: space-between; align-items: flex-end;
   gap: 8px;
 }
+.hud-left-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  max-width: min(460px, calc(100vw - 120px));
+}
 .weapon-card {
   display: flex; gap: 10px; align-items: center;
   background: rgba(7,17,31,0.85);
   border: 1px solid var(--line);
   backdrop-filter: blur(4px);
   padding: 6px 10px 6px 6px;
-  max-width: 60%;
+  max-width: 100%;
 }
 .weapon-icon {
   width: 32px; height: 32px;
@@ -485,6 +622,61 @@ canvas#game {
 .weapon-sub {
   font-family: var(--mono); font-size: 9px;
   color: var(--ink-faint); letter-spacing: 0.15em;
+}
+.weapon-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.weapon-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.weapon-stat {
+  min-width: 74px;
+  padding: 4px 6px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line-soft);
+}
+.weapon-stat .lbl {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+}
+.weapon-stat .val {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--display);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+.perk-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: 100%;
+  max-width: 420px;
+}
+.perk-chip {
+  min-width: 54px;
+  padding: 4px 6px;
+  background: rgba(7,17,31,0.84);
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--ink-dim);
+  letter-spacing: 0.08em;
+}
+.perk-chip strong {
+  color: var(--gold);
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0;
 }
 .kill-counter {
   background: rgba(7,17,31,0.85);
@@ -733,12 +925,23 @@ h3 {
 ================================================================ */
 @media (max-height: 600px) {
   .brand-title { font-size: 36px; }
-  .menu-content { gap: 16px; }
+  .brand-mark { display: none; }
+  .brand-sub { margin-top: 6px; }
+  .menu-content { gap: 12px; max-width: 560px; }
+  .meta-item { padding: 6px 8px; }
   .btn { padding: 10px 14px; font-size: 12px; }
+  .menu-btns .btn:not(.primary):not(.ghost) { padding: 9px 8px; }
+  .menu-hints { display: none; }
 }
 @media (max-width: 400px) {
+  .screen { padding: 14px; }
+  .menu-content { gap: 14px; }
+  .menu-btns { grid-template-columns: 1fr; }
+  .meta-strip { grid-template-columns: 1fr; }
   .hud-bottom { flex-direction: column; align-items: stretch; }
+  .hud-left-stack { max-width: 100%; }
   .kill-counter { align-self: flex-end; }
+  .hud-bars { max-width: none; }
 }
 
 </style>
@@ -763,23 +966,39 @@ h3 {
         </div>
       </div>
 
-      <div class="hud-bars">
-        <div class="bar hp-bar">
-          <div class="bar-fill" id="hpFill"></div>
-          <div class="bar-label"><span id="hpText">100 / 100</span></div>
-        </div>
-        <div class="bar xp-bar">
-          <div class="bar-fill" id="xpFill"></div>
-          <div class="bar-label"><span id="xpText">0 / 10</span></div>
-        </div>
-      </div>
-
       <div class="hud-bottom">
-        <div class="weapon-card">
-          <div class="weapon-icon" id="weaponIcon">▲</div>
-          <div class="weapon-info">
-            <div class="weapon-name" id="weaponName">Sidearm MK-I</div>
-            <div class="weapon-sub" id="weaponSub">Pistol • Common</div>
+        <div class="hud-left-stack">
+          <div class="hud-bars">
+            <div class="bar hp-bar">
+              <div class="bar-fill" id="hpFill"></div>
+              <div class="bar-label"><span id="hpText">100 / 100</span></div>
+            </div>
+            <div class="bar xp-bar">
+              <div class="bar-fill" id="xpFill"></div>
+              <div class="bar-label"><span id="xpText">0 / 10</span></div>
+            </div>
+          </div>
+          <div class="weapon-card">
+            <div class="weapon-icon" id="weaponIcon">▲</div>
+            <div class="weapon-meta">
+              <div class="weapon-info">
+                <div class="weapon-name" id="weaponName">Sidearm MK-I</div>
+                <div class="weapon-sub" id="weaponSub">Pistol • Common</div>
+              </div>
+              <div class="weapon-stats">
+                <div class="weapon-stat"><span class="lbl">MOVE</span><span class="val" id="moveBonusText">+0%</span></div>
+                <div class="weapon-stat"><span class="lbl">FIRE RATE</span><span class="val" id="fireBonusText">+0%</span></div>
+                <div class="weapon-stat"><span class="lbl">SHOT SIZE</span><span class="val" id="sizeBonusText">+0%</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="perk-strip">
+            <div class="perk-chip">PIERCE <strong id="pierceText">0</strong></div>
+            <div class="perk-chip">BOUNCE <strong id="ricochetText">0</strong></div>
+            <div class="perk-chip">AOE <strong id="aoeText">0</strong></div>
+            <div class="perk-chip">CRIT <strong id="critText">0%</strong></div>
+            <div class="perk-chip">CHAIN <strong id="chainText">0</strong></div>
+            <div class="perk-chip">VOID <strong id="voidText">0</strong></div>
           </div>
         </div>
         <div class="hud-mid-row">
@@ -827,15 +1046,18 @@ h3 {
           <button class="btn" id="btnClass">CLASS</button>
           <button class="btn" id="btnZone">ZONE</button>
           <button class="btn" id="btnMeta">META TREE</button>
+          <button class="btn" id="btnWorkshop">WORKSHOP</button>
           <button class="btn" id="btnCodex">CODEX</button>
           <button class="btn" id="btnPerfMode">MOBILE PERF: AUTO</button>
           <button class="btn" id="btnBalanceMode">BALANCE: STANDARD</button>
           <button class="btn ghost" id="btnReset">RESET DATA</button>
         </div>
-        <div class="footer-note" id="perfHint">Mobile Perf Auto: detecta dispositivo y ajusta calidad automáticamente.</div>
-        <div class="footer-note" id="balanceHint">Standard: ritmo equilibrado para runs consistentes.</div>
+        <div class="menu-hints">
+          <div class="footer-note" id="perfHint">Mobile Perf Auto: detecta dispositivo y ajusta calidad automáticamente.</div>
+          <div class="footer-note" id="balanceHint">Standard: ritmo equilibrado para runs consistentes.</div>
+        </div>
 
-        <div class="footer-note">v0.1.0-mvp · progressive extraction shooter</div>
+        <div class="footer-note menu-version">v0.1.1-mvp · progressive extraction shooter</div>
       </div>
     </div>
 
@@ -873,6 +1095,18 @@ h3 {
       </div>
     </div>
 
+    <!-- ============ WORKSHOP ============ -->
+    <div id="workshopScreen" class="screen hidden">
+      <div class="panel wide">
+        <header class="panel-head">
+          <button class="back-btn" data-back="mainMenu">◀</button>
+          <h2>WORKSHOP</h2>
+          <div class="head-right">CREDITS: <b id="workshopCredits">0</b></div>
+        </header>
+        <div class="workshop-body" id="workshopBody"></div>
+      </div>
+    </div>
+
     <!-- ============ CODEX ============ -->
     <div id="codexScreen" class="screen hidden">
       <div class="panel wide">
@@ -898,6 +1132,10 @@ h3 {
           <div class="spark">◆</div>
         </div>
         <div class="upgrade-choices" id="upgradeChoices"></div>
+        <div class="inv-footer">
+          <span id="levelRerollText">REROLLS 0</span>
+          <button class="btn" id="btnRerollUpgrades">REROLL</button>
+        </div>
       </div>
     </div>
 
@@ -978,6 +1216,17 @@ h3 {
  § 0. PERFORMANCE CONFIG
 ===================================================================== */
 var LOW_FX_MODE = true;  // reduce particles, glow, recoil for performance
+var WEAPON_PERF = {
+  maxFireRate: 8.5,
+  maxVolleyProjectiles: 8,
+  maxActiveFriendlyProjectiles: 80,
+  maxBurstQueue: 9,
+  maxSplashTargets: 14,
+  maxVoidTargets: 8,
+  maxBurnTargets: 8,
+  shootSoundCooldown: 0.08,
+  lowFxAoEBurst: 4,
+};
 
 /* =====================================================================
  § 1. UTILS  (src/core/utils.js)
@@ -1007,6 +1256,506 @@ const Utils = {
   els: (sel) => Array.from(document.querySelectorAll(sel)),
 };
 
+window.addEventListener('DOMContentLoaded', function() {
+Object.assign(Game, {
+  lastRunReport: null,
+
+  metaNodeById(id) {
+    return META_UPGRADES.find(function(node) { return node.id === id; });
+  },
+
+  metaNodeRank(id) {
+    return (this.save.metaUpgrades && this.save.metaUpgrades[id]) || 0;
+  },
+
+  hasMetaNode(id) {
+    return this.metaNodeRank(id) > 0;
+  },
+
+  metaNodeName(id) {
+    var node = this.metaNodeById(id);
+    return node ? node.name.toUpperCase() : id;
+  },
+
+  classMastery(id) {
+    if (!this.save.classMastery[id]) this.save.classMastery[id] = { xp: 0, level: 0, runs: 0, kills: 0 };
+    return this.save.classMastery[id];
+  },
+
+  masteryXPForLevel(level) {
+    return 30 + level * 35;
+  },
+
+  classMasteryLevel(id) {
+    return this.classMastery(id).level || 0;
+  },
+
+  classMasteryRewardText(id) {
+    var rewards = CLASS_MASTERY_REWARDS[id] || [];
+    if (rewards.length === 0) return 'No mastery rewards yet.';
+    var level = this.classMasteryLevel(id);
+    return rewards[Math.min(level, rewards.length - 1)];
+  },
+
+  awardClassMastery(id, outcome) {
+    var info = this.classMastery(id);
+    var gain = Math.floor(this.player.kills * 1.5 + World.time * 0.15 + (outcome === 'extracted' ? 18 : 8));
+    info.xp += gain;
+    info.runs += 1;
+    info.kills += this.player.kills;
+    while (info.xp >= this.masteryXPForLevel(info.level)) {
+      info.xp -= this.masteryXPForLevel(info.level);
+      info.level += 1;
+    }
+    return gain;
+  },
+
+  materialSummaryText(manifest) {
+    if (!manifest) return '';
+    var parts = [];
+    for (var key of Object.keys(manifest)) {
+      if (!manifest[key]) continue;
+      parts.push(MATERIAL_TYPES[key].name + ' +' + manifest[key]);
+    }
+    return parts.join(' · ');
+  },
+
+  materialRowsHtml() {
+    return Object.keys(MATERIAL_TYPES).map(key => {
+      return `<div class="material-row">
+        <div>
+          <div class="material-label">${MATERIAL_TYPES[key].icon} ${MATERIAL_TYPES[key].name}</div>
+          <div class="material-note">${MATERIAL_TYPES[key].desc}</div>
+        </div>
+        <div class="material-value">${this.save.materials[key] || 0}</div>
+      </div>`;
+    }).join('');
+  },
+
+  formatMaterialCost(materials) {
+    if (!materials) return '';
+    var parts = [];
+    for (var key of Object.keys(materials)) parts.push(MATERIAL_TYPES[key].icon + ' ' + materials[key]);
+    return parts.join(' · ');
+  },
+
+  isMetaNodeAvailable(node) {
+    if (!node.prereq || node.prereq.length === 0) return true;
+    for (var i = 0; i < node.prereq.length; i++) {
+      if (!this.hasMetaNode(node.prereq[i])) return false;
+    }
+    return true;
+  },
+
+  metaRequirementText(node) {
+    var parts = [];
+    if (node.prereq && node.prereq.length) {
+      for (var i = 0; i < node.prereq.length; i++) {
+        if (!this.hasMetaNode(node.prereq[i])) parts.push('REQ ' + this.metaNodeName(node.prereq[i]));
+      }
+    }
+    if (node.materials) {
+      for (var key of Object.keys(node.materials)) {
+        var need = node.materials[key];
+        var have = this.save.materials[key] || 0;
+        if (have < need) parts.push('NEED ' + MATERIAL_TYPES[key].icon + ' ' + need);
+      }
+    }
+    return parts.join(' · ');
+  },
+
+  canPurchaseMetaNode(node) {
+    if (!this.isMetaNodeAvailable(node)) return false;
+    if (this.metaNodeRank(node.id) >= node.max) return false;
+    if (this.save.credits < node.cost(this.metaNodeRank(node.id))) return false;
+    if (node.materials) {
+      for (var key of Object.keys(node.materials)) {
+        if ((this.save.materials[key] || 0) < node.materials[key]) return false;
+      }
+    }
+    return true;
+  },
+
+  purchaseMetaNode(node) {
+    if (!this.canPurchaseMetaNode(node)) return false;
+    this.save.credits -= node.cost(this.metaNodeRank(node.id));
+    if (node.materials) {
+      for (var key of Object.keys(node.materials)) this.save.materials[key] -= node.materials[key];
+    }
+    this.save.metaUpgrades[node.id] = this.metaNodeRank(node.id) + 1;
+    SaveSystem.save(this.save);
+    return true;
+  },
+
+  branchStatusText(branchId) {
+    var nodes = META_UPGRADES.filter(function(node) { return node.branch === branchId; });
+    var online = nodes.filter(node => this.metaNodeRank(node.id) > 0).length;
+    var next = nodes.find(node => this.metaNodeRank(node.id) < node.max);
+    return online + '/' + nodes.length + ' ONLINE' + (next ? ' · NEXT ' + next.name.toUpperCase() : ' · MAXED');
+  },
+
+  isUpgradeUnlocked(upgrade, player) {
+    player = player || this.player;
+    if (upgrade.unlockNode && !this.hasMetaNode(upgrade.unlockNode)) return false;
+    if (upgrade.classId && player.classId !== upgrade.classId) return false;
+    if (upgrade.classMinMastery && this.classMasteryLevel(upgrade.classId || player.classId) < upgrade.classMinMastery) return false;
+    if (upgrade.requiresPlayer && !upgrade.requiresPlayer(player)) return false;
+    if (upgrade.unique && player.takenUpgradeIds.indexOf(upgrade.id) !== -1) return false;
+    return true;
+  },
+
+  buildLevelUpChoices() {
+    var p = this.player;
+    var filtered = UPGRADES.filter(upgrade => this.isUpgradeUnlocked(upgrade, p));
+    var tagCounts = {};
+    for (var ti = 0; ti < p.takenUpgradeIds.length; ti++) {
+      var taken = UPGRADES.find(function(u) { return u.id === p.takenUpgradeIds[ti]; });
+      if (taken && taken.tags) {
+        for (var tg = 0; tg < taken.tags.length; tg++) tagCounts[taken.tags[tg]] = (tagCounts[taken.tags[tg]] || 0) + 1;
+      }
+    }
+    var choices = [];
+    for (var ci = 0; ci < 3 && filtered.length > 0; ci++) {
+      var bag = filtered.map(upgrade => {
+        var weight = RARITY[upgrade.rarity].weight;
+        if (upgrade.tags) {
+          for (var si = 0; si < upgrade.tags.length; si++) {
+            if (tagCounts[upgrade.tags[si]]) weight *= 1 + tagCounts[upgrade.tags[si]] * 0.3;
+          }
+        }
+        if (upgrade.classId === p.classId) weight *= 1.45 + this.classMasteryLevel(p.classId) * 0.1;
+        if (upgrade.unlockNode) weight *= 1.15;
+        return { id: upgrade.id, weight: weight, _ref: upgrade };
+      });
+      var pick = Utils.weighted(bag);
+      choices.push(pick._ref);
+      filtered = filtered.filter(function(upgrade) { return upgrade.id !== pick.id; });
+    }
+    return choices;
+  },
+
+  rerollLevelUpChoices() {
+    if (!this.player || this.player.levelUpRerolls <= 0 || !this.paused) return;
+    this.player.levelUpRerolls -= 1;
+    UI.showLevelUpModal(this.buildLevelUpChoices());
+  },
+
+  startRun() {
+    this.running = true;
+    this.paused = false;
+    this.time = 0;
+    this.runCredits = 0;
+    this.runItems = [];
+    this.lastRunReport = null;
+    this.camX = 0; this.camY = 0;
+    this.announceText = ''; this.announceTime = 0;
+    World.setZone(this.save.selectedZone);
+    World.reset();
+    ExtractionZone.reset();
+    RunInventory.reset();
+    Enemies.clear(); Projectiles.clear(); Pickups.clear(); VFX.clear();
+    this.player = new Player(this.save.selectedClass, this.save);
+    Input.setGameActive(true);
+    UI.hideAllScreens();
+    Utils.el('#hud').classList.remove('hidden');
+    UI.announce(`${World.zone.tier} — ${World.zone.name.toUpperCase()}`);
+    this.lastFrame = performance.now();
+    requestAnimationFrame(t => this.loop(t));
+  },
+
+  endRun(outcome) {
+    this.running = false;
+    this.paused = false;
+    Input.setGameActive(false);
+    Input.reset();
+    UI.hidePauseMenu();
+    var extracted = (outcome === 'extracted');
+    var bankReport = { credits: 0, materials: {} };
+    if (extracted) {
+      bankReport = RunInventory.bankExtracted(this.save, 1.35 + (this.player.salvageBonus || 0));
+    } else if (this.hasMetaNode('keystone_salvage')) {
+      bankReport = RunInventory.salvageOnDeath(this.save);
+    }
+    var lootValue = extracted ? bankReport.credits : 0;
+    var creditMult = extracted ? 1.0 : 0.2;
+    var earned = Math.floor(this.runCredits * creditMult) + lootValue;
+    this.save.credits += earned;
+    var accountXPGain = Math.floor(this.player.kills * 0.5 + World.time * 0.2);
+    this.save.accountXP += accountXPGain;
+    var xpForLvl = function(lvl) { return 50 * Math.pow(1.3, lvl - 1); };
+    while (this.save.accountXP >= xpForLvl(this.save.accountLevel)) {
+      this.save.accountXP -= xpForLvl(this.save.accountLevel);
+      this.save.accountLevel += 1;
+    }
+    if (this.save.accountLevel >= 3 && this.save.unlockedZones.indexOf('nexus') === -1) this.save.unlockedZones.push('nexus');
+    var best = this.save.bestRun;
+    var candidate = { kills: this.player.kills, level: this.player.level, time: World.time, zone: World.zone.id };
+    if (!best || candidate.kills > best.kills) this.save.bestRun = candidate;
+    var masteryGain = this.awardClassMastery(this.save.selectedClass, outcome);
+    this.lastRunReport = { materials: bankReport.materials || {}, masteryGain: masteryGain, rescued: bankReport.rescued || null };
+    SaveSystem.save(this.save);
+    UI.showGameOver(outcome, earned, lootValue, RunInventory.items);
+  },
+
+  onLevelUp() {
+    AudioBus.play('levelup');
+    this.triggerSlowMo(0.4, 0.25);
+    UI.showLevelUpModal(this.buildLevelUpChoices());
+  },
+});
+});
+
+window.addEventListener('DOMContentLoaded', function() {
+UI.renderClassScreen = function() {
+  const grid = Utils.el('#classGrid');
+  grid.innerHTML = '';
+  for (const [id, cls] of Object.entries(CLASSES)) {
+    const unlocked = Game.save.unlockedClasses.includes(id);
+    const selected = Game.save.selectedClass === id;
+    const mastery = Game.classMastery(id);
+    const card = document.createElement('div');
+    card.className = `class-card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}`;
+    card.innerHTML = `
+      <div class="class-icon">${cls.icon}</div>
+      <div class="class-name">${cls.name}</div>
+      <div class="class-role">${cls.role}</div>
+      <div class="class-desc">${cls.desc}</div>
+      <div class="class-perk">${cls.perk}</div>
+      <div class="class-perk">Mastery Lv ${mastery.level} · Runs ${mastery.runs}</div>
+      <div class="class-perk" style="color:var(--ink-dim)">${Game.classMasteryRewardText(id)}</div>
+      ${!unlocked && cls.unlockCost ? `<div class="class-perk" style="color:var(--gold)">Unlock: ${cls.unlockCost} ★</div>` : ''}
+    `;
+    card.onclick = () => {
+      if (!unlocked) {
+        if (cls.unlockCost && Game.save.credits >= cls.unlockCost) {
+          Game.save.credits -= cls.unlockCost;
+          Game.save.unlockedClasses.push(id);
+          SaveSystem.save(Game.save);
+          UI.renderClassScreen();
+          UI.renderMainMenu();
+        }
+        return;
+      }
+      Game.save.selectedClass = id;
+      SaveSystem.save(Game.save);
+      UI.renderClassScreen();
+    };
+    grid.appendChild(card);
+  }
+};
+
+UI.renderMetaScreen = function() {
+  Utils.el('#metaCredits2').textContent = Game.save.credits;
+  const grid = Utils.el('#metaGrid');
+  grid.innerHTML = '';
+  for (const branch of Object.values(META_BRANCHES)) {
+    const wrap = document.createElement('div');
+    wrap.className = 'meta-branch';
+    const total = META_UPGRADES.filter(mu => mu.branch === branch.id).length;
+    const online = META_UPGRADES.filter(mu => mu.branch === branch.id && Game.metaNodeRank(mu.id) > 0).length;
+    wrap.innerHTML = `
+      <div class="meta-branch-head">
+        <div>
+          <div class="meta-branch-title">${branch.icon} ${branch.name}</div>
+          <div class="meta-branch-sub">${branch.desc}</div>
+        </div>
+        <div class="meta-branch-sub">${online}/${total} ONLINE</div>
+      </div>
+      <div class="meta-branch-body"></div>
+    `;
+    const body = wrap.querySelector('.meta-branch-body');
+    for (const mu of META_UPGRADES.filter(item => item.branch === branch.id)) {
+      const rank = Game.metaNodeRank(mu.id);
+      const maxed = rank >= mu.max;
+      const cost = maxed ? 0 : mu.cost(rank);
+      const canAfford = Game.canPurchaseMetaNode(mu);
+      const available = Game.isMetaNodeAvailable(mu);
+      const reqText = Game.metaRequirementText(mu);
+      const node = document.createElement('div');
+      node.className = `meta-node ${mu.type} ${maxed ? 'maxed' : ''} ${!canAfford && !maxed ? 'cannot' : ''} ${!available ? 'locked' : ''}`;
+      node.innerHTML = `
+        <div class="meta-node-name">${mu.icon} ${mu.name}</div>
+        <div class="meta-node-desc">${mu.desc}</div>
+        <div class="meta-node-rank">
+          <span>${rank}/${mu.max}</span>
+          <span class="meta-node-cost">${maxed ? 'MAX' : cost + ' ★'}</span>
+        </div>
+        ${reqText ? `<div class="meta-node-req">${reqText}</div>` : ''}
+      `;
+      node.onclick = () => {
+        if (!Game.purchaseMetaNode(mu)) return;
+        UI.renderMetaScreen();
+        UI.renderWorkshopScreen();
+        UI.renderMainMenu();
+      };
+      body.appendChild(node);
+    }
+    grid.appendChild(wrap);
+  }
+};
+
+UI.renderWorkshopScreen = function() {
+  Utils.el('#workshopCredits').textContent = Game.save.credits;
+  const body = Utils.el('#workshopBody');
+  const branchCards = Object.values(META_BRANCHES).map(branch => `
+    <div class="workshop-card">
+      <div class="workshop-title">${branch.icon} ${branch.name}</div>
+      <div class="workshop-copy">${branch.desc}</div>
+      <div class="material-note">${Game.branchStatusText(branch.id)}</div>
+    </div>
+  `).join('');
+  const masteryRows = Object.keys(CLASSES).map(id => {
+    const info = Game.classMastery(id);
+    return `
+      <div class="mastery-row">
+        <div>
+          <div class="mastery-name">${CLASSES[id].name}</div>
+          <div class="mastery-note">${Game.classMasteryRewardText(id)}</div>
+        </div>
+        <div class="mastery-level">LV ${info.level}</div>
+      </div>
+    `;
+  }).join('');
+  const lastManifest = Game.lastRunReport && Game.lastRunReport.materials && Object.keys(Game.lastRunReport.materials).length
+    ? Object.keys(Game.lastRunReport.materials).map(key => `<div class="manifest-chip">${MATERIAL_TYPES[key].icon} ${MATERIAL_TYPES[key].name} +${Game.lastRunReport.materials[key]}</div>`).join('')
+    : '<div class="manifest-chip">No materials banked yet.</div>';
+  body.innerHTML = `
+    <div class="workshop-card">
+      <div class="workshop-title">VISION</div>
+      <div class="workshop-copy">Credits grow the account. Materials unlock branches. Class mastery changes what each class can become in a run.</div>
+    </div>
+    <div class="workshop-card">
+      <div class="workshop-title">BANKED MATERIALS</div>
+      ${Game.materialRowsHtml()}
+    </div>
+    <div class="workshop-card">
+      <div class="workshop-title">BRANCH STATUS</div>
+      <div class="workshop-grid">${branchCards}</div>
+    </div>
+    <div class="workshop-card">
+      <div class="workshop-title">CLASS MASTERY</div>
+      ${masteryRows}
+    </div>
+    <div class="workshop-card">
+      <div class="workshop-title">LAST EXTRACTION</div>
+      <div class="workshop-manifest">${lastManifest}</div>
+    </div>
+  `;
+};
+
+UI.showLevelUpModal = function(choices) {
+  const modal = Utils.el('#lvlUpModal');
+  const body = Utils.el('#upgradeChoices');
+  body.innerHTML = '';
+  Utils.el('#levelRerollText').textContent = `REROLLS ${Game.player.levelUpRerolls}`;
+  Utils.el('#btnRerollUpgrades').disabled = Game.player.levelUpRerolls <= 0;
+  for (const up of choices) {
+    const btn = document.createElement('button');
+    btn.className = 'upgrade';
+    var tagsHtml = '';
+    if (up.tags && up.tags.length > 0) {
+      tagsHtml = '<div class="upgrade-tags">' + up.tags.map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div>';
+    }
+    btn.innerHTML = `
+      <div class="upgrade-icon">${up.icon}</div>
+      <div class="upgrade-body">
+        <div class="upgrade-name">${up.name}</div>
+        <div class="upgrade-desc">${up.desc}</div>
+        <div class="upgrade-rarity" style="color:${RARITY[up.rarity].color}">${up.rarity.toUpperCase()}</div>
+        ${tagsHtml}
+        ${up.unlockNode ? `<div class="upgrade-lockline">UNLOCKED BY ${Game.metaNodeName(up.unlockNode)}</div>` : ''}
+      </div>
+    `;
+    btn.onclick = () => {
+      up.apply(Game.player);
+      Game.player.takenUpgradeIds.push(up.id);
+      modal.classList.add('hidden');
+      Game.paused = false;
+    };
+    body.appendChild(btn);
+  }
+  modal.classList.remove('hidden');
+  Game.paused = true;
+};
+
+UI.showGameOver = function(outcome, earned, lootValue, lootItems) {
+  var p = Game.player;
+  var extracted = (outcome === 'extracted');
+  var titleEl = Utils.el('#gameOverTitle');
+  titleEl.textContent = extracted ? 'EXTRACTED' : 'YOU FELL';
+  titleEl.className = 'death-title' + (extracted ? ' extracted' : '');
+  var lootHtml = '';
+  if (extracted && lootItems && lootItems.length > 0) {
+    lootHtml = '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">LOOT BANKED</div><div class="val" style="color:#4ade80">';
+    for (var li = 0; li < lootItems.length; li++) lootHtml += lootItems[li].icon + ' ';
+    lootHtml += '</div></div>';
+  }
+  var lostHtml = !extracted ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl" style="color:#ff4d6d">LOOT LOST</div><div class="val" style="color:#ff4d6d">ALL</div></div>' : '';
+  var bankedMaterials = Game.lastRunReport ? Game.materialSummaryText(Game.lastRunReport.materials) : '';
+  var masteryGain = Game.lastRunReport && Game.lastRunReport.masteryGain ? Game.lastRunReport.masteryGain : 0;
+  Utils.el('#gameOverSummary').innerHTML =
+    '<div class="summary-row"><div class="lbl">LEVEL</div><div class="val">' + p.level + '</div></div>' +
+    '<div class="summary-row"><div class="lbl">KILLS</div><div class="val">' + p.kills + '</div></div>' +
+    '<div class="summary-row"><div class="lbl">SURVIVED</div><div class="val">' + Utils.formatTime(World.time) + '</div></div>' +
+    '<div class="summary-row"><div class="lbl">CREDITS</div><div class="val">+' + earned + ' ★</div></div>' +
+    (lootValue > 0 ? '<div class="summary-row"><div class="lbl">LOOT VALUE</div><div class="val" style="color:#4ade80">+' + lootValue + '</div></div>' : '') +
+    (bankedMaterials ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">BANKED MATERIALS</div><div class="val" style="color:#4ade80;font-size:12px">' + bankedMaterials + '</div></div>' : '') +
+    (masteryGain ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">CLASS MASTERY</div><div class="val" style="font-size:12px">' + CLASSES[Game.save.selectedClass].name + ' +' + masteryGain + ' XP</div></div>' : '') +
+    lootHtml + lostHtml;
+  UI.show('gameOverScreen');
+  Utils.el('#hud').classList.add('hidden');
+};
+
+UI.showInventory = function() {
+  var grid = Utils.el('#invGrid');
+  grid.innerHTML = '';
+  for (var i = 0; i < RunInventory.maxSlots; i++) {
+    var item = RunInventory.items[i];
+    var slot = document.createElement('div');
+    slot.className = 'inv-slot' + (item ? '' : ' inv-slot-empty');
+    if (item) {
+      slot.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[item.rarity] ? RARITY[item.rarity].color : '#9ab0c7') + '">' + item.icon + ' ' + item.name + '</div>' +
+        '<div class="inv-slot-sub">' + item.rarity.toUpperCase() + ' · ' + (item.vendorValue || 0) + '★</div>' +
+        '<div class="inv-slot-stats">' + item.desc + '</div>';
+    } else {
+      slot.innerHTML = '<div class="inv-slot-sub">EMPTY</div>';
+    }
+    grid.appendChild(slot);
+  }
+  Utils.el('#invSlotCount').textContent = RunInventory.items.length + '/' + RunInventory.maxSlots;
+  Utils.el('#inventoryModal').classList.remove('hidden');
+  Game.paused = true;
+};
+
+UI.showLootChoice = function(newItem) {
+  Game.paused = true;
+  var newEl = Utils.el('#lootNew');
+  newEl.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[newItem.rarity] ? RARITY[newItem.rarity].color : '#9ab0c7') + '">' + newItem.icon + ' ' + newItem.name + '</div>' +
+    '<div class="inv-slot-sub">' + newItem.rarity.toUpperCase() + ' · ' + (newItem.vendorValue || 0) + '★</div>' +
+    '<div class="inv-slot-stats">' + newItem.desc + '</div>';
+  var grid = Utils.el('#lootInvGrid');
+  grid.innerHTML = '';
+  RunInventory._selectedSwapIdx = -1;
+  for (var i = 0; i < RunInventory.items.length; i++) {
+    (function(idx) {
+      var item = RunInventory.items[idx];
+      var slot = document.createElement('div');
+      slot.className = 'inv-slot';
+      slot.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[item.rarity] ? RARITY[item.rarity].color : '#9ab0c7') + '">' + item.icon + ' ' + item.name + '</div>' +
+        '<div class="inv-slot-sub">' + (item.vendorValue || 0) + '★</div>';
+      slot.onclick = function() {
+        var slots = grid.querySelectorAll('.inv-slot');
+        for (var j = 0; j < slots.length; j++) slots[j].classList.remove('selected');
+        slot.classList.add('selected');
+        RunInventory._selectedSwapIdx = idx;
+      };
+      grid.appendChild(slot);
+    })(i);
+  }
+  Utils.el('#lootChoiceModal').classList.remove('hidden');
+};
+});
+
 /* =====================================================================
  § 2. SAVE SYSTEM  (src/systems/save.js)
    localStorage-backed, versioned, resilient.
@@ -1014,7 +1763,7 @@ const Utils = {
 const SAVE_KEY = 'neon_descent_save_v1';
 const SaveSystem = {
   defaults: () => ({
-    version: 1,
+    version: 2,
     accountXP: 0,
     accountLevel: 1,
     credits: 0,
@@ -1023,6 +1772,9 @@ const SaveSystem = {
     unlockedClasses: ['soldier', 'techhunter', 'biorunner'],
     unlockedZones: ['docks'],
     metaUpgrades: {},            // id -> rank
+    materials: {},
+    classMastery: {},
+    bankedLoot: { credits: 0, materials: {} },
     bestRun: null,               // { kills, level, time, zone }
     codex: { enemies: {}, weapons: {}, items: {} },
   }),
@@ -1031,7 +1783,24 @@ const SaveSystem = {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return this.defaults();
       const parsed = JSON.parse(raw);
-      return { ...this.defaults(), ...parsed };
+      const merged = { ...this.defaults(), ...parsed };
+      merged.metaUpgrades = { ...this.defaults().metaUpgrades, ...(parsed.metaUpgrades || {}) };
+      merged.codex = { ...this.defaults().codex, ...(parsed.codex || {}) };
+      merged.codex.enemies = { ...this.defaults().codex.enemies, ...((parsed.codex || {}).enemies || {}) };
+      merged.codex.weapons = { ...this.defaults().codex.weapons, ...((parsed.codex || {}).weapons || {}) };
+      merged.codex.items = { ...this.defaults().codex.items, ...((parsed.codex || {}).items || {}) };
+      merged.materials = { ...this.defaults().materials, ...(parsed.materials || {}) };
+      merged.bankedLoot = { ...this.defaults().bankedLoot, ...(parsed.bankedLoot || {}) };
+      merged.bankedLoot.materials = { ...this.defaults().bankedLoot.materials, ...((parsed.bankedLoot || {}).materials || {}) };
+      merged.classMastery = { ...this.defaults().classMastery, ...(parsed.classMastery || {}) };
+      for (const id of Object.keys(CLASSES || {})) {
+        merged.classMastery[id] = { xp: 0, level: 0, runs: 0, kills: 0, ...(merged.classMastery[id] || {}) };
+      }
+      for (const key of Object.keys(MATERIAL_TYPES || {})) {
+        merged.materials[key] = merged.materials[key] || 0;
+        merged.bankedLoot.materials[key] = merged.bankedLoot.materials[key] || 0;
+      }
+      return merged;
     } catch (e) {
       console.warn('save load failed, resetting', e);
       return this.defaults();
@@ -1138,6 +1907,20 @@ const WEAPONS = {
     projectiles: 1, spread: 0, pierce: 0,
     color: '#fb923c', trail: '#fb923caa', size: 6, explodeRadius: 70,
     desc: 'Detonates on impact. AoE damage.',
+  },
+  swarm_array: {
+    id: 'swarm_array', name: 'Swarm Array', type: 'rapid', icon: '✹',
+    rarity: 'legendary', baseDamage: 0.42, fireMult: 4.2,
+    projectiles: 3, spread: 0.14, pierce: 0,
+    color: '#67e8f9', trail: '#67e8f9aa', size: 2,
+    desc: 'Evolution: a storm of micro-bolts.',
+  },
+  helios_lance: {
+    id: 'helios_lance', name: 'Helios Lance', type: 'beam', icon: '✦',
+    rarity: 'legendary', baseDamage: 0.65, fireMult: 6.2,
+    projectiles: 1, spread: 0, pierce: 5,
+    color: '#fbbf24', trail: '#fbbf24aa', size: 3,
+    desc: 'Evolution: beam leaves a burning line through crowds.',
   },
 };
 
@@ -1291,23 +2074,82 @@ const UPGRADES = [
     apply: p => p.secondWind = true },
   { id: 'bullet_hell', name: 'Bullet Hell',        icon: '✹', rarity: 'legendary',desc: '+3 projectiles, +50% fire rate, -30% dmg', tags: ['spread','speed'],
     apply: p => { p.extraProjectiles += 3; p.stats.attackSpeed *= 1.5; p.stats.damage *= 0.7; } },
+  { id: 'shock_rounds', name: 'Shock Rounds', icon: '⚡', rarity: 'rare', desc: 'Shots chain 25% damage to 1 nearby enemy', tags: ['tech','damage'], unlockNode: 'unlock_weapons_lab',
+    apply: p => { p.shockChains = (p.shockChains || 0) + 1; } },
+  { id: 'drone_forge', name: 'Drone Forge', icon: '◈', rarity: 'rare', desc: '+1 orbital drone, +20% orbital speed', tags: ['tech','orbital'], unlockNode: 'unlock_weapons_lab',
+    apply: p => { p.orbitals = (p.orbitals || 0) + 1; p.orbitalSpeedMult *= 1.2; } },
+  { id: 'crit_pulse', name: 'Crit Pulse', icon: '◎', rarity: 'rare', desc: 'Critical kills pulse damage around the target', tags: ['tech','crit'], unlockNode: 'unlock_weapons_lab',
+    apply: p => { p.critPulse = (p.critPulse || 0) + 1; } },
+  { id: 'mutagenic_rounds', name: 'Mutagenic Rounds', icon: '☣', rarity: 'rare', desc: 'Kills release a corrosive bio burst', tags: ['mutation','aoe'], unlockNode: 'unlock_biolab',
+    apply: p => { p.bioNova = (p.bioNova || 0) + 1; } },
+  { id: 'symbiote_core', name: 'Symbiote Core', icon: '✚', rarity: 'rare', desc: '+1.5 regen, +25 max HP, abilities heal for more', tags: ['mutation','sustain'], unlockNode: 'unlock_biolab',
+    apply: p => { p.stats.hpRegen += 1.5; p.stats.maxHP += 25; p.hp += 25; p.symbioteCore = true; } },
+  { id: 'salvage_contract', name: 'Salvage Contract', icon: '⌬', rarity: 'uncommon', desc: 'Extraction loot sells for +50% more credits', tags: ['economy','risk'], unlockNode: 'unlock_expedition',
+    apply: p => { p.salvageBonus = (p.salvageBonus || 0) + 0.5; } },
+  { id: 'field_pack', name: 'Field Pack', icon: '⬒', rarity: 'uncommon', desc: '+2 backpack slots this run', tags: ['economy','utility'], unlockNode: 'unlock_expedition',
+    apply: p => { p.runBackpackBonus = (p.runBackpackBonus || 0) + 2; RunInventory.maxSlots += 2; } },
+  { id: 'void_rounds', name: 'Void Rounds', icon: '✦', rarity: 'rare', desc: 'Shots gain splash and void echo damage', tags: ['void','aoe'], unlockNode: 'unlock_void',
+    apply: p => { p.voidRounds = (p.voidRounds || 0) + 1; } },
+  { id: 'entropy_drive', name: 'Entropy Drive', icon: '⬢', rarity: 'rare', desc: '+15% move speed, +20% damage while moving', tags: ['void','mobility'], unlockNode: 'unlock_void',
+    apply: p => { p.stats.moveSpeed *= 1.15; p.entropyDrive = true; } },
+  { id: 'soldier_bastion', name: 'Bastion Protocol', icon: '▣', rarity: 'rare', desc: 'Soldier mastery: gain armor and a retaliatory blast below half HP', tags: ['class','defense'], classId: 'soldier', classMinMastery: 1,
+    apply: p => { p.stats.armor += 4; p.bastionProtocol = true; } },
+  { id: 'techhunter_relay', name: 'Relay Cascade', icon: '⌁', rarity: 'rare', desc: 'Tech Hunter mastery: crits add ricochet and speed', tags: ['class','tech'], classId: 'techhunter', classMinMastery: 1,
+    apply: p => { p.ricochet = (p.ricochet || 0) + 1; p.stats.moveSpeed *= 1.1; p.relayCascade = true; } },
+  { id: 'biorunner_bloom', name: 'Spore Bloom', icon: '✿', rarity: 'rare', desc: 'Bio-Runner mastery: bio bursts heal and spread wider', tags: ['class','mutation'], classId: 'biorunner', classMinMastery: 1,
+    apply: p => { p.bioNova = (p.bioNova || 0) + 1; p.sporeBloom = true; } },
+  { id: 'evo_swarm', name: 'Swarm Protocol', icon: '✹', rarity: 'legendary', desc: 'Evolve Needler into Swarm Array', tags: ['weapon','evolution'], unique: true, unlockNode: 'keystone_voidcraft',
+    requiresPlayer: p => p.weapon && p.weapon.id === 'rapid_fire' && p.extraProjectiles >= 2,
+    apply: p => { p.weapon = WEAPONS.swarm_array; p.weaponEvolution = 'SWARM'; } },
+  { id: 'evo_helios', name: 'Helios Lance', icon: '☀', rarity: 'legendary', desc: 'Evolve Lance Beam into a burning line weapon', tags: ['weapon','evolution'], unique: true, unlockNode: 'keystone_voidcraft',
+    requiresPlayer: p => p.weapon && p.weapon.id === 'beam_mk1' && (p.chainLightning || 0) > 0,
+    apply: p => { p.weapon = WEAPONS.helios_lance; p.weaponEvolution = 'HELIOS'; p.burnTrail = true; } },
 ];
 
 /* =====================================================================
  § 8. DATA — META TREE  (src/data/meta.js)
    Persists across runs. Purchased with credits.
 ===================================================================== */
+const MATERIAL_TYPES = {
+  scrap: { name: 'SCRAP', icon: '⬡', color: '#9ab0c7', desc: 'Hardware and salvage for armory projects.' },
+  circuits: { name: 'CIRCUITS', icon: '⬢', color: '#22d3ee', desc: 'Precision parts for rerolls, drones, and tech chains.' },
+  biomass: { name: 'BIOMASS', icon: '✿', color: '#4ade80', desc: 'Organic samples for mutation and sustain upgrades.' },
+  intel: { name: 'INTEL', icon: '◇', color: '#c084fc', desc: 'Encrypted route data for expedition planning.' },
+  void: { name: 'VOID RELICS', icon: '✦', color: '#fbbf24', desc: 'Rare components for evolutions and void nodes.' },
+};
+
+const META_BRANCHES = {
+  core: { id: 'core', name: 'CORE SYSTEMS', icon: '◉', desc: 'Reliable account power and run stability.' },
+  tech: { id: 'tech', name: 'WEAPON LAB', icon: '⌁', desc: 'Unlock weapon-tech upgrades, drones, and reroll control.' },
+  biotech: { id: 'biotech', name: 'BIOLAB', icon: '✿', desc: 'Unlock mutation upgrades and sustain-oriented growth.' },
+  expedition: { id: 'expedition', name: 'EXPEDITION', icon: '⌬', desc: 'Turn extraction into a better banking and salvage loop.' },
+  void: { id: 'void', name: 'VOID FOUNDRY', icon: '✦', desc: 'Late-run evolutions and high-risk upgrade lines.' },
+};
+
+const CLASS_MASTERY_REWARDS = {
+  soldier: ['Lv1: Bastion Protocol enters the run-upgrade pool.', 'Lv2: Soldier upgrades are weighted more often.'],
+  techhunter: ['Lv1: Relay Cascade enters the run-upgrade pool.', 'Lv2: Tech upgrades are weighted more often.'],
+  biorunner: ['Lv1: Spore Bloom enters the run-upgrade pool.', 'Lv2: Mutation upgrades are weighted more often.'],
+  voidmage: ['Lv1: Beam evolutions gain extra weight.', 'Lv2: Void upgrades are weighted more often.'],
+};
+
 const META_UPGRADES = [
-  { id: 'm_hp',     name: 'Vital Weave',     icon: '❤',  desc: '+10 max HP per rank',     max: 10, cost: r => 20 + r*15, apply: (p, r) => p.stats.maxHP += 10*r },
-  { id: 'm_dmg',    name: 'Armory Training', icon: '✦',  desc: '+4% damage per rank',     max: 10, cost: r => 25 + r*15, apply: (p, r) => p.stats.damage *= (1 + 0.04*r) },
-  { id: 'm_as',     name: 'Trigger Drill',   icon: '⟫',  desc: '+3% attack speed',        max: 10, cost: r => 25 + r*15, apply: (p, r) => p.stats.attackSpeed *= (1 + 0.03*r) },
-  { id: 'm_ms',     name: 'Marathon',        icon: '»',  desc: '+3% move speed',          max: 8,  cost: r => 20 + r*12, apply: (p, r) => p.stats.moveSpeed *= (1 + 0.03*r) },
-  { id: 'm_pickup', name: 'Scavenger',       icon: '◯',  desc: '+15% pickup radius',      max: 5,  cost: r => 30 + r*20, apply: (p, r) => p.stats.pickupRadius *= (1 + 0.15*r) },
-  { id: 'm_gold',   name: 'Opportunist',     icon: '★',  desc: '+10% credits per run',    max: 10, cost: r => 40 + r*20, apply: null, goldMult: r => 1 + 0.10*r },
-  { id: 'm_xp',     name: 'Quick Study',     icon: '◇',  desc: '+5% XP gained per rank',  max: 10, cost: r => 40 + r*20, apply: null, xpMult: r => 1 + 0.05*r },
-  { id: 'm_armor',  name: 'Hardened',        icon: '▨',  desc: '+1 armor per rank',       max: 5,  cost: r => 50 + r*25, apply: (p, r) => p.stats.armor += r },
-  { id: 'm_crit',   name: 'Keen Eye',        icon: '◎',  desc: '+2% crit per rank',       max: 5,  cost: r => 50 + r*30, apply: (p, r) => p.stats.critChance += 0.02*r },
-  { id: 'm_revive', name: 'Resurrect Chip',  icon: '✧',  desc: 'Revive once per run at 50% HP', max: 1, cost: _ => 500, apply: (p, r) => p.metaRevive = true },
+  { id: 'm_hp', branch: 'core', type: 'core', name: 'Vital Weave', icon: '❤', desc: '+12 max HP per rank', max: 5, cost: r => 25 + r * 20, apply: (p, r) => p.stats.maxHP += 12 * r },
+  { id: 'm_dmg', branch: 'core', type: 'core', name: 'Armory Training', icon: '✦', desc: '+5% damage per rank', max: 5, cost: r => 30 + r * 20, apply: (p, r) => p.stats.damage *= (1 + 0.05 * r) },
+  { id: 'm_as', branch: 'core', type: 'core', name: 'Trigger Drill', icon: '⟫', desc: '+4% attack speed per rank', max: 5, cost: r => 30 + r * 18, apply: (p, r) => p.stats.attackSpeed *= (1 + 0.04 * r) },
+  { id: 'm_ms', branch: 'core', type: 'core', name: 'Marathon', icon: '»', desc: '+4% move speed per rank', max: 4, cost: r => 25 + r * 18, apply: (p, r) => p.stats.moveSpeed *= (1 + 0.04 * r) },
+  { id: 'm_pickup', branch: 'core', type: 'core', name: 'Scavenger', icon: '◯', desc: '+15% pickup radius per rank', max: 4, cost: r => 35 + r * 22, apply: (p, r) => p.stats.pickupRadius *= (1 + 0.15 * r) },
+  { id: 'm_gold', branch: 'core', type: 'core', name: 'Opportunist', icon: '★', desc: '+12% credits per run per rank', max: 4, cost: r => 40 + r * 28, apply: null, goldMult: r => 1 + 0.12 * r },
+  { id: 'm_xp', branch: 'core', type: 'core', name: 'Quick Study', icon: '◇', desc: '+6% XP gained per rank', max: 4, cost: r => 40 + r * 28, apply: null, xpMult: r => 1 + 0.06 * r },
+  { id: 'm_revive', branch: 'core', type: 'keystone', name: 'Resurrect Chip', icon: '✧', desc: 'Revive once per run at 50% HP', max: 1, cost: _ => 480, apply: p => p.metaRevive = true, prereq: ['m_hp'] },
+  { id: 'unlock_weapons_lab', branch: 'tech', type: 'unlock', name: 'Weapon Lab', icon: '⌁', desc: 'Unlock tech upgrades, drones, and precision chains.', max: 1, cost: _ => 120, prereq: ['m_dmg'], materials: { scrap: 6, circuits: 3 } },
+  { id: 'keystone_reroll', branch: 'tech', type: 'keystone', name: 'Reroll Matrix', icon: '↺', desc: '+1 reroll each level-up screen.', max: 1, cost: _ => 180, prereq: ['unlock_weapons_lab'], materials: { circuits: 6 }, apply: p => p.levelUpRerolls += 1 },
+  { id: 'unlock_biolab', branch: 'biotech', type: 'unlock', name: 'Biolab', icon: '✿', desc: 'Unlock mutation upgrades and sustain-altering run choices.', max: 1, cost: _ => 120, prereq: ['m_hp'], materials: { biomass: 5 } },
+  { id: 'keystone_overgrowth', branch: 'biotech', type: 'keystone', name: 'Overgrowth Loop', icon: '✚', desc: 'Abilities trigger a small heal pulse around you.', max: 1, cost: _ => 170, prereq: ['unlock_biolab'], materials: { biomass: 8 }, apply: p => p.overgrowthLoop = true },
+  { id: 'unlock_expedition', branch: 'expedition', type: 'unlock', name: 'Expedition Ledger', icon: '⌬', desc: 'Unlock extraction-economy upgrades and larger backpacks.', max: 1, cost: _ => 110, prereq: ['m_pickup'], materials: { intel: 4, scrap: 4 } },
+  { id: 'keystone_salvage', branch: 'expedition', type: 'keystone', name: 'Salvage Insurance', icon: '⬒', desc: 'Death banks one random material loot item instead of losing everything.', max: 1, cost: _ => 180, prereq: ['unlock_expedition'], materials: { intel: 8 }, apply: p => p.salvageInsurance = true },
+  { id: 'unlock_void', branch: 'void', type: 'unlock', name: 'Void Foundry', icon: '✦', desc: 'Unlock void upgrades and corrupted scaling options.', max: 1, cost: _ => 150, prereq: ['m_xp'], materials: { void: 2, circuits: 4 } },
+  { id: 'keystone_voidcraft', branch: 'void', type: 'keystone', name: 'Voidcraft', icon: '☀', desc: 'Unlock weapon evolution upgrades in the level-up pool.', max: 1, cost: _ => 220, prereq: ['unlock_void'], materials: { void: 4 }, apply: p => p.voidcraft = true },
 ];
 
 /* =====================================================================
@@ -1505,6 +2347,24 @@ class Player {
     this.pointBlank = false;
     this.chainLightning = 0;
     this.takenUpgradeIds = [];  // track for synergy/unique filtering
+    this.levelUpRerolls = 0;
+    this.shockChains = 0;
+    this.critPulse = 0;
+    this.bioNova = 0;
+    this.symbioteCore = false;
+    this.salvageBonus = 0;
+    this.runBackpackBonus = 0;
+    this.voidRounds = 0;
+    this.voidcraft = false;
+    this.weaponEvolution = null;
+    this.burnTrail = false;
+    this.overgrowthLoop = false;
+    this.salvageInsurance = false;
+    this.entropyDrive = false;
+    this.bastionProtocol = false;
+    this.bastionCooldown = 0;
+    this.relayCascade = false;
+    this.sporeBloom = false;
 
     // Ability state
     this.abilityCD = 0;
@@ -1515,6 +2375,7 @@ class Player {
     // Juice state
     this.muzzleFlash = 0;
     this.recoil = 0;
+    this._shotSoundTimer = 0;
 
     // Run counters
     this.kills = 0;
@@ -1549,6 +2410,13 @@ class Player {
     this.iframes = 0.5;
     VFX.hitFlash(this.x, this.y, '#ff4d6d');
     Game.cameraShake(6, 0.2);
+    if (this.bastionProtocol && this.hp > 0 && this.hp <= this.stats.maxHP * 0.5 && this.bastionCooldown <= 0) {
+      this.bastionCooldown = 6;
+      for (const e of Enemies.list) {
+        if (e.alive && Utils.dist(this.x, this.y, e.x, e.y) < 130) e.damage(this.stats.damage * 1.4);
+      }
+      VFX.burst(this.x, this.y, '#22d3ee', 18);
+    }
     if (this.hp <= 0) this.tryDie();
   }
 
@@ -1594,6 +2462,7 @@ class Player {
 
     // Regen
     this.hp = Math.min(this.stats.maxHP, this.hp + this.stats.hpRegen * dt);
+    if (this.bastionCooldown > 0) this.bastionCooldown -= dt;
 
     // Iframes tick
     if (this.iframes > 0) this.iframes -= dt;
@@ -1601,6 +2470,7 @@ class Player {
     // Juice decay
     if (this.muzzleFlash > 0) this.muzzleFlash -= dt * 8;
     if (this.recoil > 0) this.recoil -= dt * 10;
+    if (this._shotSoundTimer > 0) this._shotSoundTimer -= dt;
 
     // Soldier perk
     if (this.classId === 'soldier' && this.hp < this.stats.maxHP * 0.5 && !this._perkOn) {
@@ -1617,7 +2487,8 @@ class Player {
         this.fireAt(target);
         var adrenalineBonus = (this.adrenaline && this.adrenalineTimer >= 0.5) ? 1.35 : 1;
         var berserkSpeedBonus = this._berserkerActive ? 1.2 : 1;
-        const interval = 1 / (this.stats.attackSpeed * this.weapon.fireMult * adrenalineBonus * berserkSpeedBonus);
+        const effectiveFireRate = Math.min(this.stats.attackSpeed * this.weapon.fireMult * adrenalineBonus * berserkSpeedBonus, WEAPON_PERF.maxFireRate);
+        const interval = 1 / effectiveFireRate;
         this.fireTimer = interval;
       }
     }
@@ -1677,7 +2548,8 @@ class Player {
 
   fireAt(target) {
     if (this.weapon.burst) {
-      for (let i = 0; i < this.weapon.burst; i++) {
+      const burstCount = Math.min(this.weapon.burst, WEAPON_PERF.maxBurstQueue);
+      for (let i = 0; i < burstCount; i++) {
         this.burstQueue.push({ target, delay: i * this.weapon.burstDelay });
       }
     } else {
@@ -1689,36 +2561,46 @@ class Player {
     const base = Utils.angle(this.x, this.y, target.x, target.y);
     // Face toward target when shooting
     this.facing = base;
-    const count = this.weapon.projectiles + this.extraProjectiles;
+    const rawCount = this.weapon.projectiles + this.extraProjectiles;
+    const count = Math.min(rawCount, WEAPON_PERF.maxVolleyProjectiles);
     const spread = this.weapon.spread;
     const pierce = this.weapon.pierce + this.extraPierce;
+    const projectileScale = Math.min(this.stats.projectileSize, 1.85);
+    const projectileSize = Math.min(this.weapon.size * projectileScale, this.radius * 0.55);
 
     for (let i = 0; i < count; i++) {
       const t = count === 1 ? 0 : (i / (count - 1)) - 0.5;
       const ang = base + t * spread * 2;
-      const dmgMul = this.weapon.baseDamage * (this._perkOn ? 1.15 : 1) * (this._berserkerActive ? 1.5 : 1);
+      const movingBonus = this.entropyDrive && (Math.abs(this.vx) > 0.1 || Math.abs(this.vy) > 0.1) ? 1.2 : 1;
+      const dmgMul = this.weapon.baseDamage * (this._perkOn ? 1.15 : 1) * (this._berserkerActive ? 1.5 : 1) * movingBonus;
       Projectiles.spawn({
         x: this.x, y: this.y,
         angle: ang,
         speed: this.stats.projectileSpeed,
-        size: this.weapon.size * this.stats.projectileSize,
+        size: projectileSize,
         damage: this.stats.damage * dmgMul,
         color: this.weapon.color,
         trail: this.weapon.trail,
         pierce,
         maxRange: this.weapon.maxRange || null,
         ricochet: this.ricochet,
-        explodeRadius: this.weapon.explodeRadius || (this.fragRounds ? 30 : 0),
+        explodeRadius: (this.weapon.explodeRadius || 0) + (this.fragRounds ? 30 : 0) + (this.voidRounds ? 18 : 0),
+        shockChains: this.shockChains,
+        voidRounds: this.voidRounds,
+        burnTrail: this.burnTrail,
         crit: Math.random() < this.stats.critChance,
         critDmg: this.stats.critDmg,
         friendly: true,
       });
     }
     // === JUICE: muzzle flash + recoil (reduced for performance) ===
-    this.muzzleFlash = LOW_FX_MODE ? 0.5 : 1;
-    this.recoil = LOW_FX_MODE ? 0.3 : 1;
+    this.muzzleFlash = LOW_FX_MODE ? 0 : 1;
+    this.recoil = LOW_FX_MODE ? 0 : 1;
     // No screen shake on normal shots — only elites/explosions
-    AudioBus.play('shoot');
+    if (this._shotSoundTimer <= 0) {
+      AudioBus.play('shoot');
+      this._shotSoundTimer = WEAPON_PERF.shootSoundCooldown;
+    }
   }
 
   useAbility() {
@@ -1738,7 +2620,7 @@ class Player {
         break;
       }
       case 'heal_pulse': {
-        this.heal(this.stats.maxHP * 0.35);
+        this.heal(this.stats.maxHP * (this.symbioteCore ? 0.45 : 0.35));
         VFX.burst(this.x, this.y, '#4ade80', 28);
         // AOE damage
         for (const e of Enemies.list) {
@@ -1755,6 +2637,12 @@ class Player {
         break;
       }
     }
+    if (this.overgrowthLoop) {
+      this.heal(this.stats.maxHP * 0.06);
+      for (const e of Enemies.list) {
+        if (e.alive && Utils.dist(this.x, this.y, e.x, e.y) < 110) e.damage(this.stats.damage * 0.8);
+      }
+    }
   }
 
   render(ctx) {
@@ -1763,16 +2651,18 @@ class Player {
     ctx.beginPath(); ctx.ellipse(this.x, this.y + 10, this.radius * 0.9, this.radius * 0.35, 0, 0, Math.PI * 2); ctx.fill();
 
     // Body glow — reduced for clarity
-    var glowColor = this.iframes > 0 ? 'rgba(255,255,255,0.4)' : 'rgba(34,211,238,0.2)';
-    var glowR = LOW_FX_MODE ? this.radius * 1.6 : this.radius * 2.5;
-    var g = ctx.createRadialGradient(this.x, this.y, this.radius * 0.5, this.x, this.y, glowR);
-    g.addColorStop(0, glowColor);
-    g.addColorStop(1, 'rgba(34,211,238,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(this.x, this.y, glowR, 0, Math.PI * 2); ctx.fill();
+    if (!LOW_FX_MODE) {
+      var glowColor = this.iframes > 0 ? 'rgba(255,255,255,0.4)' : 'rgba(34,211,238,0.2)';
+      var glowR = this.radius * 2.5;
+      var g = ctx.createRadialGradient(this.x, this.y, this.radius * 0.5, this.x, this.y, glowR);
+      g.addColorStop(0, glowColor);
+      g.addColorStop(1, 'rgba(34,211,238,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(this.x, this.y, glowR, 0, Math.PI * 2); ctx.fill();
+    }
 
     // Muzzle flash (renders at gun tip when firing)
-    if (this.muzzleFlash > 0) {
+    if (!LOW_FX_MODE && this.muzzleFlash > 0) {
       var mfx = this.x + Math.cos(this.facing) * (this.radius + 8);
       var mfy = this.y + Math.sin(this.facing) * (this.radius + 8);
       var mfSize = this.muzzleFlash * 60;
@@ -1813,7 +2703,7 @@ class Player {
       ctx.globalAlpha = 0.5 + Math.sin(Game.time * 20) * 0.3;
       ctx.beginPath();
       ctx.moveTo(-r * 0.5, -r * 0.25);
-      ctx.lineTo(-r * 1.1 - Math.random() * 4, 0);
+      ctx.lineTo(-r * (LOW_FX_MODE ? 0.95 : 1.1) - (LOW_FX_MODE ? 0 : Math.random() * 4), 0);
       ctx.lineTo(-r * 0.5, r * 0.25);
       ctx.closePath();
       ctx.fill();
@@ -1964,6 +2854,13 @@ class Enemy {
     }
     // Hit-pause only on crits
     if (isCrit) Game.hitPause(0.03);
+    if (isCrit && Game.player.critPulse > 0) {
+      for (const e of Enemies.list) {
+        if (e !== this && e.alive && Utils.dist(this.x, this.y, e.x, e.y) < 90) {
+          e.damage(amt * 0.2);
+        }
+      }
+    }
     // Knockback
     var p = Game.player;
     var knockAng = Utils.angle(p.x, p.y, this.x, this.y);
@@ -1992,18 +2889,20 @@ class Enemy {
           be.damage(exD * 0.5);
         }
       }
-      VFX.burst(this.x, this.y, '#fbbf24', LOW_FX_MODE ? 10 : 20, 180);
+      VFX.burst(this.x, this.y, '#fbbf24', LOW_FX_MODE ? 8 : 16, 160);
       VFX.deathRing(this.x, this.y, '#fbbf24', exR * 0.5);
-      Game.cameraShake(10, 0.3);
+      Game.cameraShake(LOW_FX_MODE ? 0 : 6, LOW_FX_MODE ? 0 : 0.18);
     } else {
-      // Normal death VFX — reduced in LOW_FX_MODE
-      var burstCount = this.boss ? (LOW_FX_MODE ? 25 : 60) : (this.elite ? (LOW_FX_MODE ? 12 : 30) : (LOW_FX_MODE ? 6 : 14));
+      // Normal death VFX is aggressively reduced for regular mobs during kill streaks.
+      var burstCount = this.boss ? (LOW_FX_MODE ? 18 : 60) : (this.elite ? (LOW_FX_MODE ? 8 : 30) : (LOW_FX_MODE ? 2 : 14));
       var burstSpeed = this.boss ? 240 : (this.elite ? 200 : 140);
       VFX.burst(this.x, this.y, this.accent, burstCount, burstSpeed);
-      VFX.deathRing(this.x, this.y, this.accent, this.radius);
+      if (!LOW_FX_MODE || this.elite || this.boss) {
+        VFX.deathRing(this.x, this.y, this.accent, this.radius, this.elite || this.boss);
+      }
       // === TASK 5: only shake on elite/boss kills ===
       if (this.boss || this.elite) {
-        Game.cameraShake(this.boss ? 16 : 8, this.boss ? 0.4 : 0.15);
+        Game.cameraShake(this.boss ? 12 : 5, this.boss ? 0.28 : 0.1);
       }
     }
     AudioBus.play('kill');
@@ -2036,6 +2935,18 @@ class Enemy {
       }
     }
 
+    if (Game.player.bioNova > 0) {
+      var novaRadius = Game.player.sporeBloom ? 150 : 115;
+      var novaDamage = Game.player.stats.damage * (Game.player.sporeBloom ? 0.7 : 0.45);
+      for (var bi2 = 0; bi2 < Enemies.list.length; bi2++) {
+        var ne = Enemies.list[bi2];
+        if (ne === this || !ne.alive) continue;
+        if (Utils.dist(this.x, this.y, ne.x, ne.y) < novaRadius) ne.damage(novaDamage);
+      }
+      if (Game.player.sporeBloom) Game.player.heal(2);
+      VFX.burst(this.x, this.y, '#4ade80', 10);
+    }
+
     // Credit drop chance
     const metaGoldMult = Game.metaMultiplier('goldMult');
     if (Math.random() < (this.elite || this.boss ? 1 : 0.35)) {
@@ -2044,7 +2955,8 @@ class Enemy {
 
     // Item drop
     // === EXTRACTION LOOT: drop into RunInventory instead of auto-equip ===
-    if (Math.random() < this.def.dropChance) {
+    var lootDropChance = this.def.dropChance + (this.elite ? 0.25 : 0) + (this.boss ? 0.5 : 0);
+    if (Math.random() < Math.min(1, lootDropChance)) {
       var lootTier = Math.min(4, Math.floor(World.time / 60));
       var loot = RunInventory.rollLoot(lootTier);
       RunInventory.tryAdd(loot);
@@ -2138,6 +3050,20 @@ const Enemies = {
 const Projectiles = {
   list: [],
   spawn(p) {
+    if (p.friendly) {
+      var friendlyCount = 0;
+      for (var pi = 0; pi < this.list.length; pi++) {
+        if (this.list[pi].friendly) friendlyCount++;
+      }
+      if (friendlyCount >= WEAPON_PERF.maxActiveFriendlyProjectiles) {
+        for (var ri = 0; ri < this.list.length; ri++) {
+          if (this.list[ri].friendly) {
+            this.list.splice(ri, 1);
+            break;
+          }
+        }
+      }
+    }
     this.list.push({
       x: p.x, y: p.y,
       vx: Math.cos(p.angle) * p.speed,
@@ -2154,6 +3080,9 @@ const Projectiles = {
       maxRange: p.maxRange,
       ricochet: p.ricochet || 0,
       explodeRadius: p.explodeRadius || 0,
+      shockChains: p.shockChains || 0,
+      voidRounds: p.voidRounds || 0,
+      burnTrail: !!p.burnTrail,
       friendly: p.friendly,
     });
   },
@@ -2174,17 +3103,47 @@ const Projectiles = {
           if (!e.alive || pr.hits.has(e)) continue;
           if (Utils.dist2(pr.x, pr.y, e.x, e.y) <= Math.pow(pr.size + e.radius, 2)) {
             e.damage(pr.damage, pr.crit);
+            if (pr.shockChains > 0) {
+              var shockTarget = Combat.findNearestEnemy(pr.x, pr.y, e);
+              if (shockTarget && Utils.dist(pr.x, pr.y, shockTarget.x, shockTarget.y) < 120) {
+                shockTarget.damage(pr.damage * 0.25);
+                if (!LOW_FX_MODE) VFX.impactFlash(shockTarget.x, shockTarget.y, '#67e8f9');
+              }
+            }
+            if (pr.voidRounds > 0) {
+              var voidHits = 0;
+              for (const echo of Enemies.list) {
+                if (echo !== e && echo.alive && Utils.dist(pr.x, pr.y, echo.x, echo.y) < 70) {
+                  echo.damage(pr.damage * 0.18);
+                  voidHits++;
+                  if (voidHits >= WEAPON_PERF.maxVoidTargets) break;
+                }
+              }
+            }
             pr.hits.add(e);
             if (pr.explodeRadius > 0) {
               // AoE
+              var splashHits = 0;
               for (const e2 of Enemies.list) {
                 if (e2 === e || !e2.alive) continue;
                 if (Utils.dist(pr.x, pr.y, e2.x, e2.y) < pr.explodeRadius) {
                   e2.damage(pr.damage * 0.6);
+                  splashHits++;
+                  if (splashHits >= WEAPON_PERF.maxSplashTargets) break;
                 }
               }
-              VFX.burst(pr.x, pr.y, pr.color, 14);
+              VFX.burst(pr.x, pr.y, pr.color, LOW_FX_MODE ? WEAPON_PERF.lowFxAoEBurst : 14);
               pr.life = 0;
+            }
+            if (pr.burnTrail) {
+              var burnHits = 0;
+              for (const burnTarget of Enemies.list) {
+                if (burnTarget !== e && burnTarget.alive && Utils.dist(pr.x, pr.y, burnTarget.x, burnTarget.y) < 55) {
+                  burnTarget.damage(pr.damage * 0.12);
+                  burnHits++;
+                  if (burnHits >= WEAPON_PERF.maxBurnTargets) break;
+                }
+              }
             }
             if (pr.pierce > 0) {
               pr.pierce -= 1;
@@ -2217,25 +3176,42 @@ const Projectiles = {
   },
   render(ctx) {
     for (const pr of this.list) {
-      var speed = Math.hypot(pr.vx, pr.vy);
+      if (LOW_FX_MODE) {
+        var lowFxSize = Math.max(4, pr.size * 1.15);
+        var lowFxAngle = Math.atan2(pr.vy, pr.vx);
+        ctx.save();
+        ctx.translate(pr.x, pr.y);
+        ctx.rotate(lowFxAngle);
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = pr.trail || pr.color;
+        ctx.lineWidth = Math.max(2, lowFxSize * 0.6);
+        ctx.beginPath();
+        ctx.moveTo(-lowFxSize * 2.4, 0);
+        ctx.lineTo(lowFxSize * 0.8, 0);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
+        ctx.beginPath(); ctx.arc(0, 0, lowFxSize, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath(); ctx.arc(0, 0, Math.max(1.8, lowFxSize * 0.4), 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        continue;
+      }
+
       var angle = Math.atan2(pr.vy, pr.vx);
-      // elongated trail
       ctx.save();
       ctx.translate(pr.x, pr.y);
       ctx.rotate(angle);
-      // outer glow
       ctx.globalAlpha = 0.25;
       ctx.fillStyle = pr.color;
       ctx.beginPath(); ctx.ellipse(0, 0, pr.size * 4, pr.size * 1.8, 0, 0, Math.PI * 2); ctx.fill();
-      // trail
       ctx.globalAlpha = 0.6;
       ctx.fillStyle = pr.trail;
       ctx.beginPath(); ctx.ellipse(-pr.size * 1.5, 0, pr.size * 2.5, pr.size * 0.8, 0, 0, Math.PI * 2); ctx.fill();
-      // core
       ctx.globalAlpha = 1;
       ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
       ctx.beginPath(); ctx.arc(0, 0, pr.size, 0, Math.PI * 2); ctx.fill();
-      // bright center
       ctx.fillStyle = '#ffffff';
       ctx.globalAlpha = 0.8;
       ctx.beginPath(); ctx.arc(0, 0, pr.size * 0.4, 0, Math.PI * 2); ctx.fill();
@@ -2333,10 +3309,15 @@ const VFX = {
   particles: [],
   numbers: [],
   rings: [],
+  maxParticles: 140,
+  maxRings: 24,
   hitFlash(x, y, color) { this.burst(x, y, color, 4, 80); },
   burst(x, y, color, count, speed) {
-    count = count || 10;
+    count = Math.min(count || 10, LOW_FX_MODE ? 8 : 28);
     speed = speed || 160;
+    if (this.particles.length > this.maxParticles) {
+      this.particles.splice(0, this.particles.length - this.maxParticles);
+    }
     for (let i = 0; i < count; i++) {
       const ang = Math.random() * Math.PI * 2;
       const sp = Utils.rand(speed * 0.4, speed);
@@ -2345,6 +3326,9 @@ const VFX = {
         life: Utils.rand(0.3, 0.7), maxLife: 0.7, color, size: Utils.rand(2, 5),
         glow: true,
       });
+    }
+    if (this.particles.length > this.maxParticles) {
+      this.particles.splice(0, this.particles.length - this.maxParticles);
     }
   },
   // === Impact flash — simplified in LOW_FX_MODE ===
@@ -2364,8 +3348,11 @@ const VFX = {
     }
   },
   // === NEW: expanding ring on enemy death ===
-  deathRing(x, y, color, radius) {
-    this.rings.push({ x, y, color, radius: radius || 10, maxRadius: (radius || 10) * 4, life: 0.3, maxLife: 0.3 });
+  deathRing(x, y, color, radius, important) {
+    if (LOW_FX_MODE && !important) return;
+    if (LOW_FX_MODE && this.rings.length > 6 && !important) return;
+    if (this.rings.length > this.maxRings) this.rings.shift();
+    this.rings.push({ x, y, color, radius: radius || 10, maxRadius: (radius || 10) * (important ? 3.2 : 4), life: 0.25, maxLife: 0.25 });
   },
   damageNumber(x, y, val, crit) {
     this.numbers.push({ x: x + Utils.rand(-8,8), y, val, crit, life: 0.8, vy: -80, scale: crit ? 1.4 : 1.0 });
@@ -2631,7 +3618,7 @@ const AudioBus = {
  § 19. UI MANAGER  (src/ui/hud.js  + menus.js)
 ===================================================================== */
 const UI = {
-  screens: ['mainMenu', 'classScreen', 'zoneScreen', 'metaScreen', 'codexScreen', 'gameOverScreen'],
+  screens: ['mainMenu', 'classScreen', 'zoneScreen', 'metaScreen', 'workshopScreen', 'codexScreen', 'gameOverScreen'],
   show(id) {
     for (const s of this.screens) Utils.el(`#${s}`).classList.add('hidden');
     Utils.el(`#${id}`).classList.remove('hidden');
@@ -2645,6 +3632,7 @@ const UI = {
     Utils.el('#bestRun').textContent = best
       ? `Lv ${best.level} · ${best.kills} · ${Utils.formatTime(best.time)}`
       : '—';
+    if (Utils.el('#workshopCredits')) Utils.el('#workshopCredits').textContent = Game.save.credits;
   },
 
   renderClassScreen() {
@@ -2655,12 +3643,15 @@ const UI = {
       const selected = Game.save.selectedClass === id;
       const card = document.createElement('div');
       card.className = `class-card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}`;
+      const mastery = Game.classMastery(id);
       card.innerHTML = `
         <div class="class-icon">${cls.icon}</div>
         <div class="class-name">${cls.name}</div>
         <div class="class-role">${cls.role}</div>
         <div class="class-desc">${cls.desc}</div>
         <div class="class-perk">${cls.perk}</div>
+        <div class="class-perk">Mastery Lv ${mastery.level} · Runs ${mastery.runs}</div>
+        <div class="class-perk" style="color:var(--ink-dim)">${Game.classMasteryRewardText(id)}</div>
         ${!unlocked && cls.unlockCost ? `<div class="class-perk" style="color:var(--gold)">Unlock: ${cls.unlockCost} ★</div>` : ''}
       `;
       card.onclick = () => {
@@ -2765,6 +3756,15 @@ const UI = {
 
   updateHUD() {
     const p = Game.player;
+    const base = p.cls.base;
+    const signedPct = function(value) {
+      return (value >= 0 ? '+' : '') + value + '%';
+    };
+    const cappedProjectileScale = Math.min(p.stats.projectileSize, 1.85);
+    const moveBonus = Math.round(((p.stats.moveSpeed / base.moveSpeed) - 1) * 100);
+    const fireBonus = Math.round(((p.stats.attackSpeed / base.attackSpeed) - 1) * 100);
+    const sizeBonus = Math.round(((cappedProjectileScale / base.projectileSize) - 1) * 100);
+
     Utils.el('#hpFill').style.width = `${(p.hp / p.stats.maxHP) * 100}%`;
     Utils.el('#hpText').textContent = `${Math.ceil(p.hp)} / ${Math.floor(p.stats.maxHP)}`;
     const xpNeeded = p.xpForNextLevel();
@@ -2778,6 +3778,15 @@ const UI = {
     Utils.el('#weaponIcon').textContent = p.weapon.icon;
     Utils.el('#weaponName').textContent = p.weapon.name;
     Utils.el('#weaponSub').textContent = `${p.weapon.type[0].toUpperCase()}${p.weapon.type.slice(1)} · ${p.weapon.rarity[0].toUpperCase()}${p.weapon.rarity.slice(1)}`;
+    Utils.el('#moveBonusText').textContent = signedPct(moveBonus);
+    Utils.el('#fireBonusText').textContent = signedPct(fireBonus);
+    Utils.el('#sizeBonusText').textContent = signedPct(sizeBonus);
+    Utils.el('#pierceText').textContent = (p.weapon.pierce || 0) + p.extraPierce;
+    Utils.el('#ricochetText').textContent = p.ricochet || 0;
+    Utils.el('#aoeText').textContent = p.fragRounds ? 'ON' : (p.weapon.explodeRadius ? 'WPN' : '0');
+    Utils.el('#critText').textContent = Math.round(p.stats.critChance * 100) + '%';
+    Utils.el('#chainText').textContent = p.shockChains || 0;
+    Utils.el('#voidText').textContent = p.voidRounds || 0;
     Utils.el('#killText').textContent = p.kills;
     // === EXTRACTION HUD ===
     var exHud = Utils.el('#extractHud');
@@ -2786,6 +3795,10 @@ const UI = {
       exHud.classList.toggle('active', Utils.dist(p.x, p.y, ExtractionZone.x, ExtractionZone.y) < ExtractionZone.radius);
       var exDist = Math.floor(Utils.dist(p.x, p.y, ExtractionZone.x, ExtractionZone.y));
       Utils.el('#extractDist').textContent = exDist + 'm';
+      var haulManifest = RunInventory.materialManifest();
+      var haulKinds = Object.keys(haulManifest).length;
+      var haulValue = RunInventory.totalValue();
+      Utils.el('#extractThreat').textContent = 'HAUL: ' + haulValue + '★' + (haulKinds ? ' · ' + haulKinds + ' MAT' : '');
     } else {
       exHud.classList.add('hidden');
     }
@@ -2946,12 +3959,12 @@ const UI = {
 ===================================================================== */
 var ExtractionZone = {
   x: 0, y: 0,
-  radius: 60,
+  radius: 78,
   active: false,
   standTimer: 0,
-  standRequired: 4,   // seconds standing in zone to extract
-  spawnTime: 45,       // seconds into run before extraction appears
-  relocateInterval: 90, // moves every N seconds after first spawn
+  standRequired: 3.2,   // seconds standing in zone to extract
+  spawnTime: 35,       // seconds into run before extraction appears
+  relocateInterval: 120, // moves every N seconds after first spawn
   _lastRelocate: 0,
 
   reset: function() {
@@ -2984,7 +3997,7 @@ var ExtractionZone = {
       // === TASK 2: damage resets timer (checked via player.damageTaken changing) ===
       if (this._lastHP === undefined) this._lastHP = p.hp;
       if (p.hp < this._lastHP) {
-        this.standTimer = Math.max(0, this.standTimer - 1.5); // damage knocks back 1.5s of progress
+        this.standTimer = Math.max(0, this.standTimer - 0.75); // damage should punish, not fully erase the attempt
         Game.announce('EXTRACTION INTERRUPTED');
       }
       this._lastHP = p.hp;
@@ -2996,8 +4009,8 @@ var ExtractionZone = {
       // === TASK 2: spawn pressure while extracting ===
       this._extractSpawnTimer = (this._extractSpawnTimer || 0) - dt;
       if (this._extractSpawnTimer <= 0) {
-        this._extractSpawnTimer = 1.2; // spawn extra enemies every 1.2s while extracting
-        for (var es = 0; es < 3; es++) {
+        this._extractSpawnTimer = 1.8; // lower pressure so extraction feels achievable
+        for (var es = 0; es < 2; es++) {
           var epos = World.randomSpawnPoint();
           Enemies.spawn(Utils.choice(['stalker', 'grunt', 'sniper']), epos.x, epos.y);
         }
@@ -3088,27 +4101,27 @@ var ExtractionZone = {
    Small backpack for extraction loot. Lost on death, banked on extract.
 ===================================================================== */
 var LOOT_TABLE = [
-  { id: 'scrap',     name: 'Scrap Metal',   icon: '⬡', rarity: 'common',   value: 5,  weight: 40, desc: 'Basic crafting material' },
-  { id: 'circuits',  name: 'Circuit Board', icon: '⬢', rarity: 'uncommon', value: 15, weight: 25, desc: 'Used in tech upgrades' },
-  { id: 'core',      name: 'Energy Core',   icon: '◆', rarity: 'rare',     value: 40, weight: 10, desc: 'Rare power source' },
-  { id: 'data',      name: 'Data Shard',    icon: '◇', rarity: 'rare',     value: 30, weight: 12, desc: 'Contains encrypted intel' },
-  { id: 'nanites',   name: 'Nanite Vial',   icon: '✧', rarity: 'epic',     value: 80, weight: 3,  desc: 'Self-repairing nanotech' },
-  { id: 'artifact',  name: 'Void Artifact', icon: '✦', rarity: 'legendary',value: 200,weight: 1,  desc: 'Unknown origin. Immense value' },
-  // Consumables
-  { id: 'medkit',    name: 'Field Medkit',  icon: '✚', rarity: 'uncommon', value: 10, weight: 15, desc: 'Heal 40 HP on pickup', consumable: true,
+  { id: 'scrap', name: 'Scrap Metal', icon: '⬡', rarity: 'common', vendorValue: 10, weight: 42, desc: 'Armory salvage', category: 'material', materialType: 'scrap', materialQty: 1 },
+  { id: 'circuits', name: 'Circuit Board', icon: '⬢', rarity: 'uncommon', vendorValue: 24, weight: 24, desc: 'Precision parts for tech nodes', category: 'material', materialType: 'circuits', materialQty: 1 },
+  { id: 'biomass', name: 'Biomass Sample', icon: '✿', rarity: 'uncommon', vendorValue: 24, weight: 22, desc: 'Organic sample for mutation work', category: 'material', materialType: 'biomass', materialQty: 1 },
+  { id: 'intel', name: 'Intel Shard', icon: '◇', rarity: 'rare', vendorValue: 46, weight: 16, desc: 'Encrypted route and route-risk data', category: 'material', materialType: 'intel', materialQty: 1 },
+  { id: 'void', name: 'Void Relic', icon: '✦', rarity: 'legendary', vendorValue: 150, weight: 5, desc: 'Required for foundry and weapon evolutions', category: 'material', materialType: 'void', materialQty: 1 },
+  { id: 'cache', name: 'Broker Cache', icon: '◉', rarity: 'rare', vendorValue: 75, weight: 14, desc: 'Pure vendor cargo for credits', category: 'vendor' },
+  { id: 'medkit', name: 'Field Medkit', icon: '✚', rarity: 'uncommon', vendorValue: 18, weight: 13, desc: 'Heal 40 HP on pickup', consumable: true,
     use: function(p) { p.heal(40); } },
-  { id: 'stim',      name: 'Stim Pack',     icon: '⟫', rarity: 'uncommon', value: 10, weight: 10, desc: '+20% speed for 15s', consumable: true,
+  { id: 'stim', name: 'Stim Pack', icon: '⟫', rarity: 'uncommon', vendorValue: 18, weight: 10, desc: '+20% speed for 15s', consumable: true,
     use: function(p) { p.stats.moveSpeed *= 1.2; } },
 ];
 
 var RunInventory = {
   items: [],
-  maxSlots: 6,
+  maxSlots: 7,
   _pendingLoot: null,
   _selectedSwapIdx: -1,
 
   reset: function() {
     this.items = [];
+    this.maxSlots = 7;
     this._pendingLoot = null;
     this._selectedSwapIdx = -1;
   },
@@ -3144,8 +4157,42 @@ var RunInventory = {
 
   totalValue: function() {
     var v = 0;
-    for (var i = 0; i < this.items.length; i++) v += this.items[i].value;
+    for (var i = 0; i < this.items.length; i++) v += this.items[i].vendorValue || 0;
     return v;
+  },
+
+  materialManifest: function(items) {
+    items = items || this.items;
+    var manifest = {};
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      if (!item.materialType) continue;
+      manifest[item.materialType] = (manifest[item.materialType] || 0) + (item.materialQty || 1);
+    }
+    return manifest;
+  },
+
+  bankExtracted: function(save, vendorMultiplier) {
+    vendorMultiplier = vendorMultiplier || 1;
+    var manifest = this.materialManifest(this.items);
+    for (var key in manifest) {
+      save.materials[key] = (save.materials[key] || 0) + manifest[key];
+      save.bankedLoot.materials[key] = (save.bankedLoot.materials[key] || 0) + manifest[key];
+    }
+    var credits = Math.floor(this.totalValue() * vendorMultiplier);
+    save.bankedLoot.credits = (save.bankedLoot.credits || 0) + credits;
+    return { credits: credits, materials: manifest };
+  },
+
+  salvageOnDeath: function(save) {
+    var salvageables = this.items.filter(function(item) { return !!item.materialType; });
+    if (salvageables.length === 0) return { credits: 0, materials: {} };
+    var rescued = Utils.choice(salvageables);
+    var manifest = {};
+    manifest[rescued.materialType] = rescued.materialQty || 1;
+    save.materials[rescued.materialType] = (save.materials[rescued.materialType] || 0) + manifest[rescued.materialType];
+    save.bankedLoot.materials[rescued.materialType] = (save.bankedLoot.materials[rescued.materialType] || 0) + manifest[rescued.materialType];
+    return { credits: 0, materials: manifest, rescued: rescued.name };
   },
 
   rollLoot: function(tierBonus) {
@@ -3160,8 +4207,20 @@ var RunInventory = {
     });
     var pick = Utils.weighted(adjusted);
     // Return a copy
-    return { id: pick.item.id, name: pick.item.name, icon: pick.item.icon, rarity: pick.item.rarity,
-             value: pick.item.value, desc: pick.item.desc, consumable: pick.item.consumable, use: pick.item.use };
+    return {
+      id: pick.item.id,
+      name: pick.item.name,
+      icon: pick.item.icon,
+      rarity: pick.item.rarity,
+      vendorValue: pick.item.vendorValue || 0,
+      value: pick.item.vendorValue || 0,
+      desc: pick.item.desc,
+      category: pick.item.category || 'vendor',
+      materialType: pick.item.materialType || null,
+      materialQty: pick.item.materialQty || 0,
+      consumable: pick.item.consumable,
+      use: pick.item.use,
+    };
   },
 };
 
@@ -3217,6 +4276,7 @@ const Game = {
     Utils.el('#btnClass').onclick = () => { UI.show('classScreen'); UI.renderClassScreen(); };
     Utils.el('#btnZone').onclick  = () => { UI.show('zoneScreen');  UI.renderZoneScreen(); };
     Utils.el('#btnMeta').onclick  = () => { UI.show('metaScreen');  UI.renderMetaScreen(); };
+    Utils.el('#btnWorkshop').onclick = () => { UI.show('workshopScreen'); UI.renderWorkshopScreen(); };
     Utils.el('#btnCodex').onclick = () => { UI.show('codexScreen'); UI.renderCodex('enemies'); };
     Utils.el('#btnReset').onclick = () => {
       if (confirm('Reset all progress? This cannot be undone.')) {
@@ -3240,6 +4300,7 @@ const Game = {
     Utils.el('#btnInvOpen').onclick = function() { UI.showInventory(); };
     Utils.el('#btnCloseInv').onclick = function() { UI.hideInventory(); };
     Utils.el('#btnDropLoot').onclick = function() { UI.hideLootChoice(); };
+    Utils.el('#btnRerollUpgrades').onclick = () => this.rerollLevelUpChoices();
     Utils.el('#btnSwapLoot').onclick = function() {
       if (RunInventory._selectedSwapIdx >= 0 && RunInventory._pendingLoot) {
         RunInventory.items[RunInventory._selectedSwapIdx] = RunInventory._pendingLoot;
@@ -3398,7 +4459,15 @@ const Game = {
     UI.announce(`+ ${item.rarity.toUpperCase()} ${item.slot.toUpperCase()}`);
   },
 
-  cameraShake(amt, dur) { this.shakeAmt = Math.max(this.shakeAmt, amt); this.shakeTime = Math.max(this.shakeTime, dur); },
+  cameraShake(amt, dur) {
+    if (amt <= 0 || dur <= 0) return;
+    if (LOW_FX_MODE) {
+      amt *= 0.35;
+      dur *= 0.65;
+    }
+    this.shakeAmt = Math.max(this.shakeAmt, amt);
+    this.shakeTime = Math.max(this.shakeTime, dur);
+  },
 
   // === JUICE: micro freeze frame on hit ===
   hitPauseTimer: 0,
