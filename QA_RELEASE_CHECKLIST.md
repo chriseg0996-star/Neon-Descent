@@ -1,4 +1,4 @@
-# QA Release Checklist (v0.1.1-mvp)
+# QA Release Checklist (v0.1.5-mvp)
 
 ## Core Flow
 
@@ -16,7 +16,7 @@
 ## Extraction
 
 - [ ] Extraction zone appears and relocates correctly.
-- [ ] Threat labels update: LOW -> HIGH -> CRITICAL.
+- [ ] Extraction HUD updates distance and haul state correctly.
 - [ ] Extraction interrupted behavior works when taking damage.
 - [ ] Successful extraction ends run and rewards properly.
 

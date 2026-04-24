@@ -167,6 +167,71 @@ canvas#game {
   font-family: var(--display); font-weight: 700;
   color: var(--accent); font-size: 15px;
 }
+.menu-loadout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.loadout-card {
+  background: rgba(7,17,31,0.82);
+  border: 1px solid var(--line);
+  padding: 10px 10px 12px;
+  min-height: 78px;
+}
+.loadout-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+}
+.loadout-value {
+  margin-top: 7px;
+  font-family: var(--display);
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.loadout-sub {
+  margin-top: 5px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+.mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.mode-btn {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: rgba(7,17,31,0.72);
+  color: var(--ink-dim);
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.mode-btn.active {
+  border-color: var(--gold);
+  color: #fff6d8;
+  background: linear-gradient(180deg, rgba(251,191,36,0.14), rgba(120,77,7,0.16));
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.22) inset;
+}
+.mode-btn.locked {
+  opacity: 0.45;
+}
+.menu-mode-note {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+}
 
 .menu-btns {
   display: grid;
@@ -498,6 +563,18 @@ canvas#game {
   font-family: var(--mono); font-size: 10px; color: var(--ink-faint);
   margin-top: 3px;
 }
+.workshop-emphasis {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: 18px;
+  color: var(--gold);
+}
+.workshop-inline-note {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
 .workshop-manifest {
   display: grid; gap: 8px;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -549,6 +626,19 @@ canvas#game {
 }
 .stat-pill .lbl { color: var(--ink-faint); font-size: 8px; letter-spacing: 0.12em; }
 .stat-pill span:last-child { color: var(--accent); font-weight: 700; }
+.ability-pill {
+  min-width: 82px;
+  justify-content: center;
+}
+.ability-pill.ready {
+  border-color: var(--gold);
+  color: #fff3cf;
+  background: linear-gradient(180deg, rgba(251,191,36,0.18), rgba(120,77,7,0.18));
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.35) inset, 0 0 18px rgba(251,191,36,0.18);
+}
+.ability-pill.ready span:last-child {
+  color: var(--gold);
+}
 
 .icon-btn {
   width: 28px; height: 28px;
@@ -747,6 +837,7 @@ canvas#game {
 .loot-new { padding: 10px; background: var(--bg-2); border: 1px solid var(--gold); margin-bottom: 10px; }
 .loot-choice-btns { display: flex; gap: 6px; margin-bottom: 10px; }
 .loot-choice-btns .btn { flex: 1; }
+.loot-reco { margin: 0 0 10px; font-family: var(--mono); font-size: 10px; color: var(--accent); letter-spacing: 0.06em; }
 
 /* Extracted vs died styling */
 .death-title.extracted { color: var(--good); text-shadow: 0 0 30px rgba(74,222,128,0.4); }
@@ -931,11 +1022,14 @@ h3 {
   .meta-item { padding: 6px 8px; }
   .btn { padding: 10px 14px; font-size: 12px; }
   .menu-btns .btn:not(.primary):not(.ghost) { padding: 9px 8px; }
+  .loadout-card { min-height: 68px; padding: 8px 9px 10px; }
   .menu-hints { display: none; }
 }
 @media (max-width: 400px) {
   .screen { padding: 14px; }
   .menu-content { gap: 14px; }
+  .menu-loadout { grid-template-columns: 1fr; }
+  .mode-switch { grid-template-columns: 1fr; }
   .menu-btns { grid-template-columns: 1fr; }
   .meta-strip { grid-template-columns: 1fr; }
   .hud-bottom { flex-direction: column; align-items: stretch; }
@@ -962,6 +1056,7 @@ h3 {
           <div class="stat-pill"><span class="lbl">LVL</span><span id="lvlText">1</span></div>
           <div class="stat-pill"><span class="lbl">★</span><span id="creditsText">0</span></div>
           <div class="stat-pill"><span class="lbl">TIME</span><span id="timeText">0:00</span></div>
+          <div class="stat-pill ability-pill" id="abilityPill"><span class="lbl" id="abilityLabel">ABILITY</span><span id="abilityText">READY</span></div>
           <button id="pauseBtn" class="icon-btn" aria-label="Pause">❚❚</button>
         </div>
       </div>
@@ -1003,7 +1098,7 @@ h3 {
         </div>
         <div class="hud-mid-row">
           <div class="extract-hud hidden" id="extractHud">
-            <div class="extract-label">EXTRACT</div>
+        <div class="extract-label" id="extractLabel">EXTRACT</div>
             <div class="extract-dist" id="extractDist">--m</div>
             <div class="extract-label" id="extractThreat">THREAT: LOW</div>
           </div>
@@ -1041,6 +1136,30 @@ h3 {
           <div class="meta-item"><span class="lbl">BEST RUN</span><span id="bestRun">—</span></div>
         </div>
 
+        <div class="menu-loadout">
+          <div class="loadout-card">
+            <div class="loadout-label">DEPLOY</div>
+            <div class="loadout-value" id="menuClassValue">SOLDIER</div>
+            <div class="loadout-sub" id="menuClassSub">BALANCED GUNFIGHTER</div>
+          </div>
+          <div class="loadout-card">
+            <div class="loadout-label">TARGET ZONE</div>
+            <div class="loadout-value" id="menuZoneValue">RUSTED DOCKS</div>
+            <div class="loadout-sub" id="menuZoneSub">SECTOR 01</div>
+          </div>
+          <div class="loadout-card">
+            <div class="loadout-label">START WEAPON</div>
+            <div class="loadout-value" id="menuWeaponValue">SIDEARM MK-I</div>
+            <div class="loadout-sub" id="menuWeaponSub">PISTOL</div>
+          </div>
+        </div>
+
+        <div class="mode-switch">
+          <button class="mode-btn active" id="btnModeStandard">STANDARD RUN</button>
+          <button class="mode-btn" id="btnModeOperation">OPERATION</button>
+        </div>
+        <div class="menu-mode-note" id="menuModeNote">Standard extraction stays on the live loot-and-extract loop.</div>
+
         <div class="menu-btns">
           <button class="btn primary" id="btnStart">▶ BEGIN DESCENT</button>
           <button class="btn" id="btnClass">CLASS</button>
@@ -1057,7 +1176,7 @@ h3 {
           <div class="footer-note" id="balanceHint">Standard: ritmo equilibrado para runs consistentes.</div>
         </div>
 
-        <div class="footer-note menu-version">v0.1.1-mvp · progressive extraction shooter</div>
+        <div class="footer-note menu-version">v0.1.5-mvp · progressive extraction shooter</div>
       </div>
     </div>
 
@@ -1185,6 +1304,7 @@ h3 {
       <div class="modal-inner narrow">
         <h3>BACKPACK FULL</h3>
         <div class="loot-new" id="lootNew"></div>
+        <div class="loot-reco" id="lootRecommendation">RECOMMENDED: REVIEW PICKUP</div>
         <div class="loot-choice-btns">
           <button class="btn primary" id="btnSwapLoot">SWAP</button>
           <button class="btn" id="btnDropLoot">DISCARD NEW</button>
@@ -1286,6 +1406,29 @@ Object.assign(Game, {
     return 30 + level * 35;
   },
 
+  currentRunMode() {
+    return this.save && this.save.selectedRunMode === 'operation' ? 'operation' : 'standard';
+  },
+
+  isOperationRun() {
+    return this.currentRunMode() === 'operation';
+  },
+
+  currentOperationDef() {
+    return OPERATIONS[(this.save && this.save.selectedOperation) || 'glassvault'] || OPERATIONS.glassvault;
+  },
+
+  canPlayOperations() {
+    var op = this.currentOperationDef();
+    return (this.save.accountLevel || 1) >= (op.unlockLevel || 1);
+  },
+
+  operationStats(id) {
+    id = id || this.currentOperationDef().id;
+    if (!this.save.operationStats[id]) this.save.operationStats[id] = { clears: 0, bestTier: 0, bestTime: 0, bestBracket: '', lastAffix: '' };
+    return this.save.operationStats[id];
+  },
+
   classMasteryLevel(id) {
     return this.classMastery(id).level || 0;
   },
@@ -1318,6 +1461,20 @@ Object.assign(Game, {
       parts.push(MATERIAL_TYPES[key].name + ' +' + manifest[key]);
     }
     return parts.join(' · ');
+  },
+
+  nextMetaRecommendation() {
+    var available = META_UPGRADES.filter(node => this.metaNodeRank(node.id) < node.max && this.isMetaNodeAvailable(node));
+    if (available.length === 0) return null;
+    available.sort((a, b) => {
+      var typeScore = function(node) {
+        return node.type === 'unlock' ? 0 : (node.type === 'keystone' ? 1 : 2);
+      };
+      var costA = a.cost(this.metaNodeRank(a.id));
+      var costB = b.cost(this.metaNodeRank(b.id));
+      return typeScore(a) - typeScore(b) || costA - costB;
+    });
+    return available[0];
   },
 
   materialRowsHtml() {
@@ -1441,6 +1598,10 @@ Object.assign(Game, {
   },
 
   startRun() {
+    if (this.save.selectedRunMode === 'operation' && !this.canPlayOperations()) {
+      this.save.selectedRunMode = 'standard';
+      SaveSystem.save(this.save);
+    }
     this.running = true;
     this.paused = false;
     this.time = 0;
@@ -1449,16 +1610,20 @@ Object.assign(Game, {
     this.lastRunReport = null;
     this.camX = 0; this.camY = 0;
     this.announceText = ''; this.announceTime = 0;
-    World.setZone(this.save.selectedZone);
+    var zoneId = this.isOperationRun() ? this.currentOperationDef().zoneId : this.save.selectedZone;
+    World.setZone(zoneId);
     World.reset();
     ExtractionZone.reset();
+    OperationSystem.reset();
     RunInventory.reset();
     Enemies.clear(); Projectiles.clear(); Pickups.clear(); VFX.clear();
     this.player = new Player(this.save.selectedClass, this.save);
     Input.setGameActive(true);
     UI.hideAllScreens();
     Utils.el('#hud').classList.remove('hidden');
-    UI.announce(`${World.zone.tier} — ${World.zone.name.toUpperCase()}`);
+    UI.announce(this.isOperationRun()
+      ? `${this.currentOperationDef().tier} — ${this.currentOperationDef().name}`
+      : `${World.zone.tier} — ${World.zone.name.toUpperCase()}`);
     this.lastFrame = performance.now();
     requestAnimationFrame(t => this.loop(t));
   },
@@ -1470,14 +1635,22 @@ Object.assign(Game, {
     Input.reset();
     UI.hidePauseMenu();
     var extracted = (outcome === 'extracted');
+    var operationWin = (outcome === 'operation_cleared');
     var bankReport = { credits: 0, materials: {} };
-    if (extracted) {
+    if (operationWin) {
+      bankReport = OperationSystem.buildRewardReport();
+      for (var matKey of Object.keys(bankReport.materials || {})) {
+        this.save.materials[matKey] = (this.save.materials[matKey] || 0) + bankReport.materials[matKey];
+        this.save.bankedLoot.materials[matKey] = (this.save.bankedLoot.materials[matKey] || 0) + bankReport.materials[matKey];
+      }
+      this.save.bankedLoot.credits = (this.save.bankedLoot.credits || 0) + (bankReport.credits || 0);
+    } else if (extracted) {
       bankReport = RunInventory.bankExtracted(this.save, 1.35 + (this.player.salvageBonus || 0));
     } else if (this.hasMetaNode('keystone_salvage')) {
       bankReport = RunInventory.salvageOnDeath(this.save);
     }
-    var lootValue = extracted ? bankReport.credits : 0;
-    var creditMult = extracted ? 1.0 : 0.2;
+    var lootValue = (extracted || operationWin) ? bankReport.credits : 0;
+    var creditMult = operationWin ? 0.45 : (extracted ? 1.0 : 0.2);
     var earned = Math.floor(this.runCredits * creditMult) + lootValue;
     this.save.credits += earned;
     var accountXPGain = Math.floor(this.player.kills * 0.5 + World.time * 0.2);
@@ -1489,10 +1662,25 @@ Object.assign(Game, {
     }
     if (this.save.accountLevel >= 3 && this.save.unlockedZones.indexOf('nexus') === -1) this.save.unlockedZones.push('nexus');
     var best = this.save.bestRun;
-    var candidate = { kills: this.player.kills, level: this.player.level, time: World.time, zone: World.zone.id };
+    var candidate = { kills: this.player.kills, level: this.player.level, time: World.time, zone: World.zone.id, mode: this.currentRunMode() };
     if (!best || candidate.kills > best.kills) this.save.bestRun = candidate;
+    var operationReport = null;
+    if (this.isOperationRun()) {
+      var stats = this.operationStats(this.currentOperationDef().id);
+      var reward = bankReport.operation || OperationSystem.buildRewardReport();
+      if (operationWin) {
+        stats.clears += 1;
+        stats.bestTier = Math.max(stats.bestTier || 0, reward.tier || 0);
+        if (!stats.bestTime || World.time < stats.bestTime) stats.bestTime = World.time;
+        if (!stats.bestBracket || (reward.tier || 0) >= (stats.bestTier || 0)) stats.bestBracket = reward.bracket || stats.bestBracket;
+      }
+      stats.lastAffix = OperationSystem.affixLabel();
+      this.save.operationAffixHistory.unshift(stats.lastAffix);
+      this.save.operationAffixHistory = this.save.operationAffixHistory.slice(0, 6);
+      operationReport = reward;
+    }
     var masteryGain = this.awardClassMastery(this.save.selectedClass, outcome);
-    this.lastRunReport = { materials: bankReport.materials || {}, masteryGain: masteryGain, rescued: bankReport.rescued || null };
+    this.lastRunReport = { materials: bankReport.materials || {}, masteryGain: masteryGain, rescued: bankReport.rescued || null, operation: operationReport };
     SaveSystem.save(this.save);
     UI.showGameOver(outcome, earned, lootValue, RunInventory.items);
   },
@@ -1597,6 +1785,9 @@ UI.renderMetaScreen = function() {
 UI.renderWorkshopScreen = function() {
   Utils.el('#workshopCredits').textContent = Game.save.credits;
   const body = Utils.el('#workshopBody');
+  const nextNode = Game.nextMetaRecommendation();
+  const operation = Game.currentOperationDef();
+  const opStats = Game.operationStats(operation.id);
   const branchCards = Object.values(META_BRANCHES).map(branch => `
     <div class="workshop-card">
       <div class="workshop-title">${branch.icon} ${branch.name}</div>
@@ -1626,7 +1817,23 @@ UI.renderWorkshopScreen = function() {
     </div>
     <div class="workshop-card">
       <div class="workshop-title">BANKED MATERIALS</div>
+      <div class="workshop-emphasis">${Game.save.bankedLoot.credits || 0} ★ SOLD</div>
+      <div class="workshop-inline-note">Banked sale value from extracted cargo across runs.</div>
       ${Game.materialRowsHtml()}
+    </div>
+    <div class="workshop-card">
+      <div class="workshop-title">OPERATIONS</div>
+      <div class="workshop-emphasis">${operation.name}</div>
+      <div class="workshop-inline-note">${opStats.clears || 0} clears · Best ${opStats.bestBracket || 'UNRANKED'}${opStats.bestTime ? ' · ' + Utils.formatTime(opStats.bestTime) : ''}</div>
+      <div class="workshop-copy">Operation rewards bank boss cores, keystones, sigils, and high-tier workshop materials without replacing standard extraction.</div>
+    </div>
+    <div class="workshop-card">
+      <div class="workshop-title">NEXT TARGET</div>
+      ${nextNode
+        ? `<div class="workshop-emphasis">${nextNode.icon} ${nextNode.name}</div>
+           <div class="workshop-copy">${nextNode.desc}</div>
+           <div class="workshop-inline-note">${Game.metaRequirementText(nextNode) || 'Ready to buy with credits.'}</div>`
+        : `<div class="workshop-copy">Every visible branch is online. Future updates can build straight on top of the current account.</div>`}
     </div>
     <div class="workshop-card">
       <div class="workshop-title">BRANCH STATUS</div>
@@ -1681,25 +1888,36 @@ UI.showLevelUpModal = function(choices) {
 UI.showGameOver = function(outcome, earned, lootValue, lootItems) {
   var p = Game.player;
   var extracted = (outcome === 'extracted');
+  var operationClear = (outcome === 'operation_cleared');
+  var positiveOutcome = extracted || operationClear;
   var titleEl = Utils.el('#gameOverTitle');
-  titleEl.textContent = extracted ? 'EXTRACTED' : 'YOU FELL';
-  titleEl.className = 'death-title' + (extracted ? ' extracted' : '');
+  titleEl.textContent = extracted ? 'EXTRACTED' : (operationClear ? 'OPERATION CLEARED' : 'YOU FELL');
+  titleEl.className = 'death-title' + (positiveOutcome ? ' extracted' : '');
   var lootHtml = '';
   if (extracted && lootItems && lootItems.length > 0) {
     lootHtml = '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">LOOT BANKED</div><div class="val" style="color:#4ade80">';
     for (var li = 0; li < lootItems.length; li++) lootHtml += lootItems[li].icon + ' ';
     lootHtml += '</div></div>';
   }
-  var lostHtml = !extracted ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl" style="color:#ff4d6d">LOOT LOST</div><div class="val" style="color:#ff4d6d">ALL</div></div>' : '';
+  var lostHtml = (!positiveOutcome && !Game.isOperationRun()) ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl" style="color:#ff4d6d">LOOT LOST</div><div class="val" style="color:#ff4d6d">ALL</div></div>' : '';
   var bankedMaterials = Game.lastRunReport ? Game.materialSummaryText(Game.lastRunReport.materials) : '';
   var masteryGain = Game.lastRunReport && Game.lastRunReport.masteryGain ? Game.lastRunReport.masteryGain : 0;
+  var manifestCount = Game.lastRunReport && Game.lastRunReport.materials ? Object.keys(Game.lastRunReport.materials).length : 0;
+  var rescuedText = Game.lastRunReport && Game.lastRunReport.rescued ? Game.lastRunReport.rescued : '';
+  var operationReport = Game.lastRunReport && Game.lastRunReport.operation ? Game.lastRunReport.operation : null;
   Utils.el('#gameOverSummary').innerHTML =
+    (operationReport ? '<div class="summary-row"><div class="lbl">MODE</div><div class="val">OPERATION</div></div>' : '') +
+    (operationReport ? '<div class="summary-row"><div class="lbl">BRACKET</div><div class="val" style="color:#fbbf24">' + operationReport.bracket + '</div></div>' : '') +
     '<div class="summary-row"><div class="lbl">LEVEL</div><div class="val">' + p.level + '</div></div>' +
     '<div class="summary-row"><div class="lbl">KILLS</div><div class="val">' + p.kills + '</div></div>' +
     '<div class="summary-row"><div class="lbl">SURVIVED</div><div class="val">' + Utils.formatTime(World.time) + '</div></div>' +
     '<div class="summary-row"><div class="lbl">CREDITS</div><div class="val">+' + earned + ' ★</div></div>' +
+    (operationReport ? '<div class="summary-row"><div class="lbl">AFFIX</div><div class="val">' + operationReport.affix + '</div></div>' : '') +
+    (operationReport ? '<div class="summary-row"><div class="lbl">MECHANICS</div><div class="val">' + Math.max(0, 100 - operationReport.penalty * 12) + '%</div></div>' : '') +
     (lootValue > 0 ? '<div class="summary-row"><div class="lbl">LOOT VALUE</div><div class="val" style="color:#4ade80">+' + lootValue + '</div></div>' : '') +
+    (manifestCount ? '<div class="summary-row"><div class="lbl">MATERIAL TYPES</div><div class="val" style="color:#4ade80">' + manifestCount + '</div></div>' : '') +
     (bankedMaterials ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">BANKED MATERIALS</div><div class="val" style="color:#4ade80;font-size:12px">' + bankedMaterials + '</div></div>' : '') +
+    (rescuedText ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">SALVAGED</div><div class="val" style="font-size:12px">' + rescuedText + '</div></div>' : '') +
     (masteryGain ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">CLASS MASTERY</div><div class="val" style="font-size:12px">' + CLASSES[Game.save.selectedClass].name + ' +' + masteryGain + ' XP</div></div>' : '') +
     lootHtml + lostHtml;
   UI.show('gameOverScreen');
@@ -1714,8 +1932,9 @@ UI.showInventory = function() {
     var slot = document.createElement('div');
     slot.className = 'inv-slot' + (item ? '' : ' inv-slot-empty');
     if (item) {
+      var slotTag = item.materialType ? 'MATERIAL' : (item.consumable ? 'USE' : 'CARGO');
       slot.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[item.rarity] ? RARITY[item.rarity].color : '#9ab0c7') + '">' + item.icon + ' ' + item.name + '</div>' +
-        '<div class="inv-slot-sub">' + item.rarity.toUpperCase() + ' · ' + (item.vendorValue || 0) + '★</div>' +
+        '<div class="inv-slot-sub">' + item.rarity.toUpperCase() + ' · ' + slotTag + ' · ' + (item.vendorValue || 0) + '★</div>' +
         '<div class="inv-slot-stats">' + item.desc + '</div>';
     } else {
       slot.innerHTML = '<div class="inv-slot-sub">EMPTY</div>';
@@ -1730,8 +1949,9 @@ UI.showInventory = function() {
 UI.showLootChoice = function(newItem) {
   Game.paused = true;
   var newEl = Utils.el('#lootNew');
+  var newTag = newItem.materialType ? 'MATERIAL' : (newItem.consumable ? 'USE' : 'CARGO');
   newEl.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[newItem.rarity] ? RARITY[newItem.rarity].color : '#9ab0c7') + '">' + newItem.icon + ' ' + newItem.name + '</div>' +
-    '<div class="inv-slot-sub">' + newItem.rarity.toUpperCase() + ' · ' + (newItem.vendorValue || 0) + '★</div>' +
+    '<div class="inv-slot-sub">' + newItem.rarity.toUpperCase() + ' · ' + newTag + ' · ' + (newItem.vendorValue || 0) + '★</div>' +
     '<div class="inv-slot-stats">' + newItem.desc + '</div>';
   var grid = Utils.el('#lootInvGrid');
   grid.innerHTML = '';
@@ -1739,10 +1959,11 @@ UI.showLootChoice = function(newItem) {
   for (var i = 0; i < RunInventory.items.length; i++) {
     (function(idx) {
       var item = RunInventory.items[idx];
+      var itemTag = item.materialType ? 'MAT' : (item.consumable ? 'USE' : 'CARGO');
       var slot = document.createElement('div');
       slot.className = 'inv-slot';
       slot.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[item.rarity] ? RARITY[item.rarity].color : '#9ab0c7') + '">' + item.icon + ' ' + item.name + '</div>' +
-        '<div class="inv-slot-sub">' + (item.vendorValue || 0) + '★</div>';
+        '<div class="inv-slot-sub">' + itemTag + ' · ' + (item.vendorValue || 0) + '★</div>';
       slot.onclick = function() {
         var slots = grid.querySelectorAll('.inv-slot');
         for (var j = 0; j < slots.length; j++) slots[j].classList.remove('selected');
@@ -1769,12 +1990,16 @@ const SaveSystem = {
     credits: 0,
     selectedClass: 'soldier',
     selectedZone: 'docks',
+    selectedRunMode: 'standard',
+    selectedOperation: 'glassvault',
     unlockedClasses: ['soldier', 'techhunter', 'biorunner'],
     unlockedZones: ['docks'],
     metaUpgrades: {},            // id -> rank
     materials: {},
     classMastery: {},
     bankedLoot: { credits: 0, materials: {} },
+    operationStats: {},
+    operationAffixHistory: [],
     bestRun: null,               // { kills, level, time, zone }
     codex: { enemies: {}, weapons: {}, items: {} },
   }),
@@ -1793,6 +2018,8 @@ const SaveSystem = {
       merged.bankedLoot = { ...this.defaults().bankedLoot, ...(parsed.bankedLoot || {}) };
       merged.bankedLoot.materials = { ...this.defaults().bankedLoot.materials, ...((parsed.bankedLoot || {}).materials || {}) };
       merged.classMastery = { ...this.defaults().classMastery, ...(parsed.classMastery || {}) };
+      merged.operationStats = { ...this.defaults().operationStats, ...(parsed.operationStats || {}) };
+      merged.operationAffixHistory = (parsed.operationAffixHistory || []).slice(0, 6);
       for (const id of Object.keys(CLASSES || {})) {
         merged.classMastery[id] = { xp: 0, level: 0, runs: 0, kills: 0, ...(merged.classMastery[id] || {}) };
       }
@@ -1821,7 +2048,7 @@ const CLASSES = {
     id: 'soldier', name: 'SOLDIER', role: 'Balanced Gunfighter', icon: '◉',
     desc: 'Reliable on every front. Steady damage, steady defence.',
     perk: 'Passive: +15% damage under 50% HP (Adrenaline)',
-    base: { maxHP: 120, hpRegen: 0.5, moveSpeed: 180, damage: 10, attackSpeed: 2.4,
+    base: { maxHP: 120, hpRegen: 0.5, moveSpeed: 180, damage: 11, attackSpeed: 2.55,
             critChance: 0.08, critDmg: 1.5, projectileSpeed: 520, projectileSize: 1,
             armor: 3, cdr: 0, pickupRadius: 70 },
     startWeapon: 'pistol_mk1',
@@ -1831,7 +2058,7 @@ const CLASSES = {
     id: 'techhunter', name: 'TECH HUNTER', role: 'Mobility & Gadgets', icon: '◇',
     desc: 'Fragile but impossibly fast. Trades HP for tempo.',
     perk: 'Passive: +25% move speed, +20% crit chance, -20% max HP',
-    base: { maxHP: 85, hpRegen: 0.2, moveSpeed: 230, damage: 9, attackSpeed: 3.2,
+    base: { maxHP: 85, hpRegen: 0.2, moveSpeed: 230, damage: 10, attackSpeed: 3.35,
             critChance: 0.22, critDmg: 1.7, projectileSpeed: 620, projectileSize: 0.9,
             armor: 1, cdr: 0.1, pickupRadius: 90 },
     startWeapon: 'burst_rifle',
@@ -1841,7 +2068,7 @@ const CLASSES = {
     id: 'biorunner', name: 'BIO-RUNNER', role: 'Regen / Sustain', icon: '❋',
     desc: 'A walking laboratory. Heals through attrition.',
     perk: 'Passive: Regen +2/s. Kills restore 1 HP.',
-    base: { maxHP: 140, hpRegen: 2.0, moveSpeed: 165, damage: 8, attackSpeed: 2.0,
+    base: { maxHP: 140, hpRegen: 2.0, moveSpeed: 165, damage: 9, attackSpeed: 2.15,
             critChance: 0.05, critDmg: 1.5, projectileSpeed: 480, projectileSize: 1.1,
             armor: 4, cdr: 0, pickupRadius: 80 },
     startWeapon: 'shotgun_mk1',
@@ -2012,6 +2239,20 @@ const ZONES = {
   },
 };
 
+const OPERATIONS = {
+  glassvault: {
+    id: 'glassvault',
+    name: 'THE GLASS VAULT',
+    zoneId: 'nexus',
+    tier: 'OP-01',
+    unlockLevel: 3,
+    rewardTime: 360,
+    desc: 'A compact mechanic-heavy breach through the Broken Nexus vault lattice.',
+    encounters: ['SYNC PAD', 'ANCHOR BREAK', 'SAFE SECTOR', 'THE WARDEN'],
+    affixes: ['volatile', 'pulse'],
+  },
+};
+
 /* =====================================================================
  § 7. DATA — UPGRADES  (src/data/upgrades.js)
    Shown on level-up. Each modifies player stats / weapon stats.
@@ -2028,8 +2269,8 @@ const UPGRADES = [
     apply: p => p.ricochet = (p.ricochet || 0) + 1 },
   { id: 'explosive',   name: 'Frag Rounds',        icon: '✸', rarity: 'rare',     desc: 'Shots explode on hit (AoE)', tags: ['aoe'],
     apply: p => p.fragRounds = (p.fragRounds || 0) + 1 },
-  { id: 'size_up',     name: 'Heavy Caliber',      icon: '●', rarity: 'uncommon', desc: '+40% projectile size, +15% damage', tags: ['damage'],
-    apply: p => { p.stats.projectileSize *= 1.4; p.stats.damage *= 1.15; } },
+  { id: 'size_up',     name: 'Heavy Caliber',      icon: '●', rarity: 'uncommon', desc: '+35% projectile size, +20% damage', tags: ['damage'],
+    apply: p => { p.stats.projectileSize *= 1.35; p.stats.damage *= 1.2; } },
 
   // === WEAPON SWAPS (build-defining, unique) ===
   { id: 'wep_rapid',   name: 'Needler V2',         icon: '⫸', rarity: 'rare',     desc: 'Swap: rapid fire (fast, low dmg)', tags: ['weapon','speed'], unique: true,
@@ -2046,16 +2287,16 @@ const UPGRADES = [
     apply: p => { p.orbitals = (p.orbitals || 0) + 1; } },
 
   // === SUSTAIN (meaningful amounts) ===
-  { id: 'hp_up',       name: 'Reinforced Plating', icon: '❤', rarity: 'common',   desc: '+40 max HP', tags: ['defense'],
-    apply: p => { p.stats.maxHP += 40; p.hp += 40; } },
+  { id: 'hp_up',       name: 'Reinforced Plating', icon: '❤', rarity: 'common',   desc: '+50 max HP', tags: ['defense'],
+    apply: p => { p.stats.maxHP += 50; p.hp += 50; } },
   { id: 'lifesteal',   name: 'Vampiric Rounds',    icon: '✺', rarity: 'rare',     desc: 'Heal 2 HP per kill', tags: ['sustain'],
     apply: p => p.lifesteal = (p.lifesteal || 0) + 0.5 },
   { id: 'armor_up',    name: 'Nano-Plating',       icon: '▨', rarity: 'uncommon', desc: '+5 armor (flat damage reduction)', tags: ['defense'],
     apply: p => p.stats.armor += 5 },
 
   // === SPEED/FIRE RATE (big jumps only) ===
-  { id: 'fire_up',     name: 'Overclock',          icon: '⟫', rarity: 'uncommon', desc: '+30% attack speed', tags: ['speed'],
-    apply: p => p.stats.attackSpeed *= 1.3 },
+  { id: 'fire_up',     name: 'Overclock',          icon: '⟫', rarity: 'uncommon', desc: '+35% attack speed', tags: ['speed'],
+    apply: p => p.stats.attackSpeed *= 1.35 },
   { id: 'ms_up',       name: 'Kinetic Boosters',   icon: '»', rarity: 'uncommon', desc: '+20% move speed', tags: ['mobility'],
     apply: p => p.stats.moveSpeed *= 1.2 },
 
@@ -2116,6 +2357,9 @@ const MATERIAL_TYPES = {
   biomass: { name: 'BIOMASS', icon: '✿', color: '#4ade80', desc: 'Organic samples for mutation and sustain upgrades.' },
   intel: { name: 'INTEL', icon: '◇', color: '#c084fc', desc: 'Encrypted route data for expedition planning.' },
   void: { name: 'VOID RELICS', icon: '✦', color: '#fbbf24', desc: 'Rare components for evolutions and void nodes.' },
+  core: { name: 'BOSS CORES', icon: '⬣', color: '#fb7185', desc: 'Operation boss components used for endgame unlocks.' },
+  keystone: { name: 'KEYSTONES', icon: '◈', color: '#fbbf24', desc: 'High-tier operation tokens tied to timed clears.' },
+  sigil: { name: 'RAID SIGILS', icon: '☍', color: '#22d3ee', desc: 'Prototype pinnacle currency for future raid access.' },
 };
 
 const META_BRANCHES = {
@@ -2581,6 +2825,7 @@ class Player {
         damage: this.stats.damage * dmgMul,
         color: this.weapon.color,
         trail: this.weapon.trail,
+        weaponType: this.weapon.type,
         pierce,
         maxRange: this.weapon.maxRange || null,
         ricochet: this.ricochet,
@@ -2646,9 +2891,25 @@ class Player {
   }
 
   render(ctx) {
+    var abilityReady = this.cls.ability && this.abilityCD <= 0;
     // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.beginPath(); ctx.ellipse(this.x, this.y + 10, this.radius * 0.9, this.radius * 0.35, 0, 0, Math.PI * 2); ctx.fill();
+    if (abilityReady) {
+      var readyColor = this.cls.ability.id === 'blink' ? '#fbbf24' : (this.cls.ability.id === 'dash' ? '#67e8f9' : (this.cls.ability.id === 'nova' ? '#c084fc' : '#4ade80'));
+      var readyPulse = 1 + Math.sin(Game.time * 7) * 0.08;
+      ctx.save();
+      ctx.globalAlpha = LOW_FX_MODE ? 0.45 : 0.7;
+      ctx.strokeStyle = readyColor;
+      ctx.lineWidth = LOW_FX_MODE ? 2 : 2.5;
+      if (!LOW_FX_MODE) ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 1.75 * readyPulse, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = LOW_FX_MODE ? 0.15 : 0.22;
+      ctx.fillStyle = readyColor;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 1.28, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
 
     // Body glow — reduced for clarity
     if (!LOW_FX_MODE) {
@@ -2795,15 +3056,21 @@ class Enemy {
     const d = Math.hypot(dx, dy);
 
     if (this.ranged) {
-      // Ranger keeps distance
-      const ideal = this.ranged.range * 0.7;
-      const moveDir = d > ideal ? 1 : -0.4;
-      this.vx = (dx / (d || 1)) * this.speed * moveDir;
-      this.vy = (dy / (d || 1)) * this.speed * moveDir;
+      // Ranged enemies still pressure movement, but with a softer lane so runs do not feel underpowered.
+      const ideal = this.ranged.range * 0.64;
+      const moveDir = d > ideal ? 1 : -0.16;
+      const nx = dx / (d || 1);
+      const ny = dy / (d || 1);
+      const strafe = Math.sin(Game.time * this.wobbleSpeed + this.wobblePhase) * this.speed * 0.2;
+      this.vx = nx * this.speed * moveDir + (-ny * strafe);
+      this.vy = ny * this.speed * moveDir + (nx * strafe);
       this.attackCD -= dt;
       if (d < this.ranged.range && this.attackCD <= 0) {
         this.attackCD = this.ranged.cooldown;
-        const ang = Math.atan2(dy, dx);
+        var leadTime = Math.min(0.24, d / Math.max(1, this.ranged.projectileSpeed));
+        var aimX = p.x + p.vx * leadTime;
+        var aimY = p.y + p.vy * leadTime;
+        const ang = Math.atan2(aimY - this.y, aimX - this.x);
         Projectiles.spawn({
           x: this.x, y: this.y, angle: ang,
           speed: this.ranged.projectileSpeed,
@@ -2844,6 +3111,10 @@ class Enemy {
 
   damage(amt, isCrit) {
     if (!this.alive) return;
+    if (this.invulnerable) {
+      this.hitFlash = 0.04;
+      return;
+    }
     this.hp -= amt;
     this.hitFlash = 0.08;
     Game.player.damageDealt += amt;
@@ -2872,6 +3143,7 @@ class Enemy {
   die() {
     if (!this.alive) return;
     this.alive = false;
+    if (OperationSystem.active) OperationSystem.onEnemyKilled(this);
 
     // === BOMBER: explode on death, damage player + nearby enemies ===
     if (this.def.explodeOnDeath) {
@@ -2956,7 +3228,7 @@ class Enemy {
     // Item drop
     // === EXTRACTION LOOT: drop into RunInventory instead of auto-equip ===
     var lootDropChance = this.def.dropChance + (this.elite ? 0.25 : 0) + (this.boss ? 0.5 : 0);
-    if (Math.random() < Math.min(1, lootDropChance)) {
+    if (!Game.isOperationRun() && Math.random() < Math.min(1, lootDropChance)) {
       var lootTier = Math.min(4, Math.floor(World.time / 60));
       var loot = RunInventory.rollLoot(lootTier);
       RunInventory.tryAdd(loot);
@@ -2989,9 +3261,16 @@ class Enemy {
       ctx.fillStyle = gr;
       ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 2, 0, Math.PI * 2); ctx.fill();
     }
+    if (this.invulnerable) {
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius + 7, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
     // Body
-    ctx.fillStyle = flash ? '#ffffff' : this.color;
+    ctx.fillStyle = flash ? (this.elite || this.boss ? '#ffffff' : this.accent) : this.color;
     ctx.strokeStyle = this.accent;
     ctx.lineWidth = this.elite || this.boss ? 2.5 : 1.5;
     ctx.beginPath();
@@ -3032,9 +3311,11 @@ class Enemy {
 
 const Enemies = {
   list: [],
-  spawn(type, x, y) {
-    const diff = World.currentDifficulty();
-    this.list.push(new Enemy(type, x, y, diff));
+  spawn(type, x, y, diffOverride) {
+    const diff = diffOverride || World.currentDifficulty();
+    const enemy = new Enemy(type, x, y, diff);
+    this.list.push(enemy);
+    return enemy;
   },
   update(dt) {
     for (const e of this.list) e.update(dt);
@@ -3073,6 +3354,7 @@ const Projectiles = {
       crit: !!p.crit,
       color: p.color,
       trail: p.trail,
+      weaponType: p.weaponType || 'pistol',
       pierce: p.pierce,
       hits: new Set(),
       life: 3,
@@ -3182,6 +3464,33 @@ const Projectiles = {
         ctx.save();
         ctx.translate(pr.x, pr.y);
         ctx.rotate(lowFxAngle);
+        if (pr.weaponType === 'beam') {
+          ctx.globalAlpha = 0.55;
+          ctx.strokeStyle = pr.color;
+          ctx.lineWidth = Math.max(3, lowFxSize * 0.8);
+          ctx.beginPath();
+          ctx.moveTo(-lowFxSize * 3.6, 0);
+          ctx.lineTo(lowFxSize * 2.1, 0);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(0, 0, Math.max(1.5, lowFxSize * 0.35), 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+          continue;
+        }
+        if (pr.weaponType === 'explosive') {
+          ctx.globalAlpha = 0.3;
+          ctx.strokeStyle = pr.color;
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0, 0, lowFxSize * 1.55, 0, Math.PI * 2); ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = pr.color;
+          ctx.beginPath(); ctx.arc(0, 0, lowFxSize * 0.9, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(0, 0, Math.max(1.6, lowFxSize * 0.28), 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+          continue;
+        }
         ctx.globalAlpha = 0.35;
         ctx.strokeStyle = pr.trail || pr.color;
         ctx.lineWidth = Math.max(2, lowFxSize * 0.6);
@@ -3189,6 +3498,18 @@ const Projectiles = {
         ctx.moveTo(-lowFxSize * 2.4, 0);
         ctx.lineTo(lowFxSize * 0.8, 0);
         ctx.stroke();
+        if (pr.weaponType === 'shotgun') {
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
+          ctx.beginPath();
+          ctx.moveTo(lowFxSize, 0);
+          ctx.lineTo(-lowFxSize * 0.8, -lowFxSize * 0.7);
+          ctx.lineTo(-lowFxSize * 0.8, lowFxSize * 0.7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          continue;
+        }
         ctx.globalAlpha = 1;
         ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
         ctx.beginPath(); ctx.arc(0, 0, lowFxSize, 0, Math.PI * 2); ctx.fill();
@@ -3203,12 +3524,52 @@ const Projectiles = {
       ctx.save();
       ctx.translate(pr.x, pr.y);
       ctx.rotate(angle);
+      if (pr.weaponType === 'beam') {
+        ctx.globalAlpha = 0.22;
+        ctx.strokeStyle = pr.color;
+        ctx.lineWidth = Math.max(3, pr.size * 1.2);
+        ctx.beginPath();
+        ctx.moveTo(-pr.size * 6, 0);
+        ctx.lineTo(pr.size * 3, 0);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0, 0, Math.max(1.5, pr.size * 0.45), 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        continue;
+      }
+      if (pr.weaponType === 'explosive') {
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = pr.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, pr.size * 2.2, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = pr.color;
+        ctx.beginPath(); ctx.arc(0, 0, pr.size * 1.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 0.9;
+        ctx.beginPath(); ctx.arc(0, 0, pr.size * 0.35, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        continue;
+      }
       ctx.globalAlpha = 0.25;
       ctx.fillStyle = pr.color;
       ctx.beginPath(); ctx.ellipse(0, 0, pr.size * 4, pr.size * 1.8, 0, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 0.6;
       ctx.fillStyle = pr.trail;
       ctx.beginPath(); ctx.ellipse(-pr.size * 1.5, 0, pr.size * 2.5, pr.size * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+      if (pr.weaponType === 'shotgun') {
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
+        ctx.beginPath();
+        ctx.moveTo(pr.size * 1.1, 0);
+        ctx.lineTo(-pr.size * 0.9, -pr.size * 0.75);
+        ctx.lineTo(-pr.size * 0.9, pr.size * 0.75);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        continue;
+      }
       ctx.globalAlpha = 1;
       ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
       ctx.beginPath(); ctx.arc(0, 0, pr.size, 0, Math.PI * 2); ctx.fill();
@@ -3450,11 +3811,16 @@ const World = {
     this.maxEnemies = 35; this.bossSpawned = false; this._eliteDone = false; this._lastSpike = 0;
   },
   currentDifficulty() {
+    if (Game.isOperationRun && Game.isOperationRun() && OperationSystem.active) return OperationSystem.enemyScale();
     // base scale × time-based creep × zone difficulty
     return this.zone.difficulty * (1 + this.time / 80);
   },
   update(dt) {
     this.time += dt;
+    if (Game.isOperationRun && Game.isOperationRun()) {
+      OperationSystem.update(dt);
+      return;
+    }
 
     // gradually ramp spawn rate & cap
     this.spawnInterval = Math.max(0.2, 1.2 - this.time * 0.006);
@@ -3502,9 +3868,10 @@ const World = {
   },
   spawnWave() {
     const pool = this.zone.enemyPool;
-    const count = Utils.randInt(1, 3);
+    const movingFast = Math.hypot(Game.player.vx, Game.player.vy) > Game.player.stats.moveSpeed * 0.78;
+    const count = Utils.randInt(1, 3) + (movingFast && Math.random() < 0.35 ? 1 : 0) + (this.time > 180 ? 1 : 0);
     for (let i = 0; i < count; i++) {
-      const type = Utils.choice(pool);
+      const type = movingFast && Math.random() < 0.2 ? Utils.choice(['stalker', 'stalker', 'grunt']) : Utils.choice(pool);
       const pos = this.randomSpawnPoint();
       Enemies.spawn(type, pos.x, pos.y);
     }
@@ -3523,7 +3890,12 @@ const World = {
   randomSpawnPoint() {
     const p = Game.player;
     // Spawn offscreen-ish relative to player
-    const ang = Math.random() * Math.PI * 2;
+    const playerMove = Math.hypot(p.vx, p.vy);
+    let ang = Math.random() * Math.PI * 2;
+    if (playerMove > 30 && Math.random() < 0.45) {
+      const moveAng = Math.atan2(p.vy, p.vx);
+      ang = moveAng + Utils.rand(-1.05, 1.05);
+    }
     const dist = Utils.rand(420, 600);
     let x = p.x + Math.cos(ang) * dist;
     let y = p.y + Math.sin(ang) * dist;
@@ -3626,12 +3998,44 @@ const UI = {
   hideAllScreens() { for (const s of this.screens) Utils.el(`#${s}`).classList.add('hidden'); },
 
   renderMainMenu() {
+    if (Game.save.selectedRunMode === 'operation' && !Game.canPlayOperations()) Game.save.selectedRunMode = 'standard';
     Utils.el('#accountLvl').textContent = Game.save.accountLevel;
     Utils.el('#metaCredits').textContent = Game.save.credits;
+    const cls = CLASSES[Game.save.selectedClass];
+    const zone = ZONES[Game.save.selectedZone];
+    const weapon = WEAPONS[cls.startWeapon];
     const best = Game.save.bestRun;
+    const isOperation = Game.currentRunMode() === 'operation';
+    const operation = Game.currentOperationDef();
+    const opStats = Game.operationStats(operation.id);
     Utils.el('#bestRun').textContent = best
       ? `Lv ${best.level} · ${best.kills} · ${Utils.formatTime(best.time)}`
       : '—';
+    if (Utils.el('#menuClassValue')) Utils.el('#menuClassValue').textContent = cls.name;
+    if (Utils.el('#menuClassSub')) Utils.el('#menuClassSub').textContent = cls.role.toUpperCase();
+    if (Utils.el('#menuZoneValue')) Utils.el('#menuZoneValue').textContent = isOperation ? operation.name : zone.name.toUpperCase();
+    if (Utils.el('#menuZoneSub')) Utils.el('#menuZoneSub').textContent = isOperation
+      ? `${operation.tier} · ${opStats.bestBracket || 'UNRANKED'}`
+      : `${zone.tier} · DIFF ×${zone.difficulty.toFixed(1)}`;
+    if (Utils.el('#menuWeaponValue')) Utils.el('#menuWeaponValue').textContent = weapon.name.toUpperCase();
+    if (Utils.el('#menuWeaponSub')) Utils.el('#menuWeaponSub').textContent = isOperation
+      ? `${weapon.type.toUpperCase()} · ${operation.encounters.length} ENCOUNTERS`
+      : `${weapon.type.toUpperCase()} · ${weapon.rarity.toUpperCase()}`;
+    if (Utils.el('#btnStart')) Utils.el('#btnStart').textContent = isOperation ? '▶ BEGIN OPERATION' : '▶ BEGIN DESCENT';
+    if (Utils.el('#btnModeStandard')) Utils.el('#btnModeStandard').classList.toggle('active', !isOperation);
+    if (Utils.el('#btnModeOperation')) {
+      Utils.el('#btnModeOperation').classList.toggle('active', isOperation);
+      Utils.el('#btnModeOperation').classList.toggle('locked', !Game.canPlayOperations());
+    }
+    if (Utils.el('#menuModeNote')) Utils.el('#menuModeNote').textContent = isOperation
+      ? (Game.canPlayOperations()
+          ? `${operation.desc} Affix pool: ${operation.affixes.length} light modifiers.`
+          : `Unlock at account level ${operation.unlockLevel} to enter operations.`)
+      : 'Standard extraction stays on the live loot-and-extract loop.';
+    if (Utils.el('#perfHint')) Utils.el('#perfHint').textContent = 'Auto trims visual load on weaker devices and keeps the run readable.';
+    if (Utils.el('#balanceHint')) Utils.el('#balanceHint').textContent = isOperation
+      ? 'Operations use authored mechanics, timed reward tiers, and scripted bosses.'
+      : 'Standard is the current tuning target for extraction, loot, and combat pacing.';
     if (Utils.el('#workshopCredits')) Utils.el('#workshopCredits').textContent = Game.save.credits;
   },
 
@@ -3764,20 +4168,30 @@ const UI = {
     const moveBonus = Math.round(((p.stats.moveSpeed / base.moveSpeed) - 1) * 100);
     const fireBonus = Math.round(((p.stats.attackSpeed / base.attackSpeed) - 1) * 100);
     const sizeBonus = Math.round(((cappedProjectileScale / base.projectileSize) - 1) * 100);
+    const hpPct = Math.max(0, Math.round((p.hp / p.stats.maxHP) * 100));
 
     Utils.el('#hpFill').style.width = `${(p.hp / p.stats.maxHP) * 100}%`;
-    Utils.el('#hpText').textContent = `${Math.ceil(p.hp)} / ${Math.floor(p.stats.maxHP)}`;
+    Utils.el('#hpText').textContent = `HP ${hpPct}%`;
     const xpNeeded = p.xpForNextLevel();
+    const xpPct = Math.max(0, Math.min(100, Math.round((p.xp / xpNeeded) * 100)));
     Utils.el('#xpFill').style.width = `${(p.xp / xpNeeded) * 100}%`;
-    Utils.el('#xpText').textContent = `${Math.floor(p.xp)} / ${xpNeeded}`;
+    Utils.el('#xpText').textContent = `XP ${xpPct}%`;
     Utils.el('#lvlText').textContent = p.level;
     Utils.el('#creditsText').textContent = Math.floor(Game.runCredits);
     Utils.el('#timeText').textContent = Utils.formatTime(World.time);
     Utils.el('#classTag').textContent = p.cls.name;
-    Utils.el('#zoneTag').textContent = `${World.zone.tier} — ${World.zone.name.toUpperCase()}`;
+    Utils.el('#zoneTag').textContent = Game.isOperationRun()
+      ? `${OperationSystem.current.tier} — ${OperationSystem.current.name}`
+      : `${World.zone.tier} — ${World.zone.name.toUpperCase()}`;
     Utils.el('#weaponIcon').textContent = p.weapon.icon;
     Utils.el('#weaponName').textContent = p.weapon.name;
-    Utils.el('#weaponSub').textContent = `${p.weapon.type[0].toUpperCase()}${p.weapon.type.slice(1)} · ${p.weapon.rarity[0].toUpperCase()}${p.weapon.rarity.slice(1)}`;
+    var readabilityTag = p.weapon.type === 'beam' ? 'LINE' : (p.weapon.type === 'explosive' ? 'BLAST' : (p.weapon.type === 'shotgun' ? 'CLOSE' : (p.weapon.type === 'rapid' ? 'SPRAY' : 'PRECISION')));
+    Utils.el('#weaponSub').textContent = `${p.weapon.type[0].toUpperCase()}${p.weapon.type.slice(1)} · ${p.weapon.rarity[0].toUpperCase()}${p.weapon.rarity.slice(1)} · ${readabilityTag}`;
+    const abilityPill = Utils.el('#abilityPill');
+    const abilityReady = p.abilityCD <= 0;
+    Utils.el('#abilityLabel').textContent = p.cls.ability ? p.cls.ability.name.toUpperCase() : 'ABILITY';
+    Utils.el('#abilityText').textContent = abilityReady ? 'READY' : `${p.abilityCD.toFixed(1)}s`;
+    abilityPill.classList.toggle('ready', abilityReady);
     Utils.el('#moveBonusText').textContent = signedPct(moveBonus);
     Utils.el('#fireBonusText').textContent = signedPct(fireBonus);
     Utils.el('#sizeBonusText').textContent = signedPct(sizeBonus);
@@ -3790,17 +4204,25 @@ const UI = {
     Utils.el('#killText').textContent = p.kills;
     // === EXTRACTION HUD ===
     var exHud = Utils.el('#extractHud');
-    if (ExtractionZone.active) {
+    if (Game.isOperationRun()) {
       exHud.classList.remove('hidden');
+      exHud.classList.toggle('active', OperationSystem.stageIndex === 3 && OperationSystem.bossRef && OperationSystem.bossRef.invulnerable);
+      Utils.el('#extractLabel').textContent = 'OPERATION';
+      Utils.el('#extractDist').textContent = OperationSystem.stageStatusText();
+      Utils.el('#extractThreat').textContent = OperationSystem.objectiveText + ' · ' + OperationSystem.affixLabel() + ' · ' + Utils.formatTime(OperationSystem.rewardTimer);
+    } else if (ExtractionZone.active) {
+      exHud.classList.remove('hidden');
+      Utils.el('#extractLabel').textContent = 'EXTRACT';
       exHud.classList.toggle('active', Utils.dist(p.x, p.y, ExtractionZone.x, ExtractionZone.y) < ExtractionZone.radius);
       var exDist = Math.floor(Utils.dist(p.x, p.y, ExtractionZone.x, ExtractionZone.y));
       Utils.el('#extractDist').textContent = exDist + 'm';
       var haulManifest = RunInventory.materialManifest();
       var haulKinds = Object.keys(haulManifest).length;
       var haulValue = RunInventory.totalValue();
-      Utils.el('#extractThreat').textContent = 'HAUL: ' + haulValue + '★' + (haulKinds ? ' · ' + haulKinds + ' MAT' : '');
+      Utils.el('#extractThreat').textContent = 'HAUL: ' + haulValue + '★' + (haulKinds ? ' · ' + haulKinds + ' MAT' : '') + (RunInventory.isFull() ? ' · FULL' : '');
     } else {
       exHud.classList.add('hidden');
+      Utils.el('#extractLabel').textContent = 'EXTRACT';
     }
     Utils.el('#invCountHud').textContent = RunInventory.items.length;
     var tier = Math.min(5, 1 + Math.floor(World.time / 60));
@@ -3908,25 +4330,29 @@ const UI = {
   },
 
   // === LOOT CHOICE (when backpack full) ===
-  showLootChoice: function(newItem) {
+  showLootChoice: function(newItem, decision) {
     Game.paused = true;
     var newEl = Utils.el('#lootNew');
+    var newTag = newItem.materialType ? 'MATERIAL' : (newItem.consumable ? 'USE' : 'CARGO');
     newEl.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[newItem.rarity] ? RARITY[newItem.rarity].color : '#9ab0c7') + '">' + newItem.icon + ' ' + newItem.name + '</div>' +
-      '<div class="inv-slot-sub">' + newItem.rarity.toUpperCase() + ' · ' + newItem.value + '★</div>' +
+      '<div class="inv-slot-sub">' + newItem.rarity.toUpperCase() + ' - ' + newTag + ' - ' + newItem.value + '*</div>' +
       '<div class="inv-slot-stats">' + newItem.desc + '</div>';
+    Utils.el('#lootRecommendation').textContent = 'RECOMMENDED: ' + ((decision && decision.reason) ? decision.reason : 'CHOOSE WHAT TO KEEP');
+    Utils.el('#btnSwapLoot').textContent = 'TAKE RECOMMENDED';
+    Utils.el('#btnDropLoot').textContent = 'KEEP CURRENT';
 
     var grid = Utils.el('#lootInvGrid');
     grid.innerHTML = '';
-    RunInventory._selectedSwapIdx = -1;
+    var recommended = decision && typeof decision.idx === 'number' ? decision.idx : RunInventory._recommendedSwapIdx;
     for (var i = 0; i < RunInventory.items.length; i++) {
       (function(idx) {
         var item = RunInventory.items[idx];
+        var itemTag = item.materialType ? 'MAT' : (item.consumable ? 'USE' : 'CARGO');
         var slot = document.createElement('div');
-        slot.className = 'inv-slot';
+        slot.className = 'inv-slot' + (idx === recommended ? ' selected' : '');
         slot.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[item.rarity] ? RARITY[item.rarity].color : '#9ab0c7') + '">' + item.icon + ' ' + item.name + '</div>' +
-          '<div class="inv-slot-sub">' + item.value + '★</div>';
+          '<div class="inv-slot-sub">' + itemTag + ' - ' + item.value + '*</div>';
         slot.onclick = function() {
-          // Deselect all
           var slots = grid.querySelectorAll('.inv-slot');
           for (var j = 0; j < slots.length; j++) slots[j].classList.remove('selected');
           slot.classList.add('selected');
@@ -3935,12 +4361,18 @@ const UI = {
         grid.appendChild(slot);
       })(i);
     }
+    if (typeof recommended === 'number' && recommended >= 0) RunInventory._selectedSwapIdx = recommended;
     Utils.el('#lootChoiceModal').classList.remove('hidden');
   },
 
   hideLootChoice: function() {
     Utils.el('#lootChoiceModal').classList.add('hidden');
     RunInventory._pendingLoot = null;
+    RunInventory._selectedSwapIdx = -1;
+    RunInventory._recommendedSwapIdx = -1;
+    Utils.el('#lootRecommendation').textContent = 'RECOMMENDED: REVIEW PICKUP';
+    Utils.el('#btnSwapLoot').textContent = 'SWAP';
+    Utils.el('#btnDropLoot').textContent = 'DISCARD NEW';
     Game.paused = false;
   },
 
@@ -3974,6 +4406,7 @@ var ExtractionZone = {
   },
 
   update: function(dt) {
+    if (Game.isOperationRun && Game.isOperationRun()) return;
     // Spawn extraction after delay
     if (!this.active && World.time >= this.spawnTime) {
       this.activate();
@@ -4044,6 +4477,7 @@ var ExtractionZone = {
   },
 
   render: function(ctx) {
+    if (Game.isOperationRun && Game.isOperationRun()) return;
     if (!this.active) return;
     var p = Game.player;
     var d = Utils.dist(p.x, p.y, this.x, this.y);
@@ -4096,6 +4530,359 @@ var ExtractionZone = {
   },
 };
 
+var OperationSystem = {
+  active: false,
+  current: null,
+  stageIndex: -1,
+  timer: 0,
+  stageTimer: 0,
+  stageProgress: 0,
+  objectiveText: '',
+  affix: null,
+  hazards: [],
+  rewardTimer: 0,
+  rewardBracket: 'BRONZE',
+  mechanicPenalty: 0,
+  enemySpawnTimer: 0,
+  pulseTimer: 0,
+  sectorAngle: 0,
+  sectorWidth: 0.95,
+  collapseTelegraph: null,
+  beamState: null,
+  bossRef: null,
+  bossThresholds: [0.66, 0.33],
+  pendingBossThreshold: 0,
+  _lastSectorTick: -1,
+  _lastCollapseSecond: -1,
+
+  reset: function() {
+    this.active = Game.isOperationRun();
+    this.current = this.active ? Game.currentOperationDef() : null;
+    this.stageIndex = -1;
+    this.timer = 0;
+    this.stageTimer = 0;
+    this.stageProgress = 0;
+    this.objectiveText = '';
+    this.affix = this.current ? Utils.choice(this.current.affixes) : null;
+    this.hazards = [];
+    this.rewardTimer = this.current ? this.current.rewardTime : 0;
+    this.rewardBracket = 'BRONZE';
+    this.mechanicPenalty = 0;
+    this.enemySpawnTimer = 0;
+    this.pulseTimer = 0;
+    this.sectorAngle = -Math.PI / 2;
+    this.collapseTelegraph = null;
+    this.beamState = null;
+    this.bossRef = null;
+    this.pendingBossThreshold = 0;
+    this._lastSectorTick = -1;
+    this._lastCollapseSecond = -1;
+    if (!this.active) return;
+    this.beginStage(0);
+  },
+
+  enemyScale: function() {
+    return 1.15 + Math.max(0, this.stageIndex) * 0.22;
+  },
+
+  affixLabel: function() {
+    if (this.affix === 'volatile') return 'VOLATILE FAILSAFE';
+    if (this.affix === 'pulse') return 'PULSE STORM';
+    return 'NO AFFIX';
+  },
+
+  stageName: function() {
+    return this.current ? this.current.encounters[Math.max(0, this.stageIndex)] : '';
+  },
+
+  stageStatusText: function() {
+    return 'STAGE ' + (this.stageIndex + 1) + '/4 · ' + this.stageName();
+  },
+
+  spawnTaggedEnemy: function(type, x, y, diff, tags) {
+    var enemy = Enemies.spawn(type, x, y, diff || this.enemyScale());
+    if (enemy && tags) Object.assign(enemy, tags);
+    return enemy;
+  },
+
+  beginStage: function(index) {
+    this.stageIndex = index;
+    this.stageTimer = 0;
+    this.stageProgress = 0;
+    this.enemySpawnTimer = 0;
+    this.collapseTelegraph = null;
+    this.beamState = null;
+    this.bossRef = null;
+    this.pendingBossThreshold = 0;
+    this._lastSectorTick = -1;
+    this._lastCollapseSecond = -1;
+    Enemies.clear();
+    if (index === 0) {
+      this.objectiveText = 'SYNC PAD 0%';
+    } else if (index === 1) {
+      this.objectiveText = 'ELIMINATE RELAY ANCHORS';
+      this.spawnAnchorWave();
+    } else if (index === 2) {
+      this.objectiveText = 'SAFE SECTOR 0%';
+      this.spawnEscortWave();
+    } else if (index === 3) {
+      this.objectiveText = 'DODGE MECHANICS · BURN THE WARDEN';
+      this.spawnBoss();
+    }
+    Game.announce(this.stageStatusText());
+  },
+
+  completeStage: function() {
+    Game.player.heal(Game.player.stats.maxHP * 0.12);
+    Game.player.gainXP(18 + this.stageIndex * 10);
+    Game.runCredits += 22 + this.stageIndex * 12;
+    if (this.stageIndex >= 3) {
+      Game.endRun('operation_cleared');
+      return;
+    }
+    this.beginStage(this.stageIndex + 1);
+  },
+
+  spawnAnchorWave: function() {
+    this.spawnTaggedEnemy('elite_grunt', -180, -120, 1.35, { operationAnchor: true, radius: 20, maxHP: 145, hp: 145, color: '#111827', accent: '#fbbf24' });
+    this.spawnTaggedEnemy('hulk', 180, -90, 1.42, { operationAnchor: true, radius: 24, maxHP: 170, hp: 170, color: '#1f2937', accent: '#22d3ee' });
+    this.spawnTaggedEnemy('elite_grunt', 0, 210, 1.38, { operationAnchor: true, radius: 20, maxHP: 145, hp: 145, color: '#111827', accent: '#c084fc' });
+  },
+
+  spawnEscortWave: function() {
+    this.spawnTaggedEnemy('elite_grunt', 0, -160, 1.45, { operationMiniBoss: true, maxHP: 180, hp: 180, accent: '#4ade80' });
+    this.spawnTaggedEnemy('sniper', -210, 120, 1.35);
+    this.spawnTaggedEnemy('stalker', 220, 110, 1.35);
+  },
+
+  spawnBoss: function() {
+    this.bossRef = this.spawnTaggedEnemy('boss_warden', 0, -120, 1.55, { operationBoss: true, maxHP: 1250, hp: 1250 });
+    if (this.bossRef) {
+      this.bossRef.maxHP = 1250;
+      this.bossRef.hp = 1250;
+      this.bossRef.speed = 48;
+      this.bossRef.invulnerable = false;
+    }
+    this.beamState = { timer: 2.6, active: false, angle: -Math.PI / 2 };
+  },
+
+  nearbyEnemies: function(x, y, r) {
+    var count = 0;
+    for (var i = 0; i < Enemies.list.length; i++) {
+      if (!Enemies.list[i].alive) continue;
+      if (Utils.dist(x, y, Enemies.list[i].x, Enemies.list[i].y) <= r) count++;
+    }
+    return count;
+  },
+
+  updateHazards: function(dt) {
+    for (var i = this.hazards.length - 1; i >= 0; i--) {
+      var hz = this.hazards[i];
+      hz.t += dt;
+      if (hz.type === 'volatile' && hz.t >= hz.delay && !hz.hit) {
+        hz.hit = true;
+        if (Utils.dist(Game.player.x, Game.player.y, hz.x, hz.y) < hz.radius) {
+          Game.player.damage(14);
+          this.mechanicPenalty += 1;
+        }
+        VFX.burst(hz.x, hz.y, '#fb7185', LOW_FX_MODE ? 6 : 14, 170);
+      }
+      if (hz.type === 'volatile' && hz.t > hz.delay + 0.35) this.hazards.splice(i, 1);
+      if (hz.type === 'pulse' && hz.t < hz.duration) {
+        var ringRadius = hz.maxRadius * (hz.t / hz.duration);
+        if (!hz.hit && Math.abs(Math.hypot(Game.player.x, Game.player.y) - ringRadius) < 26) {
+          hz.hit = true;
+          Game.player.damage(10);
+          this.mechanicPenalty += 1;
+        }
+      }
+      if (hz.type === 'pulse' && hz.t >= hz.duration) this.hazards.splice(i, 1);
+    }
+  },
+
+  onEnemyKilled: function(enemy) {
+    if (!this.active) return;
+    if (this.affix === 'volatile' && !enemy.boss) {
+      this.hazards.push({ type: 'volatile', x: enemy.x, y: enemy.y, radius: 54, delay: 0.72, t: 0, hit: false });
+    }
+  },
+
+  updateBossMechanics: function(dt) {
+    if (!this.bossRef || !this.bossRef.alive) return;
+    var boss = this.bossRef;
+    if (this.pendingBossThreshold < this.bossThresholds.length && boss.hp / boss.maxHP <= this.bossThresholds[this.pendingBossThreshold]) {
+      boss.invulnerable = true;
+      this.spawnTaggedEnemy('elite_grunt', boss.x - 170, boss.y + 90, 1.48, { operationAnchor: true, radius: 18, maxHP: 110, hp: 110, accent: '#fbbf24' });
+      this.spawnTaggedEnemy('elite_grunt', boss.x + 170, boss.y + 90, 1.48, { operationAnchor: true, radius: 18, maxHP: 110, hp: 110, accent: '#22d3ee' });
+      this.pendingBossThreshold += 1;
+      Game.announce('SHIELD ANCHORS ONLINE');
+    }
+    if (boss.invulnerable && !Enemies.list.some(function(e) { return e.alive && e.operationAnchor; })) {
+      boss.invulnerable = false;
+      Game.announce('WARDEN SHIELD BROKEN');
+    }
+    this.beamState.timer -= dt;
+    if (this.beamState.timer <= 0) {
+      this.beamState.active = !this.beamState.active;
+      this.beamState.timer = this.beamState.active ? 2.4 : 1.5;
+      if (!this.beamState.active) this.beamState.angle = Utils.angle(boss.x, boss.y, Game.player.x, Game.player.y);
+    }
+    if (this.beamState.active) {
+      this.beamState.angle += dt * 1.7;
+      var px = Game.player.x - boss.x;
+      var py = Game.player.y - boss.y;
+      var dist = Math.hypot(px, py);
+      var playerAng = Math.atan2(py, px);
+      var delta = Math.atan2(Math.sin(playerAng - this.beamState.angle), Math.cos(playerAng - this.beamState.angle));
+      if (dist < 420 && Math.abs(delta) < 0.09) Game.player.damage(15 * dt * 3);
+    }
+    if (!this.collapseTelegraph && this.stageTimer > 0 && Math.floor(this.stageTimer) % 9 === 0 && this._lastCollapseSecond !== Math.floor(this.stageTimer)) {
+      this._lastCollapseSecond = Math.floor(this.stageTimer);
+      this.collapseTelegraph = { start: Math.random() * Math.PI * 2, width: 1.15, timer: 1.15 };
+    } else if (this.collapseTelegraph) {
+      this.collapseTelegraph.timer -= dt;
+      if (this.collapseTelegraph.timer <= 0) {
+        var pAng = Math.atan2(Game.player.y, Game.player.x);
+        var deltaCollapse = Math.atan2(Math.sin(pAng - this.collapseTelegraph.start), Math.cos(pAng - this.collapseTelegraph.start));
+        if (Math.abs(deltaCollapse) < this.collapseTelegraph.width * 0.5) {
+          Game.player.damage(22);
+          this.mechanicPenalty += 1;
+        }
+        VFX.burst(Math.cos(this.collapseTelegraph.start) * 220, Math.sin(this.collapseTelegraph.start) * 220, '#fb7185', LOW_FX_MODE ? 6 : 14, 180);
+        this.collapseTelegraph = null;
+      }
+    }
+  },
+
+  update: function(dt) {
+    if (!this.active) return;
+    this.timer += dt;
+    this.stageTimer += dt;
+    this.rewardTimer = Math.max(0, this.current.rewardTime - this.timer);
+    this.updateHazards(dt);
+    if (this.affix === 'pulse') {
+      this.pulseTimer -= dt;
+      if (this.pulseTimer <= 0) {
+        this.pulseTimer = 9;
+        this.hazards.push({ type: 'pulse', t: 0, duration: 1.2, maxRadius: 520, hit: false });
+      }
+    }
+    if (this.stageIndex === 0) {
+      this.objectiveText = 'SYNC PAD ' + Math.floor((this.stageProgress / 6.5) * 100) + '%';
+      this.enemySpawnTimer -= dt;
+      if (this.enemySpawnTimer <= 0) {
+        this.enemySpawnTimer = 2.3;
+        this.spawnTaggedEnemy(Utils.choice(['grunt', 'stalker', 'sniper']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale());
+        this.spawnTaggedEnemy(Utils.choice(['grunt', 'stalker', 'bomber']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale());
+      }
+      var inPad = Utils.dist(Game.player.x, Game.player.y, 0, 0) < 92;
+      if (inPad) this.stageProgress += dt * (this.nearbyEnemies(0, 0, 130) > 3 ? 0.6 : 1);
+      else this.stageProgress = Math.max(0, this.stageProgress - dt * 0.5);
+      if (this.stageProgress >= 6.5) this.completeStage();
+    } else if (this.stageIndex === 1) {
+      this.objectiveText = 'ELIMINATE RELAY ANCHORS';
+      if (!Enemies.list.some(function(e) { return e.alive && e.operationAnchor; })) this.completeStage();
+    } else if (this.stageIndex === 2) {
+      this.sectorAngle += dt * 0.8;
+      var playerAngle = Math.atan2(Game.player.y, Game.player.x);
+      var safeDelta = Math.atan2(Math.sin(playerAngle - this.sectorAngle), Math.cos(playerAngle - this.sectorAngle));
+      if (Math.abs(safeDelta) < this.sectorWidth * 0.5) {
+        this.stageProgress += dt;
+      } else if (Math.floor(this.stageTimer * 2) !== this._lastSectorTick) {
+        this._lastSectorTick = Math.floor(this.stageTimer * 2);
+        Game.player.damage(6);
+        this.mechanicPenalty += 1;
+      }
+      if (this.enemySpawnTimer <= 0) {
+        this.enemySpawnTimer = 3.4;
+        this.spawnTaggedEnemy(Utils.choice(['stalker', 'sniper']), -220 + Math.random() * 440, -220 + Math.random() * 440, this.enemyScale());
+      } else {
+        this.enemySpawnTimer -= dt;
+      }
+      var miniAlive = Enemies.list.some(function(e) { return e.alive && e.operationMiniBoss; });
+      this.objectiveText = 'SAFE SECTOR ' + Math.min(100, Math.floor((this.stageProgress / 7.5) * 100)) + '%';
+      if (this.stageProgress >= 7.5 && !miniAlive) this.completeStage();
+    } else if (this.stageIndex === 3) {
+      this.updateBossMechanics(dt);
+      this.objectiveText = this.bossRef && this.bossRef.invulnerable ? 'BREAK SHIELD ANCHORS' : 'DODGE MECHANICS · BURN THE WARDEN';
+      if (!this.bossRef || !this.bossRef.alive) this.completeStage();
+    }
+  },
+
+  buildRewardReport: function() {
+    var tier = this.rewardTimer > 120 ? 3 : (this.rewardTimer > 45 ? 2 : 1);
+    var bracket = tier === 3 ? 'GOLD' : (tier === 2 ? 'SILVER' : 'BRONZE');
+    return {
+      credits: 80 + tier * 45,
+      materials: {
+        core: 1 + (tier >= 2 ? 1 : 0),
+        keystone: tier,
+        sigil: tier === 3 ? 1 : 0,
+        circuits: 2 + tier,
+        intel: 2 + (tier >= 2 ? 1 : 0),
+        void: tier === 3 ? 1 : 0,
+      },
+      operation: {
+        name: this.current.name,
+        tier: tier,
+        bracket: bracket,
+        affix: this.affixLabel(),
+        penalty: this.mechanicPenalty,
+        time: this.timer,
+      },
+    };
+  },
+
+  renderGround: function(ctx) {
+    if (!this.active) return;
+    ctx.save();
+    if (this.stageIndex === 0) {
+      ctx.strokeStyle = 'rgba(74,222,128,0.85)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 92, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath(); ctx.arc(0, 0, 92 * Math.min(1, this.stageProgress / 6.5), 0, Math.PI * 2); ctx.fill();
+    } else if (this.stageIndex === 2) {
+      ctx.fillStyle = 'rgba(74,222,128,0.12)';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, 520, this.sectorAngle - this.sectorWidth * 0.5, this.sectorAngle + this.sectorWidth * 0.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+    if (this.collapseTelegraph) {
+      ctx.fillStyle = 'rgba(251,113,133,0.14)';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, 560, this.collapseTelegraph.start - this.collapseTelegraph.width * 0.5, this.collapseTelegraph.start + this.collapseTelegraph.width * 0.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+    for (var i = 0; i < this.hazards.length; i++) {
+      var hz = this.hazards[i];
+      if (hz.type === 'volatile') {
+        ctx.strokeStyle = 'rgba(251,113,133,' + (0.35 + hz.t * 0.3) + ')';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(hz.x, hz.y, hz.radius * Math.min(1, hz.t / hz.delay), 0, Math.PI * 2); ctx.stroke();
+      } else if (hz.type === 'pulse') {
+        ctx.strokeStyle = 'rgba(34,211,238,0.4)';
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(0, 0, hz.maxRadius * Math.min(1, hz.t / hz.duration), 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    if (this.beamState && this.bossRef) {
+      ctx.strokeStyle = this.beamState.active ? 'rgba(251,191,36,0.5)' : 'rgba(251,191,36,0.18)';
+      ctx.lineWidth = this.beamState.active ? 18 : 24;
+      ctx.beginPath();
+      ctx.moveTo(this.bossRef.x, this.bossRef.y);
+      ctx.lineTo(this.bossRef.x + Math.cos(this.beamState.angle) * 470, this.bossRef.y + Math.sin(this.beamState.angle) * 470);
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+};
+
 /* =====================================================================
  § 19c. RUN INVENTORY  (src/systems/inventory.js)
    Small backpack for extraction loot. Lost on death, banked on extract.
@@ -4118,15 +4905,50 @@ var RunInventory = {
   maxSlots: 7,
   _pendingLoot: null,
   _selectedSwapIdx: -1,
+  _recommendedSwapIdx: -1,
 
   reset: function() {
     this.items = [];
     this.maxSlots = 7;
     this._pendingLoot = null;
     this._selectedSwapIdx = -1;
+    this._recommendedSwapIdx = -1;
   },
 
   isFull: function() { return this.items.length >= this.maxSlots; },
+
+  itemScore: function(item) {
+    var rarityRank = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
+    var value = item.vendorValue || item.value || 0;
+    var rarityScore = (rarityRank[item.rarity] || 0) * 18;
+    var typeScore = item.materialType ? 26 : (item.consumable ? 8 : 0);
+    return value + rarityScore + typeScore;
+  },
+
+  fullBackpackDecision: function(lootItem) {
+    var worstIdx = 0;
+    var worstScore = Infinity;
+    for (var i = 0; i < this.items.length; i++) {
+      var score = this.itemScore(this.items[i]);
+      if (score < worstScore) {
+        worstScore = score;
+        worstIdx = i;
+      }
+    }
+    var newScore = this.itemScore(lootItem);
+    var scoreDelta = newScore - worstScore;
+    var worstItem = this.items[worstIdx];
+    if (lootItem.materialType && !worstItem.materialType && scoreDelta >= -6) {
+      return { action: 'replace', idx: worstIdx, reason: 'BANK MATERIALS OVER LOW-VALUE CARGO' };
+    }
+    if (scoreDelta >= 16) {
+      return { action: 'replace', idx: worstIdx, reason: 'CLEAR VALUE UPGRADE' };
+    }
+    if (scoreDelta <= -22 && !lootItem.materialType) {
+      return { action: 'drop', idx: worstIdx, reason: 'CURRENT HAUL IS CLEARLY BETTER' };
+    }
+    return { action: 'choose', idx: worstIdx, reason: 'CLOSE CALL: SWAP THE RECOMMENDED SLOT OR KEEP YOUR HAUL' };
+  },
 
   tryAdd: function(lootItem) {
     // Consumables auto-use if they have a use function
@@ -4273,6 +5095,17 @@ const Game = {
   },
   bindMenus() {
     Utils.el('#btnStart').onclick = () => this.startRun();
+    Utils.el('#btnModeStandard').onclick = () => {
+      this.save.selectedRunMode = 'standard';
+      SaveSystem.save(this.save);
+      UI.renderMainMenu();
+    };
+    Utils.el('#btnModeOperation').onclick = () => {
+      if (!this.canPlayOperations()) return;
+      this.save.selectedRunMode = 'operation';
+      SaveSystem.save(this.save);
+      UI.renderMainMenu();
+    };
     Utils.el('#btnClass').onclick = () => { UI.show('classScreen'); UI.renderClassScreen(); };
     Utils.el('#btnZone').onclick  = () => { UI.show('zoneScreen');  UI.renderZoneScreen(); };
     Utils.el('#btnMeta').onclick  = () => { UI.show('metaScreen');  UI.renderMetaScreen(); };
@@ -4392,6 +5225,11 @@ const Game = {
   },
   onBossKilled(boss) {
     UI.announce(`★ ${boss.def.name.toUpperCase()} DEFEATED ★`);
+    if (this.isOperationRun && this.isOperationRun()) {
+      Pickups.spawnCredits(boss.x, boss.y, 80);
+      VFX.burst(boss.x, boss.y, '#fbbf24', LOW_FX_MODE ? 10 : 22, 220);
+      return;
+    }
     // drop a guaranteed rare+
     Pickups.spawnItem(boss.x, boss.y);
     Pickups.spawnItem(boss.x, boss.y);
@@ -4557,6 +5395,7 @@ const Game = {
     ctx.save();
     ctx.translate(this.width / 2 - this.camX - sx, this.height / 2 - this.camY - sy);
 
+    OperationSystem.renderGround(ctx);
     Pickups.render(ctx);
     Enemies.render(ctx);
     this.player.render(ctx);
