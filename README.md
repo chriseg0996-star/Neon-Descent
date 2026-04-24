@@ -1,56 +1,56 @@
 # Neon Descent
 
-Neon Descent is a progressive top-down extraction shooter built with vanilla JavaScript and HTML5 Canvas.
+Neon Descent is a fast, progressive top-down extraction shooter built in vanilla JavaScript and HTML5 Canvas, designed around short high-pressure runs, escalating combat density, and performance-aware play across desktop and mobile-friendly setups.
 
-## Features
+## Highlights
 
-- Progressive sector system with gate unlock events.
-- Biome shifts during runs for visual and pacing progression.
-- Extraction loop with escalating threat levels (LOW/HIGH/CRITICAL).
-- Dynamic balance presets: `arcade`, `standard`, `hardcore`.
-- Runtime performance systems:
-  - Mobile performance mode (`auto`, `on`, `off`)
-  - Dynamic perf governor (quality <-> stable)
-  - Real-time debug/performance overlay
+- Extraction-focused runs with rising pressure and commit-heavy endgame escapes
+- Progressive sector flow with breach events and shifting combat pacing
+- Distinct class and weapon-build paths that change how runs feel
+- Meta progression, workshop systems, and material banking shaping long-term play
+- Runtime performance modes and combat-side safeguards for dense fights
+- Keyboard-first controls with a browser-friendly local setup
 
-## Controls
+## Current State
+
+`v0.1.1-mvp`
+
+This build is a public MVP polish update focused on readability, menu/HUD cleanup, combat feel, and performance tuning under heavier weapon and VFX load.
+
+## How To Play
 
 - `WASD` / Arrow keys: Move
-- `Space`: Ability
+- `Space`: Use ability
 - `Esc`: Pause
+- Inventory button: Open run inventory/backpack
 - `F3`: Toggle performance overlay
-- `F4`: Cycle balance preset (`arcade -> standard -> hardcore`)
-
-## In-Game Modes
-
-- **Mobile Perf**
-  - `AUTO`: detects device and applies optimized defaults.
-  - `ON`: prioritizes stability and lower visual load.
-  - `OFF`: prioritizes visual quality.
-
-- **Balance Preset**
-  - `ARCADE`: lower pressure, more forgiving runs.
-  - `STANDARD`: default balanced run pacing.
-  - `HARDCORE`: higher pressure and tighter extraction windows.
+- `F4`: Cycle balance preset
 
 ## How To Run
 
-Because this project is plain HTML/JS, run from a local static server:
+Run the game from a local static server:
 
 - Python: `python -m http.server 8000`
-- Then open: `http://localhost:8000/neon-descent.html`
+- Open: `http://localhost:8000/neon-descent.html`
 
-## Version
+## Project Structure
 
-Current release target: `v0.1.0-mvp`
+- `neon-descent.html`: Current playable entry point and canonical source of truth
+- `game.js`: Legacy/secondary script copy kept until the repo is fully unified
+- `assets/`: Static project assets and supporting release material
 
 ## Known Issues
 
-- High-chaos moments can still reduce readability.
-- Balance tuning is ongoing across presets and sectors.
+- Very dense fights can still need more tuning for perfect readability
+- Performance and visual feedback are still being balanced against each other in chaos-heavy builds
 
-## Roadmap (Short)
+## Next Up
 
-- Final combat/pacing tune pass from live playtest data.
-- Release polish pass (UI readability + feedback cleanup).
-- Content expansion after MVP lock (zones, enemies, weapons).
+- Continue combat clarity and frame-stability work for projectile-heavy, AoE, and beam-heavy builds
+- Make extraction rewards, materials, and workshop progression easier to understand during and after runs
+- Keep simplifying menu flow and first-run presentation without turning the game into a tutorial wall
+- Expand content only after the current vertical slice feels stable and clean
+
+## Feedback
+
+Playtesting notes and feedback are welcome, especially around combat readability, extraction tension, progression clarity, and performance under upgraded builds.

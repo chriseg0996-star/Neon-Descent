@@ -32,9 +32,9 @@ Neon Descent is a fast-paced top-down extraction shooter where every run pushes 
 
 ---
 
-# GitHub Release Description (v0.1.0-mvp)
+# GitHub Release Description (v0.1.1-mvp)
 
-Neon Descent `v0.1.0-mvp` is the first stable MVP release.
+Neon Descent `v0.1.1-mvp` is a public MVP polish update focused on readability, combat feel, and performance stability.
 
 ### Added
 - Progressive sectors and gate breach events
@@ -48,7 +48,10 @@ Neon Descent `v0.1.0-mvp` is the first stable MVP release.
 - Anti-kite combat pressure
 - Run pacing toward consistent 10-15 minute sessions
 - Entity update efficiency and runtime stability
+- HUD readability and in-run stat visibility
+- Main menu hierarchy and overall presentation clarity
+- Weapon-heavy combat performance in dense fights
 
 ### Notes
-- This MVP emphasizes core loop quality over broad content volume.
-- Feedback is welcome for balance and readability polish.
+- This update keeps the focus on core loop quality over broad content volume.
+- Feedback is especially welcome for combat readability, extraction feel, and performance under upgraded builds.

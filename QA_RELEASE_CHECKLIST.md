@@ -1,4 +1,4 @@
-# QA Release Checklist (v0.1.0-mvp)
+# QA Release Checklist (v0.1.1-mvp)
 
 ## Core Flow
 
@@ -39,6 +39,8 @@
 - [ ] Menu button cycles Mobile Perf mode and persists.
 - [ ] Menu button cycles Balance mode and persists.
 - [ ] Mobile perf mode applies expected visual/perf behavior.
+- [ ] Rapid-fire, beam, explosive, and multishot builds stay playable during dense fights.
+- [ ] Regular mob death VFX no longer create obvious slowdown in kill streaks.
 
 ## Final Gate
 
