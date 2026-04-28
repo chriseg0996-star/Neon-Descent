@@ -32,9 +32,9 @@ Neon Descent is a fast-paced top-down extraction shooter where every run pushes 
 
 ---
 
-# GitHub Release Description (v0.1.7-mvp)
+# GitHub Release Description (v0.1.8-mvp)
 
-Neon Descent `v0.1.7-mvp` is a public MVP polish update focused on readability, combat feel, progression clarity, and performance stability.
+Neon Descent `v0.1.8-mvp` is a public MVP polish update focused on readability, smarter loot flow, combat feel, progression clarity, and performance stability.
 
 ### Added
 - Progressive sectors and gate breach events

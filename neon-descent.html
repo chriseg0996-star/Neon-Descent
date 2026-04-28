@@ -1220,7 +1220,7 @@ h3 {
           <div class="footer-note" id="balanceHint">Standard: ritmo equilibrado para runs consistentes.</div>
         </div>
 
-        <div class="footer-note menu-version">v0.1.7-mvp · progressive extraction shooter</div>
+        <div class="footer-note menu-version">v0.1.8-mvp · progressive extraction shooter</div>
       </div>
     </div>
 
@@ -5002,16 +5002,21 @@ var OperationSystem = {
    Small backpack for extraction loot. Lost on death, banked on extract.
 ===================================================================== */
 var LOOT_TABLE = [
-  { id: 'scrap', name: 'Scrap Metal', icon: '⬡', rarity: 'common', vendorValue: 10, weight: 42, desc: 'Armory salvage', category: 'material', materialType: 'scrap', materialQty: 1 },
-  { id: 'circuits', name: 'Circuit Board', icon: '⬢', rarity: 'uncommon', vendorValue: 24, weight: 24, desc: 'Precision parts for tech nodes', category: 'material', materialType: 'circuits', materialQty: 1 },
-  { id: 'biomass', name: 'Biomass Sample', icon: '✿', rarity: 'uncommon', vendorValue: 24, weight: 22, desc: 'Organic sample for mutation work', category: 'material', materialType: 'biomass', materialQty: 1 },
-  { id: 'intel', name: 'Intel Shard', icon: '◇', rarity: 'rare', vendorValue: 46, weight: 16, desc: 'Encrypted route and route-risk data', category: 'material', materialType: 'intel', materialQty: 1 },
-  { id: 'void', name: 'Void Relic', icon: '✦', rarity: 'legendary', vendorValue: 150, weight: 5, desc: 'Required for foundry and weapon evolutions', category: 'material', materialType: 'void', materialQty: 1 },
-  { id: 'cache', name: 'Broker Cache', icon: '◉', rarity: 'rare', vendorValue: 75, weight: 14, desc: 'Pure vendor cargo for credits', category: 'vendor' },
-  { id: 'medkit', name: 'Field Medkit', icon: '✚', rarity: 'uncommon', vendorValue: 18, weight: 13, desc: 'Heal 40 HP on pickup', consumable: true,
+  { id: 'scrap', name: 'Scrap Metal', icon: '⬡', rarity: 'common', vendorValue: 12, weight: 22, desc: 'Basic armory salvage', category: 'material', materialType: 'scrap', materialQty: 1 },
+  { id: 'circuits', name: 'Circuit Board', icon: '⬢', rarity: 'uncommon', vendorValue: 28, weight: 24, desc: 'Precision parts for tech nodes', category: 'material', materialType: 'circuits', materialQty: 1 },
+  { id: 'biomass', name: 'Biomass Sample', icon: '✿', rarity: 'uncommon', vendorValue: 28, weight: 22, desc: 'Organic sample for mutation work', category: 'material', materialType: 'biomass', materialQty: 1 },
+  { id: 'intel', name: 'Intel Shard', icon: '◇', rarity: 'rare', vendorValue: 58, weight: 18, desc: 'Encrypted route and route-risk data', category: 'material', materialType: 'intel', materialQty: 1 },
+  { id: 'nanocore', name: 'Nanoforge Core', icon: '⬣', rarity: 'epic', vendorValue: 92, weight: 11, desc: 'Dense fabrication core worth real workshop progress', category: 'material', materialType: 'circuits', materialQty: 2 },
+  { id: 'genevault', name: 'Gene Vault', icon: '✺', rarity: 'epic', vendorValue: 92, weight: 11, desc: 'Stabilized biotech reserve for mutation research', category: 'material', materialType: 'biomass', materialQty: 2 },
+  { id: 'void', name: 'Void Relic', icon: '✦', rarity: 'legendary', vendorValue: 150, weight: 6, desc: 'Required for foundry and weapon evolutions', category: 'material', materialType: 'void', materialQty: 1 },
+  { id: 'cache', name: 'Broker Cache', icon: '◉', rarity: 'rare', vendorValue: 88, weight: 15, desc: 'Pure vendor cargo for credits', category: 'vendor' },
+  { id: 'blackbox', name: 'Blacksite Black Box', icon: '▣', rarity: 'epic', vendorValue: 130, weight: 8, desc: 'Recovered command hardware loaded with sellable intel', category: 'vendor' },
+  { id: 'medkit', name: 'Field Medkit', icon: '✚', rarity: 'uncommon', vendorValue: 18, weight: 10, desc: 'Heal 40 HP on pickup', consumable: true,
     use: function(p) { p.heal(40); } },
-  { id: 'stim', name: 'Stim Pack', icon: '⟫', rarity: 'uncommon', vendorValue: 18, weight: 10, desc: '+20% speed for 15s', consumable: true,
+  { id: 'stim', name: 'Stim Pack', icon: '⟫', rarity: 'uncommon', vendorValue: 18, weight: 8, desc: '+20% speed for 15s', consumable: true,
     use: function(p) { p.stats.moveSpeed *= 1.2; } },
+  { id: 'surge', name: 'Overclock Ampoule', icon: '✸', rarity: 'rare', vendorValue: 30, weight: 7, desc: '+25% fire rate for 12s', consumable: true,
+    use: function(p) { p.stats.fireRate *= 1.25; } },
 ];
 
 var RunInventory = {
@@ -5034,9 +5039,10 @@ var RunInventory = {
   itemScore: function(item) {
     var rarityRank = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
     var value = item.vendorValue || item.value || 0;
-    var rarityScore = (rarityRank[item.rarity] || 0) * 18;
-    var typeScore = item.materialType ? 26 : (item.consumable ? 8 : 0);
-    return value + rarityScore + typeScore;
+    var rarityScore = (rarityRank[item.rarity] || 0) * 22;
+    var typeScore = item.materialType ? 38 : (item.consumable ? 10 : 0);
+    var qtyScore = item.materialQty ? item.materialQty * 12 : 0;
+    return value + rarityScore + typeScore + qtyScore;
   },
 
   fullBackpackDecision: function(lootItem) {
@@ -5052,13 +5058,19 @@ var RunInventory = {
     var newScore = this.itemScore(lootItem);
     var scoreDelta = newScore - worstScore;
     var worstItem = this.items[worstIdx];
-    if (lootItem.materialType && !worstItem.materialType && scoreDelta >= -6) {
+    if (lootItem.materialType && !worstItem.materialType && scoreDelta >= -18) {
       return { action: 'replace', idx: worstIdx, reason: 'BANK MATERIALS OVER LOW-VALUE CARGO' };
     }
-    if (scoreDelta >= 16) {
+    if ((lootItem.rarity === 'epic' || lootItem.rarity === 'legendary') && scoreDelta >= -10) {
+      return { action: 'replace', idx: worstIdx, reason: 'HIGH-END HAUL BEATS YOUR WORST SLOT' };
+    }
+    if (scoreDelta >= 10) {
       return { action: 'replace', idx: worstIdx, reason: 'CLEAR VALUE UPGRADE' };
     }
-    if (scoreDelta <= -22 && !lootItem.materialType) {
+    if (scoreDelta <= -12 && !lootItem.materialType && lootItem.rarity === 'common') {
+      return { action: 'drop', idx: worstIdx, reason: 'IGNORE LOW-END SCRAP WHILE MOVING' };
+    }
+    if (scoreDelta <= -18 && !lootItem.materialType) {
       return { action: 'drop', idx: worstIdx, reason: 'CURRENT HAUL IS CLEARLY BETTER' };
     }
     return { action: 'choose', idx: worstIdx, reason: 'CLOSE CALL: SWAP THE RECOMMENDED SLOT OR KEEP YOUR HAUL' };
@@ -5078,10 +5090,25 @@ var RunInventory = {
       AudioBus.play('pickup');
       return true;
     }
-    // Inventory full — show choice modal
+    var decision = this.fullBackpackDecision(lootItem);
+    this._recommendedSwapIdx = decision.idx;
+    if (decision.action === 'replace') {
+      var replaced = this.items[decision.idx];
+      this.items[decision.idx] = lootItem;
+      Game.announce('+ AUTO-SWAP ' + lootItem.name.toUpperCase() + ' > ' + replaced.name.toUpperCase());
+      AudioBus.play('pickup');
+      return true;
+    }
+    if (decision.action === 'drop') {
+      if (!lootItem.consumable) {
+        Game.announce('SKIPPED ' + lootItem.name.toUpperCase());
+      }
+      return false;
+    }
+    // Inventory full — only show choice on close calls
     this._pendingLoot = lootItem;
-    this._selectedSwapIdx = -1;
-    UI.showLootChoice(lootItem);
+    this._selectedSwapIdx = decision.idx;
+    UI.showLootChoice(lootItem, decision);
     return false;
   },
 
