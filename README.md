@@ -1,6 +1,6 @@
 # Neon Descent
 
-Neon Descent is a fast, progressive top-down extraction shooter built in vanilla JavaScript and HTML5 Canvas, designed around short high-pressure runs, escalating combat density, and performance-aware play across desktop and mobile-friendly setups.
+Neon Descent is evolving into a top-down extraction action looter built in vanilla JavaScript and HTML5 Canvas, designed around risky scavenging runs, meaningful loot, and hideout progression across desktop and mobile-friendly setups.
 
 ## Highlights
 
@@ -13,9 +13,9 @@ Neon Descent is a fast, progressive top-down extraction shooter built in vanilla
 
 ## Current State
 
-`v0.1.8-mvp`
+`v0.4.9-mvp`
 
-This build is a public MVP polish update focused on readability, smarter loot flow, combat feel, and performance tuning under heavier weapon and VFX load.
+This build reopens the run flow after the first objective pass became too punishing: bigger play space, lighter cover density, fewer enemies, easier extraction, and the field objective shifted toward an optional bonus instead of a hard pressure gate.
 
 ## How To Play
 
@@ -46,10 +46,10 @@ Run the game from a local static server:
 
 ## Next Up
 
-- Continue combat clarity and frame-stability work for projectile-heavy, AoE, and beam-heavy builds
-- Make extraction rewards, materials, and workshop progression easier to understand during and after runs
-- Keep simplifying menu flow and first-run presentation without turning the game into a tutorial wall
-- Expand content only after the current vertical slice feels stable and clean
+- Reframe the live loop around better loot value, clearer extraction stakes, and less repetitive kiting
+- Turn the current workshop/menu progression into a real hideout structure with stash, vendor, workbench, and intel roles
+- Move maps toward points of interest, guarded loot, patrols, and route decisions instead of mostly open wave pressure
+- Use operations as special endgame expeditions while standard runs become the main scavenging loop
 
 ## Feedback
 

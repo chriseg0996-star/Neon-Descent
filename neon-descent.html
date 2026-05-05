@@ -41,8 +41,9 @@
   --r-legend: #fb923c;
 
   --radius: 2px;
-  --mono: ui-monospace, 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', monospace;
-  --display: 'Avenir Next Condensed', 'Arial Narrow', 'Helvetica Neue', system-ui, sans-serif;
+  --mono: 'Cascadia Mono', 'IBM Plex Mono', 'SF Mono', 'Consolas', 'Liberation Mono', monospace;
+  --display: 'Bahnschrift SemiCondensed', 'DIN Condensed', 'Franklin Gothic Medium', 'Arial Narrow', sans-serif;
+  --ui: 'Bahnschrift', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,7 +52,7 @@ html, body {
   width: 100%; height: 100%; overflow: hidden;
   background: var(--bg-0);
   color: var(--ink);
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--ui);
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -104,18 +105,33 @@ canvas#game {
     radial-gradient(circle at 72% 18%, rgba(251,191,36,0.06), transparent 34%);
   pointer-events: none;
 }
+#mainMenu {
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px 20px 38px;
+}
 .menu-content {
   position: relative; z-index: 1;
   display: grid;
-  gap: 18px;
-  width: 100%; max-width: 520px;
-  align-content: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 1060px;
+  align-content: start;
+  margin: 0 auto;
+  padding-bottom: 24px;
 }
-.brand { text-align: center; }
+.brand {
+  text-align: left;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
 .brand-mark {
-  font-size: 24px; color: var(--accent);
-  text-shadow: 0 0 24px var(--accent);
-  margin-bottom: 6px;
+  font-size: 18px; color: #9fe8ff;
+  text-shadow: 0 0 18px rgba(34,211,238,0.32);
+  margin-bottom: 10px;
   animation: pulse 2.4s ease-in-out infinite;
 }
 @keyframes pulse { 50% { opacity: 0.6; transform: scale(0.92); } }
@@ -123,41 +139,67 @@ canvas#game {
 .brand-title {
   font-family: var(--display);
   font-weight: 900;
-  font-size: clamp(34px, 7vw, 56px);
-  letter-spacing: 0.08em;
-  line-height: 0.9;
-  color: var(--ink);
-  text-shadow: 0 0 30px rgba(34,211,238,0.35);
+  font-size: clamp(36px, 7vw, 62px);
+  letter-spacing: 0.16em;
+  line-height: 0.86;
+  color: #eef7ff;
+  text-shadow: 0 0 24px rgba(34,211,238,0.18);
+  text-transform: uppercase;
 }
 .brand-title span {
   display: block;
-  color: var(--accent);
+  color: #7ddcf5;
   font-weight: 700;
-  letter-spacing: 0.22em;
-  font-size: 0.58em;
-  margin-top: 6px;
+  letter-spacing: 0.32em;
+  font-size: 0.42em;
+  margin-top: 10px;
 }
 .brand-sub {
   font-family: var(--mono);
-  color: var(--ink-faint);
+  color: #6f89a4;
   font-size: 10px;
-  letter-spacing: 0.22em;
-  margin-top: 8px;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
+}
+
+.menu-shell {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.15fr) minmax(340px, 0.95fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.menu-brief,
+.menu-actions {
+  display: grid;
+  gap: 14px;
+}
+
+.menu-actions {
+  padding: 16px;
+  border: 1px solid rgba(83, 116, 148, 0.75);
+  background:
+    linear-gradient(180deg, rgba(8,16,28,0.95), rgba(5,11,20,0.97)),
+    rgba(5,11,20,0.97);
+  box-shadow:
+    inset 0 0 0 1px rgba(207,233,255,0.04),
+    0 20px 60px rgba(0,0,0,0.28);
 }
 
 .meta-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: rgba(34,211,238,0.12);
-  border: 1px solid var(--line-soft);
+  gap: 10px;
   width: 100%;
 }
 .meta-item {
-  flex: 1; background: var(--bg-1);
-  padding: 8px 8px; text-align: center;
+  flex: 1;
+  background: linear-gradient(180deg, rgba(8,16,28,0.9), rgba(6,12,22,0.94));
+  border: 1px solid rgba(63,96,126,0.72);
+  padding: 10px 10px; text-align: left;
   display: flex; flex-direction: column; gap: 2px;
+  min-height: 60px;
+  box-shadow: inset 0 0 0 1px rgba(197,226,255,0.03);
 }
 .meta-item .lbl {
   font-family: var(--mono); font-size: 8px;
@@ -165,25 +207,27 @@ canvas#game {
 }
 .meta-item span:last-child {
   font-family: var(--display); font-weight: 700;
-  color: var(--accent); font-size: 15px;
+  color: var(--accent); font-size: 18px;
+  margin-top: auto;
 }
 .menu-loadout {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   width: 100%;
 }
 .loadout-card {
-  background: rgba(7,17,31,0.82);
-  border: 1px solid var(--line);
-  padding: 10px 10px 12px;
-  min-height: 78px;
+  background: linear-gradient(180deg, rgba(8,18,31,0.94), rgba(5,12,22,0.96));
+  border: 1px solid rgba(63,96,126,0.82);
+  padding: 12px 14px 13px;
+  min-height: 80px;
+  box-shadow: inset 0 0 0 1px rgba(197,226,255,0.03);
 }
 .loadout-label {
   font-family: var(--mono);
   font-size: 8px;
-  color: var(--ink-faint);
-  letter-spacing: 0.14em;
+  color: #6f89a4;
+  letter-spacing: 0.18em;
 }
 .loadout-value {
   margin-top: 7px;
@@ -202,13 +246,13 @@ canvas#game {
 .mode-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
   width: 100%;
 }
 .mode-btn {
   padding: 10px 12px;
-  border: 1px solid var(--line);
-  background: rgba(7,17,31,0.72);
+  border: 1px solid rgba(63,96,126,0.78);
+  background: linear-gradient(180deg, rgba(8,16,28,0.92), rgba(7,13,23,0.92));
   color: var(--ink-dim);
   font-family: var(--display);
   font-size: 12px;
@@ -217,10 +261,10 @@ canvas#game {
   cursor: pointer;
 }
 .mode-btn.active {
-  border-color: var(--gold);
-  color: #fff6d8;
-  background: linear-gradient(180deg, rgba(251,191,36,0.14), rgba(120,77,7,0.16));
-  box-shadow: 0 0 0 1px rgba(251,191,36,0.22) inset;
+  border-color: #d2a94b;
+  color: #fff3cf;
+  background: linear-gradient(180deg, rgba(112,88,35,0.34), rgba(43,30,10,0.34));
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.12) inset;
 }
 .mode-btn.locked {
   opacity: 0.45;
@@ -231,7 +275,60 @@ canvas#game {
   font-size: 10px;
   color: var(--ink-faint);
   letter-spacing: 0.06em;
+  line-height: 1.45;
 }
+.keystone-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(63,96,126,0.72);
+  background: linear-gradient(180deg, rgba(8,16,28,0.92), rgba(7,13,23,0.92));
+  box-shadow: inset 0 0 0 1px rgba(197,226,255,0.03);
+}
+.keystone-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.keystone-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--ink-faint);
+  letter-spacing: 0.18em;
+}
+.keystone-value {
+  font-family: var(--display);
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+}
+.keystone-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+.keystone-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mini-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  background: rgba(7,17,31,0.82);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 14px;
+  cursor: pointer;
+}
+.mini-btn:hover { border-color: var(--gold); color: var(--gold); }
+.mini-btn:disabled { opacity: 0.35; cursor: default; }
 
 .menu-btns {
   display: grid;
@@ -242,26 +339,26 @@ canvas#game {
 
 .btn {
   font-family: var(--display); font-weight: 700;
-  letter-spacing: 0.18em; font-size: 13px;
+  letter-spacing: 0.2em; font-size: 13px;
   padding: 14px 18px;
-  background: var(--bg-2);
-  color: var(--ink);
-  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(8,18,31,0.96), rgba(6,12,22,0.96));
+  color: #d7ecff;
+  border: 1px solid rgba(63,96,126,0.82);
   cursor: pointer;
   position: relative;
   transition: all 0.15s ease;
   text-transform: uppercase;
 }
-.btn:hover { background: var(--bg-3); border-color: var(--accent-deep); color: var(--accent); }
+.btn:hover { background: linear-gradient(180deg, rgba(13,28,46,0.98), rgba(8,16,28,0.98)); border-color: #6c9fc4; color: #9fe8ff; }
 .btn:active { transform: translateY(1px); }
 .btn.primary {
   grid-column: 1 / -1;
-  background: linear-gradient(180deg, var(--accent-deep) 0%, #065968 100%);
-  border-color: var(--accent);
+  background: linear-gradient(180deg, #406c8a 0%, #25465f 100%);
+  border-color: #8bb9d8;
   color: #eafcff;
-  box-shadow: 0 0 0 1px var(--accent) inset, 0 0 24px rgba(34,211,238,0.25);
+  box-shadow: 0 0 0 1px rgba(207,233,255,0.24) inset, 0 0 18px rgba(72,133,176,0.18);
 }
-.btn.primary:hover { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%); }
+.btn.primary:hover { background: linear-gradient(180deg, #5a8cad 0%, #315875 100%); }
 .menu-btns .btn:not(.primary):not(.ghost) {
   padding: 11px 10px;
   font-size: 11px;
@@ -285,6 +382,179 @@ canvas#game {
 }
 .btn.ghost:hover { color: var(--warn); border-color: var(--warn-deep); }
 
+.menu-tools {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.menu-tools .btn {
+  min-height: 58px;
+}
+
+.menu-system {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.menu-system .btn {
+  min-height: 52px;
+}
+
+.menu-system .btn.ghost {
+  grid-column: auto;
+}
+
+.menu-footer {
+  display: grid;
+  gap: 5px;
+  justify-items: start;
+}
+
+.menu-footer .footer-note {
+  letter-spacing: 0.12em;
+}
+.menu-footer .menu-version {
+  opacity: 0.6;
+}
+
+/* Menu layout override */
+.menu-content {
+  grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.9fr);
+  grid-template-areas:
+    "brand brand"
+    "meta control"
+    "buttons buttons"
+    "utility utility"
+    "footer footer";
+  align-items: start;
+  column-gap: 24px;
+  row-gap: 12px;
+}
+.menu-content > .brand { grid-area: brand; }
+.menu-content > .meta-strip { grid-area: meta; }
+.menu-content > .mode-switch { grid-area: control; }
+.menu-content > .mode-switch,
+.menu-content > .keystone-row {
+  grid-column: 2;
+}
+.menu-content > .keystone-row {
+  grid-row: 2;
+  align-self: start;
+  margin-top: 86px;
+}
+.menu-content > .menu-btns {
+  grid-area: buttons;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 2px;
+}
+.menu-content > .menu-utility {
+  grid-area: utility;
+}
+.menu-content > .menu-btns .btn.primary {
+  grid-column: 1 / -1;
+  min-height: 78px;
+  font-size: 18px;
+  letter-spacing: 0.16em;
+}
+.menu-content > .menu-btns .btn:not(.primary):not(.ghost) {
+  min-height: 56px;
+}
+.menu-content > .menu-btns #btnClass,
+.menu-content > .menu-btns #btnZone,
+.menu-content > .menu-btns #btnMeta,
+.menu-content > .menu-btns #btnWorkshop {
+  grid-column: span 2;
+}
+.menu-content > .menu-btns #btnCodex,
+.menu-content > .menu-btns #btnPerfMode,
+.menu-content > .menu-btns #btnBalanceMode,
+.menu-content > .menu-btns #btnReset {
+  min-height: 48px;
+}
+.menu-content > .menu-btns #btnReset {
+  grid-column: 4;
+}
+.menu-content > .menu-version {
+  grid-area: footer;
+  justify-self: center;
+  align-self: end;
+}
+
+.menu-content > .mode-switch,
+.menu-content > .keystone-row {
+  background: linear-gradient(180deg, rgba(8,16,28,0.95), rgba(6,12,22,0.97));
+  border: 1px solid rgba(83,116,148,0.72);
+  padding: 12px;
+}
+.menu-content > .mode-switch {
+  box-shadow: inset 0 0 0 1px rgba(197,226,255,0.03);
+}
+.menu-content > .keystone-row.hidden {
+  display: none !important;
+}
+
+.picker-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 14px !important;
+}
+.picker-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+}
+.picker-value {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: #eafcff;
+  line-height: 1;
+}
+.picker-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  line-height: 1.2;
+}
+.menu-utility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.82;
+}
+.menu-utility .btn {
+  min-height: 38px;
+  padding: 8px 11px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+.menu-utility #btnCodex {
+  min-width: 120px;
+}
+.menu-utility #btnPerfMode,
+.menu-utility #btnBalanceMode {
+  color: var(--ink-faint);
+  border-color: var(--line-soft);
+  background: rgba(7,17,31,0.38);
+}
+.menu-utility #btnReset {
+  color: #9aaab8;
+  border-color: rgba(83,116,148,0.35);
+  background: transparent;
+}
+
 .footer-note {
   font-family: var(--mono); font-size: 10px;
   color: var(--ink-faint); letter-spacing: 0.2em;
@@ -301,7 +571,7 @@ canvas#game {
 }
 .menu-version {
   text-align: center;
-  opacity: 0.55;
+  opacity: 0.62;
 }
 
 /* ================================================================
@@ -579,6 +849,23 @@ canvas#game {
   display: grid; gap: 8px;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 }
+.workshop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.workshop-actions .btn {
+  min-width: 132px;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+.workshop-section-note {
+  margin-top: 10px;
+  color: var(--ink-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
 .manifest-chip {
   padding: 8px 10px;
   border: 1px solid var(--line);
@@ -598,28 +885,38 @@ canvas#game {
 .hud {
   position: absolute; inset: 0; z-index: 20;
   pointer-events: none;
-  padding: 12px;
+  padding: 14px;
   display: flex; flex-direction: column; justify-content: space-between;
 }
 .hud > * { pointer-events: auto; }
-.hud-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.hud-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.hud-left { display: flex; flex-direction: column; gap: 4px; }
 
 .class-tag, .zone-tag {
   font-family: var(--display); font-weight: 700;
-  letter-spacing: 0.2em; font-size: 11px;
-  padding: 4px 8px;
-  background: rgba(7,17,31,0.85);
+  letter-spacing: 0.18em; font-size: 11px;
+  padding: 5px 9px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid var(--line);
   color: var(--accent);
   backdrop-filter: blur(4px);
+  box-shadow: inset 0 0 0 1px rgba(159,232,255,0.03);
 }
-.zone-tag { color: var(--ink-dim); margin-top: 4px; font-size: 10px; }
+.zone-tag { color: var(--ink-dim); font-size: 10px; }
 
-.hud-right { display: flex; gap: 4px; align-items: flex-start; }
+.hud-right {
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: min(520px, 48vw);
+}
 .stat-pill {
   font-family: var(--mono); font-size: 10px;
-  padding: 4px 7px;
-  background: rgba(7,17,31,0.85);
+  padding: 5px 8px;
+  min-height: 30px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid var(--line);
   backdrop-filter: blur(4px);
   display: flex; gap: 6px; align-items: center;
@@ -627,7 +924,7 @@ canvas#game {
 .stat-pill .lbl { color: var(--ink-faint); font-size: 8px; letter-spacing: 0.12em; }
 .stat-pill span:last-child { color: var(--accent); font-weight: 700; }
 .ability-pill {
-  min-width: 82px;
+  min-width: 118px;
   justify-content: center;
 }
 .ability-pill.ready {
@@ -636,13 +933,11 @@ canvas#game {
   background: linear-gradient(180deg, rgba(251,191,36,0.18), rgba(120,77,7,0.18));
   box-shadow: 0 0 0 1px rgba(251,191,36,0.35) inset, 0 0 18px rgba(251,191,36,0.18);
 }
-.ability-pill.ready span:last-child {
-  color: var(--gold);
-}
+.ability-pill.ready span:last-child { color: var(--gold); }
 
 .icon-btn {
-  width: 28px; height: 28px;
-  background: rgba(7,17,31,0.85);
+  width: 30px; height: 30px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid var(--line);
   color: var(--ink); cursor: pointer;
   font-size: 10px;
@@ -654,11 +949,11 @@ canvas#game {
   position: static;
   display: flex; flex-direction: column; gap: 4px;
   width: 100%;
-  max-width: 420px;
+  max-width: 360px;
   z-index: 1;
 }
 .bar {
-  position: relative; height: 16px;
+  position: relative; height: 14px;
   background: var(--bg-1);
   border: 1px solid var(--line);
   overflow: hidden;
@@ -674,29 +969,31 @@ canvas#game {
 .bar-label {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 10px;
+  font-family: var(--mono); font-size: 9px;
   color: var(--ink); text-shadow: 0 0 4px #000;
   letter-spacing: 0.1em;
 }
 
 .hud-bottom {
   display: flex; justify-content: space-between; align-items: flex-end;
-  gap: 8px;
+  gap: 12px;
 }
 .hud-left-stack {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   align-items: flex-start;
-  max-width: min(460px, calc(100vw - 120px));
+  max-width: min(380px, calc(100vw - 420px));
 }
 .weapon-card {
-  display: flex; gap: 10px; align-items: center;
-  background: rgba(7,17,31,0.85);
+  display: flex; gap: 10px; align-items: flex-start;
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid var(--line);
   backdrop-filter: blur(4px);
-  padding: 6px 10px 6px 6px;
+  padding: 8px 10px 8px 8px;
   max-width: 100%;
+  width: 100%;
+  box-shadow: inset 0 0 0 1px rgba(159,232,255,0.03);
 }
 .weapon-icon {
   width: 32px; height: 32px;
@@ -716,16 +1013,17 @@ canvas#game {
 .weapon-meta {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   min-width: 0;
+  flex: 1;
 }
 .weapon-stats {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 .weapon-stat {
-  min-width: 74px;
+  min-width: 0;
   padding: 4px 6px;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--line-soft);
@@ -746,16 +1044,16 @@ canvas#game {
   letter-spacing: 0.08em;
 }
 .perk-strip {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   width: 100%;
-  max-width: 420px;
+  max-width: 360px;
 }
 .perk-chip {
-  min-width: 54px;
+  min-width: 0;
   padding: 4px 6px;
-  background: rgba(7,17,31,0.84);
+  background: linear-gradient(180deg, rgba(7,17,31,0.76), rgba(5,12,22,0.82));
   border: 1px solid var(--line);
   font-family: var(--mono);
   font-size: 9px;
@@ -768,8 +1066,56 @@ canvas#game {
   font-size: 11px;
   letter-spacing: 0;
 }
+
+.hud-side-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: min(300px, 28vw);
+}
+.objective-card {
+  width: min(300px, 28vw);
+  padding: 10px 12px 11px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.9), rgba(5,12,22,0.92));
+  border: 1px solid rgba(34,211,238,0.28);
+  box-shadow: inset 0 0 0 1px rgba(159,232,255,0.03);
+  backdrop-filter: blur(4px);
+}
+.objective-card.urgent {
+  border-color: rgba(251,191,36,0.55);
+  box-shadow: inset 0 0 0 1px rgba(251,191,36,0.12), 0 0 18px rgba(251,191,36,0.1);
+}
+.objective-kicker {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--ink-faint);
+  letter-spacing: 0.18em;
+}
+.objective-main {
+  margin-top: 5px;
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: #eef7ff;
+}
+.objective-sub {
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 9px;
+  line-height: 1.35;
+  color: var(--ink-dim);
+}
+
+.hud-utility {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  gap: 6px;
+  align-items: stretch;
+}
 .kill-counter {
-  background: rgba(7,17,31,0.85);
+  min-width: 68px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid var(--line);
   backdrop-filter: blur(4px);
   padding: 6px 10px;
@@ -785,19 +1131,21 @@ canvas#game {
 }
 
 /* === EXTRACTION HUD === */
-.hud-mid-row {
-  display: flex; gap: 6px; align-items: flex-end;
-}
 .extract-hud {
-  background: rgba(7,17,31,0.85); border: 1px solid var(--good);
-  backdrop-filter: blur(4px); padding: 5px 10px; text-align: center;
+  min-width: 128px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
+  border: 1px solid rgba(74,222,128,0.55);
+  backdrop-filter: blur(4px);
+  padding: 7px 10px 8px;
+  text-align: left;
+  box-shadow: inset 0 0 0 1px rgba(74,222,128,0.05);
 }
 .extract-hud.active { border-color: #4ade80; box-shadow: 0 0 12px rgba(74,222,128,0.4); animation: pulse 1s infinite; }
-.extract-label { font-family: var(--mono); font-size: 9px; color: var(--good); letter-spacing: 0.2em; }
-.extract-dist { font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--good); }
+.extract-label { font-family: var(--mono); font-size: 8px; color: var(--good); letter-spacing: 0.2em; }
+.extract-dist { margin-top: 4px; font-family: var(--display); font-weight: 700; font-size: 13px; color: var(--good); letter-spacing: 0.08em; }
 .inv-btn {
-  width: 36px; height: 36px;
-  background: rgba(7,17,31,0.85); border: 1px solid var(--line);
+  width: 40px; height: 40px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9)); border: 1px solid var(--line);
   color: var(--accent); font-size: 14px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 2px;
   backdrop-filter: blur(4px); position: relative;
@@ -810,7 +1158,13 @@ canvas#game {
 }
 .loot-tier {
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
-  padding: 5px 8px; background: rgba(7,17,31,0.85); border: 1px solid var(--line);
+  min-width: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
+  border: 1px solid var(--line);
   color: var(--gold); backdrop-filter: blur(4px);
 }
 
@@ -912,11 +1266,16 @@ canvas#game {
   .hud-right .stat-pill:nth-child(3) { display: none; }
   .hud-right .stat-pill { padding: 3px 6px; }
   .hud-bottom { align-items: flex-end; }
-  .hud-left-stack { max-width: min(260px, calc(100vw - 108px)); }
-  .weapon-stats, .perk-strip, .kill-counter { display: none; }
+  .hud-left-stack { max-width: min(248px, calc(100vw - 118px)); gap: 5px; }
+  .hud-side-stack { min-width: auto; gap: 6px; }
+  .objective-card { width: min(220px, 54vw); padding: 8px 10px; }
+  .objective-main { font-size: 12px; }
+  .objective-sub { font-size: 8px; }
+  .weapon-stats, .perk-strip, .kill-counter, .loot-tier { display: none; }
   .weapon-card { padding: 6px 8px 6px 6px; gap: 8px; }
   .weapon-name { font-size: 11px; }
   .weapon-sub { font-size: 8px; letter-spacing: 0.1em; }
+  .extract-hud { min-width: 108px; }
 }
 
 /* ================================================================
@@ -976,7 +1335,14 @@ canvas#game {
   font-family: var(--display); font-weight: 700;
   font-size: 13px; letter-spacing: 0.12em;
 }
-.upgrade-desc { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+.upgrade-desc { font-size: 12px; color: var(--ink); margin-top: 3px; }
+.upgrade-quick {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-top: 4px;
+}
 .upgrade-rarity {
   font-family: var(--mono); font-size: 9px;
   letter-spacing: 0.25em; margin-top: 4px;
@@ -1027,14 +1393,17 @@ h3 {
   font-size: 32px; letter-spacing: 0.2em;
   color: var(--warn);
   text-shadow: 0 0 30px rgba(255,77,109,0.4);
+  text-align: center;
 }
 .summary {
   display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
   background: var(--line);
   border: 1px solid var(--line);
+  overflow: hidden;
 }
 .summary-row {
-  background: var(--bg-2); padding: 10px;
+  background: linear-gradient(180deg, rgba(10,23,38,0.98), rgba(8,18,31,0.98));
+  padding: 11px 12px;
 }
 .summary-row .lbl {
   font-family: var(--mono); font-size: 9px;
@@ -1043,6 +1412,13 @@ h3 {
 .summary-row .val {
   font-family: var(--display); font-weight: 700;
   color: var(--accent); font-size: 16px;
+}
+.summary-row.wide {
+  grid-column: 1 / -1;
+}
+.summary-row.compact .val {
+  font-size: 13px;
+  line-height: 1.35;
 }
 .summary-btns { display: flex; flex-direction: column; gap: 8px; }
 
@@ -1068,16 +1444,74 @@ h3 {
   .loadout-card { min-height: 68px; padding: 8px 9px 10px; }
   .menu-hints { display: none; }
 }
+@media (max-width: 900px) {
+  .menu-content { max-width: 620px; }
+  .menu-content {
+    display: flex;
+    flex-direction: column;
+    max-width: 700px;
+  }
+  .menu-content > .brand { order: 1; }
+  .menu-content > .meta-strip { order: 2; }
+  .menu-content > .mode-switch { order: 3; }
+  .menu-content > .keystone-row { order: 4; margin-top: 0; }
+  .menu-content > .menu-btns { order: 5; }
+  .menu-content > .menu-utility { order: 6; }
+  .menu-content > .menu-version { order: 7; }
+  .menu-content > .menu-btns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .menu-content > .menu-version {
+    align-self: center;
+  }
+  .menu-shell { grid-template-columns: 1fr; }
+  .brand { justify-items: center; text-align: center; }
+  .menu-actions { padding: 14px; }
+  .menu-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .menu-system { grid-template-columns: 1fr; }
+  .menu-utility {
+    justify-content: center;
+  }
+}
 @media (max-width: 400px) {
   .screen { padding: 14px; }
+  #mainMenu { padding: 12px 14px 26px; }
   .menu-content { gap: 14px; }
+  .menu-content > .menu-btns {
+    grid-template-columns: 1fr;
+  }
+  .menu-content > .menu-btns #btnClass,
+  .menu-content > .menu-btns #btnZone,
+  .menu-content > .menu-btns #btnMeta,
+  .menu-content > .menu-btns #btnWorkshop {
+    grid-column: auto;
+  }
+  .menu-content > .menu-btns .btn.primary {
+    min-height: 72px;
+    font-size: 16px;
+  }
+  .menu-utility {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .menu-utility .btn,
+  .menu-utility #btnCodex {
+    width: 100%;
+    min-width: 0;
+  }
+  .brand { justify-items: center; text-align: center; }
+  .menu-shell { grid-template-columns: 1fr; }
   .menu-loadout { grid-template-columns: 1fr; }
   .mode-switch { grid-template-columns: 1fr; }
   .menu-btns { grid-template-columns: 1fr; }
+  .menu-tools { grid-template-columns: 1fr; }
+  .menu-system { grid-template-columns: 1fr; }
   .meta-strip { grid-template-columns: 1fr; }
   .hud-bottom { flex-direction: column; align-items: stretch; }
   .hud-left-stack { max-width: 100%; }
-  .kill-counter { align-self: flex-end; }
+  .hud-side-stack { align-items: stretch; }
+  .objective-card { width: 100%; }
+  .hud-utility { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .hud-bars { max-width: none; }
 }
 
@@ -1139,20 +1573,27 @@ h3 {
             <div class="perk-chip">VOID <strong id="voidText">0</strong></div>
           </div>
         </div>
-        <div class="hud-mid-row">
-          <div class="extract-hud hidden" id="extractHud">
-        <div class="extract-label" id="extractLabel">EXTRACT</div>
-            <div class="extract-dist" id="extractDist">--m</div>
-            <div class="extract-label" id="extractThreat">THREAT: LOW</div>
+        <div class="hud-side-stack">
+          <div class="objective-card" id="objectiveCard">
+            <div class="objective-kicker" id="objectiveKicker">CURRENT TASK</div>
+            <div class="objective-main" id="objectiveMain">SCAVENGE THE ZONE</div>
+            <div class="objective-sub" id="objectiveSub">Secure caches, build haul, then call extraction.</div>
           </div>
-          <button class="inv-btn" id="btnInvOpen" aria-label="Inventory">
-            <span>⬟</span><span class="inv-count" id="invCountHud">0</span>
-          </button>
-          <div class="loot-tier" id="lootTierHud">TIER 1</div>
-        </div>
-        <div class="kill-counter">
-          <div class="lbl">KILLS</div>
-          <div class="val" id="killText">0</div>
+          <div class="hud-utility">
+            <div class="extract-hud hidden" id="extractHud">
+              <div class="extract-label" id="extractLabel">EXTRACT</div>
+              <div class="extract-dist" id="extractDist">--m</div>
+              <div class="extract-label" id="extractThreat">THREAT: LOW</div>
+            </div>
+            <button class="inv-btn" id="btnInvOpen" aria-label="Inventory">
+              <span>⬟</span><span class="inv-count" id="invCountHud">0</span>
+            </button>
+            <div class="loot-tier" id="lootTierHud">TIER 1</div>
+            <div class="kill-counter">
+              <div class="lbl">KILLS</div>
+              <div class="val" id="killText">0</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1180,39 +1621,42 @@ h3 {
           <div class="meta-item"><span class="lbl">BEST RUN</span><span id="bestRun">—</span></div>
         </div>
 
-        <div class="menu-loadout">
-          <div class="loadout-card">
-            <div class="loadout-label">DEPLOY</div>
-            <div class="loadout-value" id="menuClassValue">SOLDIER</div>
-            <div class="loadout-sub" id="menuClassSub">BALANCED GUNFIGHTER</div>
-          </div>
-          <div class="loadout-card">
-            <div class="loadout-label">TARGET ZONE</div>
-            <div class="loadout-value" id="menuZoneValue">RUSTED DOCKS</div>
-            <div class="loadout-sub" id="menuZoneSub">SECTOR 01</div>
-          </div>
-          <div class="loadout-card">
-            <div class="loadout-label">START WEAPON</div>
-            <div class="loadout-value" id="menuWeaponValue">SIDEARM MK-I</div>
-            <div class="loadout-sub" id="menuWeaponSub">PISTOL</div>
-          </div>
-        </div>
-
         <div class="mode-switch">
           <button class="mode-btn active" id="btnModeStandard">STANDARD RUN</button>
-          <button class="mode-btn" id="btnModeOperation">OPERATION</button>
+          <button class="mode-btn" id="btnModeOperation">OPERATION+</button>
         </div>
-        <div class="menu-mode-note" id="menuModeNote">Standard extraction stays on the live loot-and-extract loop.</div>
+        <div class="menu-mode-note hidden" id="menuModeNote"></div>
+        <div class="keystone-row hidden" id="keystoneRow">
+          <div class="keystone-info">
+            <div class="keystone-label">KEYSTONE TIER</div>
+            <div class="keystone-value" id="keystoneTierValue">K+1</div>
+            <div class="keystone-sub" id="keystoneTierSub">Best clear K+0 · No affixes yet</div>
+          </div>
+          <div class="keystone-controls">
+            <button class="mini-btn" id="btnTierDown" aria-label="Lower keystone tier">−</button>
+            <button class="mini-btn" id="btnTierUp" aria-label="Raise keystone tier">+</button>
+          </div>
+        </div>
 
         <div class="menu-btns">
           <button class="btn primary" id="btnStart">▶ BEGIN DESCENT</button>
-          <button class="btn" id="btnClass">CLASS</button>
-          <button class="btn" id="btnZone">ZONE</button>
+          <button class="btn picker-btn" id="btnClass">
+            <span class="picker-label">CLASS</span>
+            <span class="picker-value" id="loadoutClassValue">SOLDIER</span>
+            <span class="picker-sub" id="loadoutClassSub">BALANCED GUNFIGHTER · SIDEARM MK-I</span>
+          </button>
+          <button class="btn picker-btn" id="btnZone">
+            <span class="picker-label">ZONE</span>
+            <span class="picker-value" id="loadoutZoneValue">RUSTED DOCKS</span>
+            <span class="picker-sub" id="loadoutZoneSub">SECTOR 01 · DIFF x1.0</span>
+          </button>
           <button class="btn" id="btnMeta">META TREE</button>
           <button class="btn" id="btnWorkshop">WORKSHOP</button>
+        </div>
+        <div class="menu-utility">
           <button class="btn" id="btnCodex">CODEX</button>
-          <button class="btn" id="btnPerfMode">MOBILE PERF: AUTO</button>
-          <button class="btn" id="btnBalanceMode">BALANCE: STANDARD</button>
+          <button class="btn" id="btnPerfMode">PERF: AUTO</button>
+          <button class="btn" id="btnBalanceMode">TUNE: STANDARD</button>
           <button class="btn ghost" id="btnReset">RESET DATA</button>
         </div>
         <div class="menu-hints">
@@ -1220,7 +1664,7 @@ h3 {
           <div class="footer-note" id="balanceHint">Standard: ritmo equilibrado para runs consistentes.</div>
         </div>
 
-        <div class="footer-note menu-version">v0.1.8-mvp · progressive extraction shooter</div>
+        <div class="footer-note menu-version">v0.4.9-mvp · operation keystone prototype</div>
       </div>
     </div>
 
@@ -1420,6 +1864,201 @@ const Utils = {
   els: (sel) => Array.from(document.querySelectorAll(sel)),
 };
 
+const AudioBus = {
+  init() {},
+  play() {},
+};
+
+const UI = {
+  screens: ['mainMenu', 'classScreen', 'zoneScreen', 'metaScreen', 'workshopScreen', 'codexScreen', 'gameOverScreen'],
+
+  show(id) {
+    this.hideAllScreens();
+    const el = Utils.el('#' + id);
+    if (el) el.classList.remove('hidden');
+  },
+
+  hideAllScreens() {
+    for (const id of this.screens) {
+      const el = Utils.el('#' + id);
+      if (el) el.classList.add('hidden');
+    }
+  },
+
+  announce(text) {
+    Game.announceText = text;
+    Game.announceTime = 3;
+  },
+
+  renderMainMenu() {
+    if (!Game.save) return;
+    const save = Game.save;
+    if (Utils.el('#accountLvl')) Utils.el('#accountLvl').textContent = save.accountLevel || 1;
+    if (Utils.el('#creditsMeta')) Utils.el('#creditsMeta').textContent = save.credits || 0;
+    if (Utils.el('#bestRunMeta')) Utils.el('#bestRunMeta').textContent = save.bestRun ? (save.bestRun.kills + 'K') : '—';
+    if (Utils.el('#perfHint')) Utils.el('#perfHint').textContent = 'Mobile Perf Auto: detecta dispositivo y ajusta calidad automáticamente.';
+    if (Utils.el('#balanceHint')) Utils.el('#balanceHint').textContent = 'Standard: ritmo equilibrado para runs consistentes.';
+    const cls = CLASSES[save.selectedClass];
+    const zone = ZONES[save.selectedZone];
+    const startWeapon = cls && cls.weapon ? cls.weapon : null;
+    if (cls) {
+      if (Utils.el('#loadoutClassValue')) Utils.el('#loadoutClassValue').textContent = cls.name.toUpperCase();
+      if (Utils.el('#loadoutClassSub')) {
+        const classSub = [cls.role.toUpperCase()];
+        if (startWeapon) classSub.push(startWeapon.name.toUpperCase());
+        Utils.el('#loadoutClassSub').textContent = classSub.join(' · ');
+      }
+      if (Utils.el('#classTag')) Utils.el('#classTag').textContent = cls.name.toUpperCase();
+    }
+    if (zone) {
+      if (Utils.el('#loadoutZoneValue')) Utils.el('#loadoutZoneValue').textContent = zone.name.toUpperCase();
+      if (Utils.el('#loadoutZoneSub')) Utils.el('#loadoutZoneSub').textContent = `${zone.tier} · DIFF x${zone.difficulty.toFixed(1)}`;
+    }
+    const standardBtn = Utils.el('#btnModeStandard');
+    const operationBtn = Utils.el('#btnModeOperation');
+    const keystoneRow = Utils.el('#keystoneRow');
+    const opDef = Game.currentOperationDef ? Game.currentOperationDef() : null;
+    const opStats = opDef && Game.operationStats ? Game.operationStats(opDef.id) : null;
+    const currentTier = Game.currentOperationTier ? Game.currentOperationTier() : 1;
+    const maxTier = Game.maxSelectableOperationTier ? Game.maxSelectableOperationTier() : 1;
+    const affixes = Game.operationAffixesForTier ? Game.operationAffixesForTier(currentTier) : [];
+    if (standardBtn) standardBtn.classList.toggle('active', (save.selectedRunMode || 'standard') === 'standard');
+    if (operationBtn) {
+      const canPlay = Game.canPlayOperations ? Game.canPlayOperations() : false;
+      operationBtn.classList.toggle('active', save.selectedRunMode === 'operation' && canPlay);
+      operationBtn.disabled = !canPlay;
+    }
+    if (Utils.el('#menuModeNote')) {
+      Utils.el('#menuModeNote').textContent = '';
+      Utils.el('#menuModeNote').classList.add('hidden');
+    }
+    if (keystoneRow) keystoneRow.classList.toggle('hidden', save.selectedRunMode !== 'operation');
+    if (Utils.el('#keystoneTierValue')) Utils.el('#keystoneTierValue').textContent = 'K+' + currentTier;
+    if (Utils.el('#keystoneTierSub')) Utils.el('#keystoneTierSub').textContent = 'Best clear K+' + ((opStats && opStats.bestTier) || 0) + ' · ' + (affixes.length ? affixes.map(function(a) { return OperationSystem.affixLabel(a); }).join(' / ') : 'No affixes yet');
+    if (Utils.el('#btnTierDown')) Utils.el('#btnTierDown').disabled = currentTier <= 1;
+    if (Utils.el('#btnTierUp')) Utils.el('#btnTierUp').disabled = currentTier >= maxTier;
+  },
+
+  renderCodex() {},
+
+  showPauseMenu() {
+    const el = Utils.el('#pauseMenu');
+    if (el) el.classList.remove('hidden');
+  },
+
+  hidePauseMenu() {
+    const el = Utils.el('#pauseMenu');
+    if (el) el.classList.add('hidden');
+  },
+
+  hideInventory() {
+    const el = Utils.el('#inventoryModal');
+    if (el) el.classList.add('hidden');
+    Game.paused = false;
+  },
+
+  hideLootChoice() {
+    const el = Utils.el('#lootChoiceModal');
+    if (el) el.classList.add('hidden');
+    RunInventory._pendingLoot = null;
+    RunInventory._selectedSwapIdx = -1;
+    RunInventory._recommendedSwapIdx = -1;
+    Game.paused = false;
+  },
+
+  updateHUD() {
+    if (!Game.player) return;
+    const p = Game.player;
+    const hpPct = Math.max(0, Math.min(100, Math.round((p.hp / p.stats.maxHP) * 100)));
+    if (Utils.el('#hpFill')) Utils.el('#hpFill').style.width = `${Math.max(0, (p.hp / p.stats.maxHP) * 100)}%`;
+    if (Utils.el('#hpText')) Utils.el('#hpText').textContent = `HP ${hpPct}%`;
+    const xpNeeded = p.xpForNextLevel ? p.xpForNextLevel() : 1;
+    const xpPct = Math.max(0, Math.min(100, Math.round((p.xp / xpNeeded) * 100)));
+    if (Utils.el('#xpFill')) Utils.el('#xpFill').style.width = `${Math.max(0, (p.xp / xpNeeded) * 100)}%`;
+    if (Utils.el('#xpText')) Utils.el('#xpText').textContent = `XP ${xpPct}%`;
+    if (Utils.el('#lvlText')) Utils.el('#lvlText').textContent = p.level;
+    if (Utils.el('#creditsText')) Utils.el('#creditsText').textContent = Math.floor(Game.runCredits || 0);
+    if (Utils.el('#timeText')) Utils.el('#timeText').textContent = Utils.formatTime(World.time || 0);
+    if (Utils.el('#classTag')) Utils.el('#classTag').textContent = p.cls ? p.cls.name.toUpperCase() : 'RUNNER';
+    if (Utils.el('#zoneTag')) Utils.el('#zoneTag').textContent = Game.isOperationRun && Game.isOperationRun()
+      ? `K+${OperationSystem.keystoneTier} — ${OperationSystem.current.name}`
+      : `${World.zone.tier} — ${World.zone.name.toUpperCase()}`;
+    if (Utils.el('#weaponName')) Utils.el('#weaponName').textContent = p.weapon.name;
+    if (Utils.el('#weaponIcon')) Utils.el('#weaponIcon').textContent = p.weapon.icon;
+    if (Utils.el('#abilityLabel')) Utils.el('#abilityLabel').textContent = p.cls.ability ? p.cls.ability.name.toUpperCase() : 'ABILITY';
+    if (Utils.el('#abilityText')) Utils.el('#abilityText').textContent = p.abilityCD <= 0 ? 'READY' : `${p.abilityCD.toFixed(1)}s`;
+    if (Utils.el('#invCountHud')) Utils.el('#invCountHud').textContent = RunInventory.items.length;
+    if (Utils.el('#killText')) Utils.el('#killText').textContent = p.kills || 0;
+    if (Utils.el('#lootTierHud')) Utils.el('#lootTierHud').textContent = 'TIER ' + Math.max(1, Math.min(4, Math.ceil((World.haulHeat ? World.haulHeat() : 0.4))));
+
+    var objectiveKicker = 'CURRENT TASK';
+    var objectiveMain = 'SCAVENGE THE ZONE';
+    var objectiveSub = 'Secure caches, build haul, then call extraction.';
+    var objectiveUrgent = false;
+    var extractHud = Utils.el('#extractHud');
+    if (extractHud) extractHud.classList.add('hidden');
+
+    if (Game.isOperationRun && Game.isOperationRun()) {
+      objectiveKicker = OperationSystem.stageStatusText ? OperationSystem.stageStatusText() : 'OPERATION';
+      objectiveMain = OperationSystem.briefingTitle || (OperationSystem.current ? OperationSystem.current.name : 'ACTIVE OPERATION');
+      objectiveSub = OperationSystem.objectiveText || 'Clear the current room objective.';
+      objectiveUrgent = true;
+    } else if (ExtractionZone.state && ExtractionZone.state !== 'idle') {
+      objectiveKicker = 'EXTRACTION';
+      if (ExtractionZone.state === 'beacon') {
+        objectiveMain = 'ARM THE BEACON';
+        objectiveSub = 'Stand inside the beacon ring until it finishes charging.';
+      } else if (ExtractionZone.state === 'inbound') {
+        objectiveMain = 'MOVE TO THE LZ';
+        objectiveSub = 'Landing zone inbound. Rotate to the marked landing zone.';
+      } else {
+        objectiveMain = 'HOLD TO EXTRACT';
+        objectiveSub = 'Stay inside the LZ and avoid taking hits that interrupt progress.';
+      }
+      objectiveUrgent = true;
+      if (extractHud) {
+        extractHud.classList.remove('hidden');
+        extractHud.classList.toggle('active', ExtractionZone.state === 'hold');
+        if (Utils.el('#extractLabel')) Utils.el('#extractLabel').textContent = ExtractionZone.state === 'beacon' ? 'BEACON' : (ExtractionZone.state === 'inbound' ? 'LZ INBOUND' : 'EXTRACT');
+        var ex = ExtractionZone.state === 'beacon' ? ExtractionZone.beaconX : ExtractionZone.x;
+        var ey = ExtractionZone.state === 'beacon' ? ExtractionZone.beaconY : ExtractionZone.y;
+        if (Utils.el('#extractDist')) Utils.el('#extractDist').textContent = Math.round(Utils.dist(p.x, p.y, ex, ey)) + 'm';
+        if (Utils.el('#extractThreat')) Utils.el('#extractThreat').textContent = 'HEAT ' + (World.haulHeat ? World.haulHeat().toFixed(1) : '0.0');
+      }
+    } else if (FieldObjectives.uplink && !FieldObjectives.completed) {
+      objectiveKicker = 'OPTIONAL';
+      objectiveMain = 'SECURE THE UPLINK';
+      objectiveSub = 'Activate the signal uplink for bonus credits and an earlier extract window.';
+    } else if (ScavengeSites && ScavengeSites.sites) {
+      var openSites = ScavengeSites.sites.filter(function(site) { return !site.cleared; });
+      var nearest = null;
+      var nearestDist = Infinity;
+      for (var i = 0; i < openSites.length; i++) {
+        var d = Utils.dist(p.x, p.y, openSites[i].x, openSites[i].y);
+        if (d < nearestDist) {
+          nearestDist = d;
+          nearest = openSites[i];
+        }
+      }
+      objectiveKicker = 'SCAVENGE';
+      objectiveMain = nearest ? nearest.label : 'SECURE MORE CACHES';
+      if (nearest) {
+        var guarded = ScavengeSites.enemyCountNear ? ScavengeSites.enemyCountNear(nearest, 150) > 0 : false;
+        objectiveSub = guarded
+          ? 'Guards are still on site. Clear the area before you can search it.'
+          : 'Move in and search the site. More haul opens extraction sooner.';
+      } else {
+        objectiveSub = 'Secure more value and wait for the next field objective.';
+      }
+    }
+
+    if (Utils.el('#objectiveKicker')) Utils.el('#objectiveKicker').textContent = objectiveKicker;
+    if (Utils.el('#objectiveMain')) Utils.el('#objectiveMain').textContent = objectiveMain;
+    if (Utils.el('#objectiveSub')) Utils.el('#objectiveSub').textContent = objectiveSub;
+    if (Utils.el('#objectiveCard')) Utils.el('#objectiveCard').classList.toggle('urgent', objectiveUrgent);
+  },
+};
+
 window.addEventListener('DOMContentLoaded', function() {
 Object.assign(Game, {
   lastRunReport: null,
@@ -1471,6 +2110,26 @@ Object.assign(Game, {
     id = id || this.currentOperationDef().id;
     if (!this.save.operationStats[id]) this.save.operationStats[id] = { clears: 0, bestTier: 0, bestTime: 0, bestBracket: '', lastAffix: '' };
     return this.save.operationStats[id];
+  },
+
+  currentOperationTier() {
+    return Math.max(1, (this.save && this.save.selectedOperationTier) || 1);
+  },
+
+  maxSelectableOperationTier() {
+    var stats = this.operationStats(this.currentOperationDef().id);
+    return Math.max(1, (stats.bestTier || 0) + 1);
+  },
+
+  operationAffixesForTier(tier) {
+    tier = Math.max(1, tier || 1);
+    var affixes = [];
+    if (tier >= 2) affixes.push('volatile');
+    if (tier >= 4) affixes.push('pulse');
+    if (tier >= 7) affixes.push('hunters');
+    if (tier >= 10) affixes.push('crossfire');
+    if (tier >= 14) affixes.push('eruption');
+    return affixes;
   },
 
   classMasteryLevel(id) {
@@ -1540,6 +2199,41 @@ Object.assign(Game, {
     return parts.join(' · ');
   },
 
+  hideoutRank(id) {
+    return (this.save.hideout && this.save.hideout[id]) || 0;
+  },
+
+  hideoutNode(id) {
+    return HIDEOUT_UPGRADES.find(function(node) { return node.id === id; }) || null;
+  },
+
+  hideoutCost(node) {
+    var rank = this.hideoutRank(node.id);
+    return node.costs[Math.min(rank, node.costs.length - 1)];
+  },
+
+  canPurchaseHideoutNode(node) {
+    if (!node) return false;
+    var rank = this.hideoutRank(node.id);
+    if (rank >= node.max) return false;
+    var cost = this.hideoutCost(node);
+    if (this.save.credits < cost.credits) return false;
+    for (var key of Object.keys(cost.materials || {})) {
+      if ((this.save.materials[key] || 0) < cost.materials[key]) return false;
+    }
+    return true;
+  },
+
+  purchaseHideoutNode(node) {
+    if (!this.canPurchaseHideoutNode(node)) return false;
+    var cost = this.hideoutCost(node);
+    this.save.credits -= cost.credits;
+    for (var key of Object.keys(cost.materials || {})) this.save.materials[key] -= cost.materials[key];
+    this.save.hideout[node.id] = this.hideoutRank(node.id) + 1;
+    SaveSystem.save(this.save);
+    return true;
+  },
+
   isMetaNodeAvailable(node) {
     if (!node.prereq || node.prereq.length === 0) return true;
     for (var i = 0; i < node.prereq.length; i++) {
@@ -1600,6 +2294,7 @@ Object.assign(Game, {
     if (upgrade.unlockNode && !this.hasMetaNode(upgrade.unlockNode)) return false;
     if (upgrade.classId && player.classId !== upgrade.classId) return false;
     if (upgrade.classMinMastery && this.classMasteryLevel(upgrade.classId || player.classId) < upgrade.classMinMastery) return false;
+    if (upgrade.weaponSwap) return false;
     if (upgrade.requiresPlayer && !upgrade.requiresPlayer(player)) return false;
     if (upgrade.unique && player.takenUpgradeIds.indexOf(upgrade.id) !== -1) return false;
     return true;
@@ -1660,13 +2355,18 @@ Object.assign(Game, {
     ExtractionZone.reset();
     OperationSystem.reset();
     RunInventory.reset();
+    RunInventory.maxSlots += Game.hideoutRank('stash_rack');
     Enemies.clear(); Projectiles.clear(); Pickups.clear(); VFX.clear();
     this.player = new Player(this.save.selectedClass, this.save);
+    var safeSpawn = World.safeSpawnPosition(this.player.radius);
+    this.player.x = safeSpawn.x;
+    this.player.y = safeSpawn.y;
+    if (!this.isOperationRun()) World.seedVisibleThreats();
     Input.setGameActive(true);
     UI.hideAllScreens();
     Utils.el('#hud').classList.remove('hidden');
     UI.announce(this.isOperationRun()
-      ? `${this.currentOperationDef().tier} — ${this.currentOperationDef().name}`
+      ? `K+${this.currentOperationTier()} — ${this.currentOperationDef().name}`
       : `${World.zone.tier} — ${World.zone.name.toUpperCase()}`);
     this.lastFrame = performance.now();
     requestAnimationFrame(t => this.loop(t));
@@ -1711,20 +2411,35 @@ Object.assign(Game, {
     var operationReport = null;
     if (this.isOperationRun()) {
       var stats = this.operationStats(this.currentOperationDef().id);
-      var reward = bankReport.operation || OperationSystem.buildRewardReport();
+      var rewardBundle = operationWin ? bankReport : OperationSystem.buildRewardReport();
+      var reward = rewardBundle.operation || rewardBundle;
+      reward.tier = reward.tier || this.currentOperationTier();
+      reward.bracket = reward.bracket || 'FAILED';
+      reward.affix = reward.affix || OperationSystem.affixSummary();
+      reward.penalty = Number.isFinite(reward.penalty) ? reward.penalty : OperationSystem.mechanicPenalty;
       if (operationWin) {
         stats.clears += 1;
         stats.bestTier = Math.max(stats.bestTier || 0, reward.tier || 0);
         if (!stats.bestTime || World.time < stats.bestTime) stats.bestTime = World.time;
         if (!stats.bestBracket || (reward.tier || 0) >= (stats.bestTier || 0)) stats.bestBracket = reward.bracket || stats.bestBracket;
+        if ((this.save.selectedOperationTier || 1) <= (reward.tier || 1)) {
+          this.save.selectedOperationTier = Math.max(this.save.selectedOperationTier || 1, (reward.tier || 1) + 1);
+        }
       }
-      stats.lastAffix = OperationSystem.affixLabel();
+      stats.lastAffix = OperationSystem.affixSummary();
       this.save.operationAffixHistory.unshift(stats.lastAffix);
       this.save.operationAffixHistory = this.save.operationAffixHistory.slice(0, 6);
       operationReport = reward;
     }
     var masteryGain = this.awardClassMastery(this.save.selectedClass, outcome);
-    this.lastRunReport = { materials: bankReport.materials || {}, masteryGain: masteryGain, rescued: bankReport.rescued || null, operation: operationReport };
+    this.lastRunReport = {
+      materials: bankReport.materials || {},
+      masteryGain: masteryGain,
+      rescued: bankReport.rescued || null,
+      operation: operationReport,
+      scavenge: { caches: ScavengeSites.searchedCount, securedValue: ScavengeSites.totalSecuredValue, peakHeat: ScavengeSites.peakHeat },
+      fieldObjectiveBonus: FieldObjectives.totalBonusCredits || 0
+    };
     SaveSystem.save(this.save);
     UI.showGameOver(outcome, earned, lootValue, RunInventory.items);
   },
@@ -1851,28 +2566,49 @@ UI.renderWorkshopScreen = function() {
       </div>
     `;
   }).join('');
+  const hideoutCards = HIDEOUT_UPGRADES.map(node => {
+    const rank = Game.hideoutRank(node.id);
+    const maxed = rank >= node.max;
+    const cost = Game.hideoutCost(node);
+    const costText = `${cost.credits} C${Game.formatMaterialCost(cost.materials) ? ' - ' + Game.formatMaterialCost(cost.materials) : ''}`;
+    return `
+      <div class="workshop-card">
+        <div class="workshop-title">${node.icon} ${node.name}</div>
+        <div class="workshop-copy">${node.desc}</div>
+        <div class="workshop-inline-note">LV ${rank}/${node.max}${maxed ? ' - ONLINE' : ' - NEXT ' + costText}</div>
+        <div class="workshop-actions">
+          <button class="btn ${maxed ? 'ghost' : ''}" data-hideout-upgrade="${node.id}" ${maxed ? 'disabled' : ''}>${maxed ? 'MAXED' : 'UPGRADE'}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
   const lastManifest = Game.lastRunReport && Game.lastRunReport.materials && Object.keys(Game.lastRunReport.materials).length
     ? Object.keys(Game.lastRunReport.materials).map(key => `<div class="manifest-chip">${MATERIAL_TYPES[key].icon} ${MATERIAL_TYPES[key].name} +${Game.lastRunReport.materials[key]}</div>`).join('')
     : '<div class="manifest-chip">No materials banked yet.</div>';
   body.innerHTML = `
     <div class="workshop-card">
-      <div class="workshop-title">VISION</div>
-      <div class="workshop-copy">Credits grow the account. Materials unlock branches. Class mastery changes what each class can become in a run.</div>
+      <div class="workshop-title">HIDEOUT STATUS</div>
+      <div class="workshop-copy">The hideout is now the reason loot matters: more carry space, stronger sale routes, better extraction beacons, and clearer threat reads.</div>
+      <div class="workshop-section-note">If credits are maxed, materials and intel still push your account forward here.</div>
     </div>
     <div class="workshop-card">
       <div class="workshop-title">BANKED MATERIALS</div>
-      <div class="workshop-emphasis">${Game.save.bankedLoot.credits || 0} ★ SOLD</div>
+      <div class="workshop-emphasis">${Game.save.bankedLoot.credits || 0} C SOLD</div>
       <div class="workshop-inline-note">Banked sale value from extracted cargo across runs.</div>
       ${Game.materialRowsHtml()}
     </div>
     <div class="workshop-card">
-      <div class="workshop-title">OPERATIONS</div>
-      <div class="workshop-emphasis">${operation.name}</div>
-      <div class="workshop-inline-note">${opStats.clears || 0} clears · Best ${opStats.bestBracket || 'UNRANKED'}${opStats.bestTime ? ' · ' + Utils.formatTime(opStats.bestTime) : ''}</div>
-      <div class="workshop-copy">Operation rewards bank boss cores, keystones, sigils, and high-tier workshop materials without replacing standard extraction.</div>
+      <div class="workshop-title">HIDEOUT PROJECTS</div>
+      <div class="workshop-grid">${hideoutCards}</div>
     </div>
     <div class="workshop-card">
-      <div class="workshop-title">NEXT TARGET</div>
+      <div class="workshop-title">OPERATIONS</div>
+      <div class="workshop-emphasis">${operation.name} · K+${Game.currentOperationTier()}</div>
+      <div class="workshop-inline-note">${opStats.clears || 0} clears - Best K+${opStats.bestTier || 0}${opStats.bestBracket ? ' · ' + opStats.bestBracket : ''}${opStats.bestTime ? ' - ' + Utils.formatTime(opStats.bestTime) : ''}</div>
+      <div class="workshop-copy">Operation+ is now your keystone ladder: push one tier at a time, stack affixes, and bank higher-end materials the further your execution carries you.</div>
+    </div>
+    <div class="workshop-card">
+      <div class="workshop-title">NEXT META TARGET</div>
       ${nextNode
         ? `<div class="workshop-emphasis">${nextNode.icon} ${nextNode.name}</div>
            <div class="workshop-copy">${nextNode.desc}</div>
@@ -1892,6 +2628,14 @@ UI.renderWorkshopScreen = function() {
       <div class="workshop-manifest">${lastManifest}</div>
     </div>
   `;
+  body.querySelectorAll('[data-hideout-upgrade]').forEach(btn => {
+    btn.onclick = () => {
+      const node = Game.hideoutNode(btn.dataset.hideoutUpgrade);
+      if (!Game.purchaseHideoutNode(node)) return;
+      UI.renderWorkshopScreen();
+      UI.renderMainMenu();
+    };
+  });
 };
 
 UI.showLevelUpModal = function(choices) {
@@ -1900,21 +2644,26 @@ UI.showLevelUpModal = function(choices) {
   body.innerHTML = '';
   Utils.el('#levelRerollText').textContent = `REROLLS ${Game.player.levelUpRerolls}`;
   Utils.el('#btnRerollUpgrades').disabled = Game.player.levelUpRerolls <= 0;
+  var quickType = function(up) {
+    if (up.weaponSwap) return 'WEAPON SWAP';
+    if (up.tags && up.tags.indexOf('evolution') >= 0) return 'EVOLUTION';
+    if (up.tags && up.tags.indexOf('defense') >= 0) return 'DEFENSE';
+    if (up.tags && up.tags.indexOf('speed') >= 0) return 'SPEED';
+    if (up.tags && up.tags.indexOf('damage') >= 0) return 'DAMAGE';
+    if (up.tags && up.tags.indexOf('bio') >= 0) return 'BIO';
+    if (up.tags && up.tags.indexOf('tech') >= 0) return 'TECH';
+    if (up.tags && up.tags.indexOf('void') >= 0) return 'VOID';
+    return up.rarity ? up.rarity.toUpperCase() : 'UPGRADE';
+  };
   for (const up of choices) {
     const btn = document.createElement('button');
     btn.className = 'upgrade';
-    var tagsHtml = '';
-    if (up.tags && up.tags.length > 0) {
-      tagsHtml = '<div class="upgrade-tags">' + up.tags.map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div>';
-    }
     btn.innerHTML = `
       <div class="upgrade-icon">${up.icon}</div>
       <div class="upgrade-body">
         <div class="upgrade-name">${up.name}</div>
+        <div class="upgrade-quick">${quickType(up)}</div>
         <div class="upgrade-desc">${up.desc}</div>
-        <div class="upgrade-rarity" style="color:${RARITY[up.rarity].color}">${up.rarity.toUpperCase()}</div>
-        ${tagsHtml}
-        ${up.unlockNode ? `<div class="upgrade-lockline">UNLOCKED BY ${Game.metaNodeName(up.unlockNode)}</div>` : ''}
       </div>
     `;
     btn.onclick = () => {
@@ -1949,20 +2698,26 @@ UI.showGameOver = function(outcome, earned, lootValue, lootItems) {
   var manifestCount = Game.lastRunReport && Game.lastRunReport.materials ? Object.keys(Game.lastRunReport.materials).length : 0;
   var rescuedText = Game.lastRunReport && Game.lastRunReport.rescued ? Game.lastRunReport.rescued : '';
   var operationReport = Game.lastRunReport && Game.lastRunReport.operation ? Game.lastRunReport.operation : null;
+  var scavengeReport = Game.lastRunReport && Game.lastRunReport.scavenge ? Game.lastRunReport.scavenge : null;
+  var fieldObjectiveBonus = Game.lastRunReport && Game.lastRunReport.fieldObjectiveBonus ? Game.lastRunReport.fieldObjectiveBonus : 0;
   Utils.el('#gameOverSummary').innerHTML =
-    (operationReport ? '<div class="summary-row"><div class="lbl">MODE</div><div class="val">OPERATION</div></div>' : '') +
-    (operationReport ? '<div class="summary-row"><div class="lbl">BRACKET</div><div class="val" style="color:#fbbf24">' + operationReport.bracket + '</div></div>' : '') +
-    '<div class="summary-row"><div class="lbl">LEVEL</div><div class="val">' + p.level + '</div></div>' +
-    '<div class="summary-row"><div class="lbl">KILLS</div><div class="val">' + p.kills + '</div></div>' +
+    (operationReport
+      ? '<div class="summary-row"><div class="lbl">KEYSTONE</div><div class="val" style="color:#fbbf24">K+' + operationReport.tier + '</div></div>' +
+        '<div class="summary-row"><div class="lbl">BRACKET</div><div class="val" style="color:#fbbf24">' + operationReport.bracket + '</div></div>'
+      : '<div class="summary-row"><div class="lbl">LEVEL</div><div class="val">' + p.level + '</div></div>' +
+        '<div class="summary-row"><div class="lbl">KILLS</div><div class="val">' + p.kills + '</div></div>') +
     '<div class="summary-row"><div class="lbl">SURVIVED</div><div class="val">' + Utils.formatTime(World.time) + '</div></div>' +
     '<div class="summary-row"><div class="lbl">CREDITS</div><div class="val">+' + earned + ' ★</div></div>' +
-    (operationReport ? '<div class="summary-row"><div class="lbl">AFFIX</div><div class="val">' + operationReport.affix + '</div></div>' : '') +
-    (operationReport ? '<div class="summary-row"><div class="lbl">MECHANICS</div><div class="val">' + Math.max(0, 100 - operationReport.penalty * 12) + '%</div></div>' : '') +
-    (lootValue > 0 ? '<div class="summary-row"><div class="lbl">LOOT VALUE</div><div class="val" style="color:#4ade80">+' + lootValue + '</div></div>' : '') +
-    (manifestCount ? '<div class="summary-row"><div class="lbl">MATERIAL TYPES</div><div class="val" style="color:#4ade80">' + manifestCount + '</div></div>' : '') +
-    (bankedMaterials ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">BANKED MATERIALS</div><div class="val" style="color:#4ade80;font-size:12px">' + bankedMaterials + '</div></div>' : '') +
-    (rescuedText ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">SALVAGED</div><div class="val" style="font-size:12px">' + rescuedText + '</div></div>' : '') +
-    (masteryGain ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">CLASS MASTERY</div><div class="val" style="font-size:12px">' + CLASSES[Game.save.selectedClass].name + ' +' + masteryGain + ' XP</div></div>' : '') +
+    '<div class="summary-row"><div class="lbl">' + (operationReport ? 'KILLS' : 'LOOT VALUE') + '</div><div class="val">' + (operationReport ? p.kills : ('+' + lootValue)) + '</div></div>' +
+    '<div class="summary-row"><div class="lbl">' + (operationReport ? 'LEVEL' : 'MATERIAL TYPES') + '</div><div class="val">' + (operationReport ? p.level : (manifestCount || 0)) + '</div></div>' +
+    (fieldObjectiveBonus ? '<div class="summary-row"><div class="lbl">UPLINK BONUS</div><div class="val" style="color:#fbbf24">+' + fieldObjectiveBonus + '★</div></div>' : '') +
+    (!operationReport && scavengeReport ? '<div class="summary-row"><div class="lbl">CACHES</div><div class="val">' + scavengeReport.caches + '</div></div>' : '') +
+    (!operationReport && scavengeReport ? '<div class="summary-row"><div class="lbl">FIELD VALUE</div><div class="val" style="color:#22d3ee">' + scavengeReport.securedValue + '★</div></div>' : '') +
+    (operationReport ? '<div class="summary-row wide compact"><div class="lbl">RUN NOTES</div><div class="val">' + operationReport.affix + ' · EXECUTION ' + Math.max(0, 100 - operationReport.penalty * 12) + '%</div></div>' : '') +
+    (lootValue > 0 && operationReport ? '<div class="summary-row wide compact"><div class="lbl">LOOT VALUE</div><div class="val" style="color:#4ade80">+' + lootValue + '</div></div>' : '') +
+    (bankedMaterials ? '<div class="summary-row wide compact"><div class="lbl">BANKED MATERIALS</div><div class="val" style="color:#4ade80">' + bankedMaterials + '</div></div>' : '') +
+    (rescuedText ? '<div class="summary-row wide compact"><div class="lbl">SALVAGED</div><div class="val">' + rescuedText + '</div></div>' : '') +
+    (masteryGain ? '<div class="summary-row wide compact"><div class="lbl">CLASS MASTERY</div><div class="val">' + CLASSES[Game.save.selectedClass].name + ' +' + masteryGain + ' XP</div></div>' : '') +
     lootHtml + lostHtml;
   UI.show('gameOverScreen');
   Utils.el('#hud').classList.add('hidden');
@@ -2028,7 +2783,7 @@ UI.showLootChoice = function(newItem) {
 const SAVE_KEY = 'neon_descent_save_v1';
 const SaveSystem = {
   defaults: () => ({
-    version: 2,
+    version: 3,
     accountXP: 0,
     accountLevel: 1,
     credits: 0,
@@ -2036,11 +2791,13 @@ const SaveSystem = {
     selectedZone: 'docks',
     selectedRunMode: 'standard',
     selectedOperation: 'glassvault',
+    selectedOperationTier: 1,
     unlockedClasses: ['soldier', 'techhunter', 'biorunner'],
     unlockedZones: ['docks'],
     metaUpgrades: {},            // id -> rank
     materials: {},
     classMastery: {},
+    hideout: {},
     bankedLoot: { credits: 0, materials: {} },
     operationStats: {},
     operationAffixHistory: [],
@@ -2059,6 +2816,7 @@ const SaveSystem = {
       merged.codex.weapons = { ...this.defaults().codex.weapons, ...((parsed.codex || {}).weapons || {}) };
       merged.codex.items = { ...this.defaults().codex.items, ...((parsed.codex || {}).items || {}) };
       merged.materials = { ...this.defaults().materials, ...(parsed.materials || {}) };
+      merged.hideout = { ...this.defaults().hideout, ...(parsed.hideout || {}) };
       merged.bankedLoot = { ...this.defaults().bankedLoot, ...(parsed.bankedLoot || {}) };
       merged.bankedLoot.materials = { ...this.defaults().bankedLoot.materials, ...((parsed.bankedLoot || {}).materials || {}) };
       merged.classMastery = { ...this.defaults().classMastery, ...(parsed.classMastery || {}) };
@@ -2313,17 +3071,17 @@ const UPGRADES = [
     apply: p => p.ricochet = (p.ricochet || 0) + 1 },
   { id: 'explosive',   name: 'Frag Rounds',        icon: '✸', rarity: 'rare',     desc: 'Shots explode on hit (AoE)', tags: ['aoe'],
     apply: p => p.fragRounds = (p.fragRounds || 0) + 1 },
-  { id: 'size_up',     name: 'Heavy Caliber',      icon: '●', rarity: 'uncommon', desc: '+35% projectile size, +20% damage', tags: ['damage'],
-    apply: p => { p.stats.projectileSize *= 1.35; p.stats.damage *= 1.2; } },
+  { id: 'size_up',     name: 'Heavy Caliber',      icon: '●', rarity: 'uncommon', desc: '+22% projectile size, +14% damage', tags: ['damage'],
+    apply: p => { p.stats.projectileSize *= 1.22; p.stats.damage *= 1.14; } },
 
   // === WEAPON SWAPS (build-defining, unique) ===
-  { id: 'wep_rapid',   name: 'Needler V2',         icon: '⫸', rarity: 'rare',     desc: 'Swap: rapid fire (fast, low dmg)', tags: ['weapon','speed'], unique: true,
+  { id: 'wep_rapid',   name: 'Needler V2',         icon: '⫸', rarity: 'rare',     desc: 'Swap: rapid fire (fast, low dmg)', tags: ['weapon','speed'], unique: true, weaponSwap: true,
     apply: p => { p.weapon = WEAPONS.rapid_fire; } },
-  { id: 'wep_shotgun', name: 'Scatter-12',         icon: '⬟', rarity: 'rare',     desc: 'Swap: shotgun (spread, close range)', tags: ['weapon','spread'], unique: true,
+  { id: 'wep_shotgun', name: 'Scatter-12',         icon: '⬟', rarity: 'rare',     desc: 'Swap: shotgun (spread, close range)', tags: ['weapon','spread'], unique: true, weaponSwap: true,
     apply: p => { p.weapon = WEAPONS.shotgun_mk1; } },
-  { id: 'wep_beam',    name: 'Lance Beam',         icon: '═', rarity: 'rare',     desc: 'Swap: beam (pierces 3, continuous)', tags: ['weapon','penetration'], unique: true,
+  { id: 'wep_beam',    name: 'Lance Beam',         icon: '═', rarity: 'rare',     desc: 'Swap: beam (pierces 3, continuous)', tags: ['weapon','penetration'], unique: true, weaponSwap: true,
     apply: p => { p.weapon = WEAPONS.beam_mk1; } },
-  { id: 'wep_explode', name: 'Arc-Launcher',       icon: '◉', rarity: 'rare',     desc: 'Swap: launcher (AoE explosions)', tags: ['weapon','aoe'], unique: true,
+  { id: 'wep_explode', name: 'Arc-Launcher',       icon: '◉', rarity: 'rare',     desc: 'Swap: launcher (AoE explosions)', tags: ['weapon','aoe'], unique: true, weaponSwap: true,
     apply: p => { p.weapon = WEAPONS.explosive_mk1; } },
 
   // === ORBITAL (new weapon axis) ===
@@ -2331,24 +3089,24 @@ const UPGRADES = [
     apply: p => { p.orbitals = (p.orbitals || 0) + 1; } },
 
   // === SUSTAIN (meaningful amounts) ===
-  { id: 'hp_up',       name: 'Reinforced Plating', icon: '❤', rarity: 'common',   desc: '+50 max HP', tags: ['defense'],
-    apply: p => { p.stats.maxHP += 50; p.hp += 50; } },
+  { id: 'hp_up',       name: 'Reinforced Plating', icon: '❤', rarity: 'common',   desc: '+40 max HP', tags: ['defense'],
+    apply: p => { p.stats.maxHP += 40; p.hp += 40; } },
   { id: 'lifesteal',   name: 'Vampiric Rounds',    icon: '✺', rarity: 'rare',     desc: 'Heal 2 HP per kill', tags: ['sustain'],
-    apply: p => p.lifesteal = (p.lifesteal || 0) + 0.5 },
-  { id: 'armor_up',    name: 'Nano-Plating',       icon: '▨', rarity: 'uncommon', desc: '+5 armor (flat damage reduction)', tags: ['defense'],
-    apply: p => p.stats.armor += 5 },
+    apply: p => p.killHeal = (p.killHeal || 0) + 2 },
+  { id: 'armor_up',    name: 'Nano-Plating',       icon: '▨', rarity: 'uncommon', desc: '+4 armor (flat damage reduction)', tags: ['defense'],
+    apply: p => p.stats.armor += 4 },
 
   // === SPEED/FIRE RATE (big jumps only) ===
-  { id: 'fire_up',     name: 'Overclock',          icon: '⟫', rarity: 'uncommon', desc: '+35% attack speed', tags: ['speed'],
-    apply: p => p.stats.attackSpeed *= 1.35 },
-  { id: 'ms_up',       name: 'Kinetic Boosters',   icon: '»', rarity: 'uncommon', desc: '+20% move speed', tags: ['mobility'],
-    apply: p => p.stats.moveSpeed *= 1.2 },
+  { id: 'fire_up',     name: 'Overclock',          icon: '⟫', rarity: 'uncommon', desc: '+28% attack speed', tags: ['speed'],
+    apply: p => p.stats.attackSpeed *= 1.28 },
+  { id: 'ms_up',       name: 'Kinetic Boosters',   icon: '»', rarity: 'uncommon', desc: '+16% move speed', tags: ['mobility'],
+    apply: p => p.stats.moveSpeed *= 1.16 },
 
   // === RISK/REWARD (interesting decisions) ===
-  { id: 'berserker',   name: 'Berserker Protocol', icon: '✦', rarity: 'rare',     desc: 'Below 40% HP: +50% dmg, +20% speed', tags: ['damage','risk'],
+  { id: 'berserker',   name: 'Berserker Protocol', icon: '✦', rarity: 'rare',     desc: 'Below 40% HP: +35% dmg, +16% speed', tags: ['damage','risk'],
     apply: p => { p.berserker = true; } },
-  { id: 'glass_cannon',name: 'Glass Cannon',       icon: '◇', rarity: 'rare',     desc: '-40% max HP, +80% damage', tags: ['damage','risk'],
-    apply: p => { p.stats.maxHP = Math.floor(p.stats.maxHP * 0.6); p.hp = Math.min(p.hp, p.stats.maxHP); p.stats.damage *= 1.8; } },
+  { id: 'glass_cannon',name: 'Glass Cannon',       icon: '◇', rarity: 'rare',     desc: '-30% max HP, +55% damage', tags: ['damage','risk'],
+    apply: p => { p.stats.maxHP = Math.floor(p.stats.maxHP * 0.7); p.hp = Math.min(p.hp, p.stats.maxHP); p.stats.damage *= 1.55; } },
   { id: 'close_combat',name: 'Point Blank',        icon: '⊕', rarity: 'uncommon', desc: 'Close kills: +100% XP', tags: ['risk'],
     apply: p => { p.pointBlank = true; } },
   { id: 'chain_light', name: 'Chain Lightning',    icon: '⚡', rarity: 'rare',     desc: 'Kills zap 2 nearby enemies', tags: ['aoe','damage'],
@@ -2357,8 +3115,8 @@ const UPGRADES = [
   // === LEGENDARY (run-defining) ===
   { id: 'second_wind', name: 'Second Wind',        icon: '✧', rarity: 'legendary',desc: 'Survive one lethal hit', tags: ['defense'], unique: true,
     apply: p => p.secondWind = true },
-  { id: 'bullet_hell', name: 'Bullet Hell',        icon: '✹', rarity: 'legendary',desc: '+3 projectiles, +50% fire rate, -30% dmg', tags: ['spread','speed'],
-    apply: p => { p.extraProjectiles += 3; p.stats.attackSpeed *= 1.5; p.stats.damage *= 0.7; } },
+  { id: 'bullet_hell', name: 'Bullet Hell',        icon: '✹', rarity: 'legendary',desc: '+2 projectiles, +40% fire rate, -15% dmg', tags: ['spread','speed'],
+    apply: p => { p.extraProjectiles += 2; p.stats.attackSpeed *= 1.4; p.stats.damage *= 0.85; } },
   { id: 'shock_rounds', name: 'Shock Rounds', icon: '⚡', rarity: 'rare', desc: 'Shots chain 25% damage to 1 nearby enemy', tags: ['tech','damage'], unlockNode: 'unlock_weapons_lab',
     apply: p => { p.shockChains = (p.shockChains || 0) + 1; } },
   { id: 'drone_forge', name: 'Drone Forge', icon: '◈', rarity: 'rare', desc: '+1 orbital drone, +20% orbital speed', tags: ['tech','orbital'], unlockNode: 'unlock_weapons_lab',
@@ -2405,6 +3163,56 @@ const MATERIAL_TYPES = {
   keystone: { name: 'KEYSTONES', icon: '◈', color: '#fbbf24', desc: 'High-tier operation tokens tied to timed clears.' },
   sigil: { name: 'RAID SIGILS', icon: '☍', color: '#22d3ee', desc: 'Prototype pinnacle currency for future raid access.' },
 };
+
+const HIDEOUT_UPGRADES = [
+  {
+    id: 'stash_rack',
+    name: 'STASH RACK',
+    icon: 'S',
+    max: 3,
+    desc: 'Adds permanent carry space so good runs can actually cash out.',
+    costs: [
+      { credits: 80, materials: { scrap: 5, intel: 1 } },
+      { credits: 130, materials: { scrap: 8, circuits: 3 } },
+      { credits: 190, materials: { scrap: 12, circuits: 5, intel: 2 } }
+    ]
+  },
+  {
+    id: 'broker_uplink',
+    name: 'BROKER UPLINK',
+    icon: 'B',
+    max: 3,
+    desc: 'Improves extracted sale value so cargo still matters after credit caps.',
+    costs: [
+      { credits: 90, materials: { intel: 2, circuits: 2 } },
+      { credits: 140, materials: { intel: 4, circuits: 4 } },
+      { credits: 210, materials: { intel: 6, circuits: 6 } }
+    ]
+  },
+  {
+    id: 'beacon_relay',
+    name: 'BEACON RELAY',
+    icon: 'R',
+    max: 3,
+    desc: 'Makes extraction beacons arm faster and the landing zone easier to hold.',
+    costs: [
+      { credits: 95, materials: { scrap: 4, circuits: 2 } },
+      { credits: 150, materials: { scrap: 6, circuits: 4, intel: 2 } },
+      { credits: 225, materials: { circuits: 7, intel: 4, biomass: 3 } }
+    ]
+  },
+  {
+    id: 'field_scanner',
+    name: 'FIELD SCANNER',
+    icon: 'F',
+    max: 2,
+    desc: 'Shows stronger threat readouts so you can judge whether a zone is worth pushing.',
+    costs: [
+      { credits: 110, materials: { intel: 4, circuits: 2 } },
+      { credits: 180, materials: { intel: 6, circuits: 4, void: 1 } }
+    ]
+  }
+];
 
 const META_BRANCHES = {
   core: { id: 'core', name: 'CORE SYSTEMS', icon: '◉', desc: 'Reliable account power and run stability.' },
@@ -2631,6 +3439,7 @@ class Player {
     this.extraProjectiles = 0;
     this.extraPierce = 0;
     this.lifesteal = 0;
+    this.killHeal = 0;
     this.fragRounds = 0;
     this.ricochet = 0;
     this.secondWind = false;
@@ -2643,6 +3452,8 @@ class Player {
     this.orbitalSpeedMult = 1;
     this.orbitalAngle = 0;
     this.berserker = false;
+    this.berserkerDamageMult = 1.35;
+    this.berserkerSpeedMult = 1.16;
     this.adrenaline = false;
     this.adrenalineTimer = 0;
     this.pointBlank = false;
@@ -2746,11 +3557,14 @@ class Player {
 
   update(dt) {
     // Movement
-    let speed = this.stats.moveSpeed * (this._berserkerActive ? 1.2 : 1);
+    let speed = this.stats.moveSpeed * (this._berserkerActive ? this.berserkerSpeedMult : 1);
     this.vx = Input.move.x * speed;
     this.vy = Input.move.y * speed;
+    const prevX = this.x;
+    const prevY = this.y;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
+    World.resolveEntityCollision(this, prevX, prevY);
     // Clamp inside arena
     const R = World.radius;
     const d = Math.hypot(this.x, this.y);
@@ -2787,7 +3601,7 @@ class Player {
       if (target) {
         this.fireAt(target);
         var adrenalineBonus = (this.adrenaline && this.adrenalineTimer >= 0.5) ? 1.35 : 1;
-        var berserkSpeedBonus = this._berserkerActive ? 1.2 : 1;
+        var berserkSpeedBonus = this._berserkerActive ? this.berserkerSpeedMult : 1;
         const effectiveFireRate = Math.min(this.stats.attackSpeed * this.weapon.fireMult * adrenalineBonus * berserkSpeedBonus, WEAPON_PERF.maxFireRate);
         const interval = 1 / effectiveFireRate;
         this.fireTimer = interval;
@@ -2873,7 +3687,7 @@ class Player {
       const t = count === 1 ? 0 : (i / (count - 1)) - 0.5;
       const ang = base + t * spread * 2;
       const movingBonus = this.entropyDrive && (Math.abs(this.vx) > 0.1 || Math.abs(this.vy) > 0.1) ? 1.2 : 1;
-      const dmgMul = this.weapon.baseDamage * (this._perkOn ? 1.15 : 1) * (this._berserkerActive ? 1.5 : 1) * movingBonus;
+      const dmgMul = this.weapon.baseDamage * (this._perkOn ? 1.15 : 1) * (this._berserkerActive ? this.berserkerDamageMult : 1) * movingBonus;
       Projectiles.spawn({
         x: this.x, y: this.y,
         angle: ang,
@@ -3109,7 +3923,16 @@ class Enemy {
   update(dt) {
     if (!this.alive) return;
     const p = Game.player;
-    const dx = p.x - this.x, dy = p.y - this.y;
+    var targetX = p.x, targetY = p.y;
+    if (this.scavengeGuard && this.anchorX !== undefined) {
+      var playerToAnchor = Utils.dist(p.x, p.y, this.anchorX, this.anchorY);
+      var selfToAnchor = Utils.dist(this.x, this.y, this.anchorX, this.anchorY);
+      if (selfToAnchor > (this.guardRadius || 170) || playerToAnchor > (this.guardLeash || 250)) {
+        targetX = this.anchorX;
+        targetY = this.anchorY;
+      }
+    }
+    const dx = targetX - this.x, dy = targetY - this.y;
     const d = Math.hypot(dx, dy);
 
     if (this.ranged) {
@@ -3122,7 +3945,7 @@ class Enemy {
       this.vx = nx * this.speed * moveDir + (-ny * strafe);
       this.vy = ny * this.speed * moveDir + (nx * strafe);
       this.attackCD -= dt;
-      if (d < this.ranged.range && this.attackCD <= 0) {
+      if (targetX === p.x && d < this.ranged.range && this.attackCD <= 0) {
         this.attackCD = this.ranged.cooldown;
         var leadTime = Math.min(0.24, d / Math.max(1, this.ranged.projectileSpeed));
         var aimX = p.x + p.vx * leadTime;
@@ -3146,8 +3969,11 @@ class Enemy {
       this.vy = Math.sin(chaseAng) * this.speed;
     }
 
+    const prevX = this.x;
+    const prevY = this.y;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
+    World.resolveEntityCollision(this, prevX, prevY);
 
     if (this.hitFlash > 0) this.hitFlash -= dt;
 
@@ -3201,6 +4027,7 @@ class Enemy {
     if (!this.alive) return;
     this.alive = false;
     if (OperationSystem.active) OperationSystem.onEnemyKilled(this);
+    var operationSpecial = this.operationAnchor || this.operationMiniBoss || this.operationDisruptor;
 
     // === BOMBER: explode on death, damage player + nearby enemies ===
     if (this.def.explodeOnDeath) {
@@ -3223,14 +4050,16 @@ class Enemy {
       Game.cameraShake(LOW_FX_MODE ? 0 : 6, LOW_FX_MODE ? 0 : 0.18);
     } else {
       // Normal death VFX is aggressively reduced for regular mobs during kill streaks.
-      var burstCount = this.boss ? (LOW_FX_MODE ? 18 : 60) : (this.elite ? (LOW_FX_MODE ? 8 : 30) : (LOW_FX_MODE ? 2 : 14));
-      var burstSpeed = this.boss ? 240 : (this.elite ? 200 : 140);
+      var burstCount = operationSpecial
+        ? (LOW_FX_MODE ? 3 : 8)
+        : (this.boss ? (LOW_FX_MODE ? 18 : 60) : (this.elite ? (LOW_FX_MODE ? 8 : 30) : (LOW_FX_MODE ? 2 : 14)));
+      var burstSpeed = operationSpecial ? 120 : (this.boss ? 240 : (this.elite ? 200 : 140));
       VFX.burst(this.x, this.y, this.accent, burstCount, burstSpeed);
-      if (!LOW_FX_MODE || this.elite || this.boss) {
+      if (!operationSpecial && (!LOW_FX_MODE || this.elite || this.boss)) {
         VFX.deathRing(this.x, this.y, this.accent, this.radius, this.elite || this.boss);
       }
       // === TASK 5: only shake on elite/boss kills ===
-      if (this.boss || this.elite) {
+      if (!operationSpecial && (this.boss || this.elite)) {
         Game.cameraShake(this.boss ? 12 : 5, this.boss ? 0.28 : 0.1);
       }
     }
@@ -3294,9 +4123,9 @@ class Enemy {
     // Bio-runner lifesteal
     if (Game.player.classId === 'biorunner') Game.player.heal(1);
 
-    // Lifesteal pickup (kill-based)
-    if (Game.player.lifesteal > 0 && Math.random() < Game.player.lifesteal) {
-      Game.player.heal(1);
+    // Kill-heal sustain
+    if (Game.player.killHeal > 0) {
+      Game.player.heal(Game.player.killHeal);
     }
 
     if (this.boss) Game.onBossKilled(this);
@@ -3317,6 +4146,13 @@ class Enemy {
       gr.addColorStop(1, this.accent + '00');
       ctx.fillStyle = gr;
       ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 2, 0, Math.PI * 2); ctx.fill();
+    }
+    if (this.scavengeGuard) {
+      ctx.strokeStyle = this.accent;
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius + 5 + Math.sin(Game.time * 4 + this.x) * 1.5, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
     }
     if (this.invulnerable) {
       ctx.strokeStyle = '#fbbf24';
@@ -3355,6 +4191,18 @@ class Enemy {
       ctx.font = 'bold 10px ui-monospace, monospace';
       ctx.textAlign = 'center';
       ctx.fillText(this.operationAnchor ? 'ANCHOR' : 'BREACH GUARD', this.x, this.y - this.radius - 12);
+    }
+    if (this.operationDisruptor) {
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 10px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('DISRUPTOR', this.x, this.y - this.radius - 12);
+    }
+    if (this.scavengeGuard && !this.operationAnchor && !this.operationMiniBoss) {
+      ctx.fillStyle = this.accent;
+      ctx.font = 'bold 9px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.guardLabel || 'GUARD', this.x, this.y - this.radius - 11);
     }
     if (this.operationBoss && this.invulnerable) {
       ctx.fillStyle = '#fbbf24';
@@ -3439,6 +4287,8 @@ const Projectiles = {
   },
   update(dt) {
     for (const pr of this.list) {
+      const prevX = pr.x;
+      const prevY = pr.y;
       const dx = pr.vx * dt, dy = pr.vy * dt;
       pr.x += dx; pr.y += dy;
       pr.distance += Math.hypot(dx, dy);
@@ -3447,6 +4297,11 @@ const Projectiles = {
       // Out of arena → remove
       if (Math.hypot(pr.x, pr.y) > World.radius + 50) pr.life = 0;
       if (pr.maxRange && pr.distance > pr.maxRange) pr.life = 0;
+      if (pr.life > 0 && World.projectileHitsObstacle && World.projectileHitsObstacle(prevX, prevY, pr.x, pr.y, Math.max(2, pr.size * 0.85))) {
+        if (pr.explodeRadius > 0 && !LOW_FX_MODE) VFX.burst(pr.x, pr.y, pr.color, 8);
+        pr.life = 0;
+        continue;
+      }
 
       if (pr.friendly) {
         // Hit enemies
@@ -3862,27 +4717,493 @@ const Combat = {
   },
 };
 
-/* =====================================================================
- § 17. WORLD / SPAWNER  (src/systems/world.js)
-===================================================================== */
+var ScavengeSites = {
+  sites: [],
+  searchedCount: 0,
+  totalSecuredValue: 0,
+  peakHeat: 0,
+  siteDefs: [
+    { kind: 'stash', label: 'BROKER STASH', icon: 'S', color: '#22d3ee', accent: '#9fe8ff', rewardBias: 'material' },
+    { kind: 'locker', label: 'FIELD LOCKER', icon: 'L', color: '#4ade80', accent: '#bbf7d0', rewardBias: 'mixed' },
+    { kind: 'data', label: 'DATA NEST', icon: 'D', color: '#c084fc', accent: '#e9d5ff', rewardBias: 'intel' },
+    { kind: 'cache', label: 'SUPPLY CACHE', icon: 'C', color: '#f59e0b', accent: '#fde68a', rewardBias: 'cargo' }
+  ],
+
+  reset: function() {
+    this.sites = [];
+    this.searchedCount = 0;
+    this.totalSecuredValue = 0;
+    this.peakHeat = 0;
+    if (Game.isOperationRun && Game.isOperationRun()) return;
+    for (var i = 0; i < 4; i++) this.spawnSite(i > 1 ? 1 : 0);
+  },
+
+  activeSitesLeft: function() {
+    return this.sites.filter(function(site) { return !site.cleared; }).length;
+  },
+
+  threatDescriptor: function(level) {
+    if (level >= 3) return 'HEAVY';
+    if (level >= 2) return 'MEDIUM';
+    return 'LIGHT';
+  },
+
+  threatPalette: function(level) {
+    return level >= 3 ? '#fb7185' : (level >= 2 ? '#f59e0b' : '#4ade80');
+  },
+
+  nearestActiveSite: function() {
+    if (!Game.player) return null;
+    var best = null;
+    var bestDist = Infinity;
+    for (var i = 0; i < this.sites.length; i++) {
+      var site = this.sites[i];
+      if (site.cleared) continue;
+      var d = Utils.dist(Game.player.x, Game.player.y, site.x, site.y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = site;
+      }
+    }
+    return best ? { site: best, dist: bestDist } : null;
+  },
+
+  spawnSite: function(tierBoost) {
+    var def = Utils.choice(this.siteDefs);
+    var x = 0, y = 0;
+    for (var attempts = 0; attempts < 12; attempts++) {
+      var ang = Math.random() * Math.PI * 2;
+      var dist = Utils.rand(World.radius * 0.28, World.radius * 0.8);
+      x = Math.cos(ang) * dist;
+      y = Math.sin(ang) * dist;
+      var tooClose = this.sites.some(function(site) {
+        return !site.cleared && Utils.dist(site.x, site.y, x, y) < 220;
+      });
+      var blocked = World.obstacles && World.obstacles.some(function(ob) {
+        return x > ob.x - ob.w * 0.75 && x < ob.x + ob.w * 0.75 && y > ob.y - ob.h * 0.75 && y < ob.y + ob.h * 0.75;
+      });
+      if (!tooClose && !blocked) break;
+    }
+    this.sites.push({
+      id: 'site_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      x: x,
+      y: y,
+      radius: 58,
+      progress: 0,
+      required: 1.8 + Math.random() * 0.7,
+      tierBoost: tierBoost || 0,
+      cleared: false,
+      guardSpawned: false,
+      kind: def.kind,
+      label: def.label,
+      icon: def.icon,
+      color: def.color,
+      accent: def.accent,
+      rewardBias: def.rewardBias,
+      threatLevel: 2 + Math.floor(Math.random() * 3) + (tierBoost > 0 ? 1 : 0),
+      threatMix: def.rewardBias === 'intel' ? ['sniper', 'sniper', 'stalker'] : (def.rewardBias === 'cargo' ? ['grunt', 'stalker', 'bomber'] : ['grunt', 'stalker', 'sniper'])
+    });
+  },
+
+  enemyCountNear: function(site, radius) {
+    var count = 0;
+    for (var i = 0; i < Enemies.list.length; i++) {
+      var enemy = Enemies.list[i];
+      if (!enemy.alive) continue;
+      if (Utils.dist(enemy.x, enemy.y, site.x, site.y) < radius) count++;
+    }
+    return count;
+  },
+
+  spawnGuards: function(site) {
+    site.guardSpawned = true;
+    var count = 3 + site.threatLevel + (site.tierBoost > 0 ? 1 : 0);
+    var pool = site.threatMix || ['grunt', 'stalker', 'sniper'];
+    for (var i = 0; i < count; i++) {
+      var ang = (Math.PI * 2 / count) * i + Math.random() * 0.4;
+      var dist = Utils.rand(70, 130);
+      var guard = Enemies.spawn(Utils.choice(pool), site.x + Math.cos(ang) * dist, site.y + Math.sin(ang) * dist);
+      guard.scavengeGuard = true;
+      guard.guardLabel = site.label;
+      guard.accent = site.color;
+      guard.anchorX = site.x;
+      guard.anchorY = site.y;
+      guard.guardRadius = 180 + site.threatLevel * 20;
+      guard.guardLeash = 240 + site.threatLevel * 28;
+      guard.zoneRole = i === 0 ? 'GUARD CAPTAIN' : 'GUARD';
+    }
+    if (site.threatLevel >= 3 || Math.random() < 0.45 + site.tierBoost * 0.2) {
+      var elite = Enemies.spawn('elite_grunt', site.x + Utils.rand(-110, 110), site.y + Utils.rand(-110, 110));
+      elite.scavengeGuard = true;
+      elite.guardLabel = site.label;
+      elite.accent = site.color;
+      elite.anchorX = site.x;
+      elite.anchorY = site.y;
+      elite.guardRadius = 210;
+      elite.guardLeash = 270;
+      elite.zoneRole = 'ELITE GUARD';
+    }
+  },
+
+  rollPriorityLoot: function(tierBoost, preferMaterial) {
+    for (var attempts = 0; attempts < 6; attempts++) {
+      var rolled = RunInventory.rollLoot(tierBoost || 0);
+      if (!preferMaterial) return rolled;
+      if (rolled.materialType || rolled.rarity === 'rare' || rolled.rarity === 'epic' || rolled.rarity === 'legendary') return rolled;
+    }
+    return RunInventory.rollLoot((tierBoost || 0) + 1);
+  },
+
+  secureSite: function(site) {
+    site.cleared = true;
+    site.progress = site.required;
+    this.searchedCount += 1;
+    var credits = 12 + Math.floor(World.time / 35) + site.tierBoost * 10;
+    Game.runCredits += credits;
+    var drops = [
+      this.rollPriorityLoot(site.tierBoost, true),
+      this.rollPriorityLoot(site.tierBoost + 1, false)
+    ];
+    if (Math.random() < 0.32 + site.tierBoost * 0.08) drops.push(this.rollPriorityLoot(site.tierBoost + 1, true));
+    var securedValue = 0;
+    for (var i = 0; i < drops.length; i++) {
+      RunInventory.tryAdd(drops[i]);
+      securedValue += drops[i].vendorValue || drops[i].value || 0;
+    }
+    this.totalSecuredValue += securedValue;
+    VFX.burst(site.x, site.y, site.color, LOW_FX_MODE ? 6 : 14, 140);
+    VFX.deathRing(site.x, site.y, site.color, 22, true);
+    Game.announce(site.icon + ' ' + site.label + ' SECURED +' + credits + '? - ' + drops.length + ' LOOT');
+    if (this.activeSitesLeft() < 2) this.spawnSite(Math.min(2, Math.floor(World.time / 90)));
+  },
+
+  update: function(dt) {
+    if (Game.isOperationRun && Game.isOperationRun()) return;
+    if (!Game.player) return;
+    this.peakHeat = Math.max(this.peakHeat, World.haulHeat());
+    var p = Game.player;
+    for (var i = 0; i < this.sites.length; i++) {
+      var site = this.sites[i];
+      if (site.cleared) continue;
+      var dist = Utils.dist(p.x, p.y, site.x, site.y);
+      var enemyPressure = this.enemyCountNear(site, 150);
+      if (dist < site.radius) {
+        var speed = enemyPressure > 0 ? 0.2 : 0.9;
+        site.progress += dt * speed;
+        if (site.progress >= site.required) this.secureSite(site);
+      } else {
+        site.progress = Math.max(0, site.progress - dt * 0.45);
+      }
+    }
+  },
+
+  render: function(ctx) {
+    if (Game.isOperationRun && Game.isOperationRun()) return;
+    for (var i = 0; i < this.sites.length; i++) {
+      var site = this.sites[i];
+      if (site.cleared) continue;
+      var nearEnemies = this.enemyCountNear(site, 150);
+      var playerDist = Utils.dist(Game.player.x, Game.player.y, site.x, site.y);
+      var detailAlpha = playerDist < 230 ? 1 : (playerDist < 360 ? 0.55 : 0.2);
+      var pulse = 1 + Math.sin(Game.time * 2.5 + i) * 0.06;
+      ctx.save();
+      ctx.globalAlpha = 0.05 * Math.max(0.4, detailAlpha);
+      ctx.fillStyle = nearEnemies > 0 ? '#f59e0b' : site.color;
+      ctx.beginPath(); ctx.arc(site.x, site.y, site.radius * 1.28, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.18 * Math.max(0.6, detailAlpha);
+      ctx.strokeStyle = site.accent;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(site.x - site.radius * 0.7, site.y);
+      ctx.lineTo(site.x + site.radius * 0.7, site.y);
+      ctx.moveTo(site.x, site.y - site.radius * 0.7);
+      ctx.lineTo(site.x, site.y + site.radius * 0.7);
+      ctx.stroke();
+      ctx.globalAlpha = 0.42 * Math.max(0.55, detailAlpha);
+      ctx.strokeStyle = nearEnemies > 0 ? '#f59e0b' : site.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(site.x, site.y, site.radius * pulse, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 0.9 * Math.max(0.6, detailAlpha);
+      ctx.fillStyle = site.accent;
+      ctx.font = 'bold 15px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(site.icon, site.x, site.y + 5);
+      if (detailAlpha > 0.25) {
+        ctx.fillStyle = '#e6f7ff';
+        ctx.font = 'bold 9px ui-monospace, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(site.label, site.x, site.y - site.radius - 12);
+        ctx.fillStyle = nearEnemies > 0 ? this.threatPalette(site.threatLevel) : '#94a3b8';
+        ctx.font = 'bold 8px ui-monospace, monospace';
+        ctx.fillText((Game.hideoutRank('field_scanner') > 0 ? this.threatDescriptor(site.threatLevel) + ' THREAT' : 'UNKNOWN RISK'), site.x, site.y - site.radius - 1);
+      }
+      if (site.progress > 0) {
+        var pct = Math.min(1, site.progress / site.required);
+        ctx.globalAlpha = 0.75;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(site.x, site.y, site.radius * 0.68, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
+        ctx.stroke();
+      }
+      if (detailAlpha > 0.55) {
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = nearEnemies > 0 ? '#fbbf24' : site.accent;
+        ctx.font = 'bold 8px ui-monospace, monospace';
+        ctx.fillText(nearEnemies > 0 ? 'CLEAR GUARDS' : 'SEARCH', site.x, site.y + site.radius + 11);
+      }
+      ctx.restore();
+    }
+  }
+};
+
+var FieldObjectives = {
+  uplink: null,
+  completed: false,
+  totalBonusCredits: 0,
+
+  reset: function() {
+    this.uplink = null;
+    this.completed = false;
+    this.totalBonusCredits = 0;
+  },
+
+  spawnUplink: function() {
+    if (this.uplink || (Game.isOperationRun && Game.isOperationRun())) return;
+    var pos = World.randomSpawnPoint(0, 0, 260, 520);
+    this.uplink = { x: pos.x, y: pos.y, radius: 68, progress: 0, required: 2.4, active: true, label: 'SIGNAL UPLINK' };
+    Game.announce('OPTIONAL UPLINK DETECTED');
+  },
+
+  nearbyEnemies: function(radius) {
+    if (!this.uplink) return 0;
+    var count = 0;
+    for (var i = 0; i < Enemies.list.length; i++) {
+      var e = Enemies.list[i];
+      if (!e.alive) continue;
+      if (Utils.dist(e.x, e.y, this.uplink.x, this.uplink.y) < radius) count++;
+    }
+    return count;
+  },
+
+  triggerAmbush: function() {
+    if (!this.uplink) return;
+    for (var i = 0; i < 3; i++) {
+      var pos = World.randomSpawnPoint(this.uplink.x, this.uplink.y, 120, 210);
+      var enemy = Enemies.spawn(Utils.choice(['stalker', 'sniper', 'bomber']), pos.x, pos.y);
+      enemy.scavengeGuard = true;
+      enemy.guardLabel = 'RESPONSE';
+      enemy.accent = '#fb7185';
+    }
+  },
+
+  complete: function() {
+    if (!this.uplink || this.completed) return;
+    this.completed = true;
+    this.uplink.active = false;
+    var bonus = 55 + ScavengeSites.searchedCount * 12;
+    this.totalBonusCredits += bonus;
+    Game.runCredits += bonus;
+    VFX.burst(this.uplink.x, this.uplink.y, '#fbbf24', LOW_FX_MODE ? 8 : 18, 170);
+    VFX.deathRing(this.uplink.x, this.uplink.y, '#fbbf24', 26, true);
+    this.triggerAmbush();
+    ExtractionZone.spawnTime = Math.min(ExtractionZone.spawnTime, World.time + 8);
+    Game.announce('UPLINK SECURED +' + bonus + '? - EXTRACT WINDOW SOON');
+  },
+
+  update: function(dt) {
+    if (Game.isOperationRun && Game.isOperationRun()) return;
+    if (!this.uplink && ScavengeSites.searchedCount >= 3 && World.time > 50) this.spawnUplink();
+    if (!this.uplink || this.completed) return;
+    var p = Game.player;
+    var dist = Utils.dist(p.x, p.y, this.uplink.x, this.uplink.y);
+    if (dist < this.uplink.radius) {
+      var pressure = this.nearbyEnemies(150);
+      this.uplink.progress += dt * (pressure > 0 ? 0.55 : 1);
+      if (this.uplink.progress >= this.uplink.required) this.complete();
+    } else {
+      this.uplink.progress = Math.max(0, this.uplink.progress - dt * 0.55);
+    }
+  },
+
+  render: function(ctx) {
+    if (!this.uplink || this.completed) return;
+    var pulse = 1 + Math.sin(Game.time * 2.8) * 0.06;
+    ctx.save();
+    ctx.globalAlpha = 0.09;
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath(); ctx.arc(this.uplink.x, this.uplink.y, this.uplink.radius * 1.9, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(this.uplink.x, this.uplink.y, this.uplink.radius * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = '#fde68a';
+    ctx.beginPath();
+    ctx.moveTo(this.uplink.x - this.uplink.radius * 0.8, this.uplink.y);
+    ctx.lineTo(this.uplink.x + this.uplink.radius * 0.8, this.uplink.y);
+    ctx.moveTo(this.uplink.x, this.uplink.y - this.uplink.radius * 0.8);
+    ctx.lineTo(this.uplink.x, this.uplink.y + this.uplink.radius * 0.8);
+    ctx.stroke();
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = '#fde68a';
+    ctx.font = 'bold 18px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('U', this.uplink.x, this.uplink.y + 7);
+    ctx.fillStyle = '#fff7d6';
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.fillText(this.uplink.label, this.uplink.x, this.uplink.y - this.uplink.radius - 10);
+    if (this.uplink.progress > 0) {
+      var pct = Math.min(1, this.uplink.progress / this.uplink.required);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(this.uplink.x, this.uplink.y, this.uplink.radius * 0.68, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#fde68a';
+    ctx.fillText('LINK', this.uplink.x, this.uplink.y + this.uplink.radius + 14);
+    ctx.restore();
+  }
+};
+
 const World = {
   zone: null,
   time: 0,
-  radius: 900,           // arena radius
+  radius: 1120,
+  obstacles: [],
   spawnTimer: 0,
-  spawnInterval: 1.2,
-  maxEnemies: 35,
+  spawnInterval: 4.8,
+  maxEnemies: 14,
+  patrolTimer: 0,
   bossSpawned: false,
 
   setZone(id) { this.zone = ZONES[id]; },
   reset() {
-    this.time = 0; this.spawnTimer = 0; this.spawnInterval = 1.2;
-    this.maxEnemies = 35; this.bossSpawned = false; this._eliteDone = false; this._lastSpike = 0;
+    this.time = 0;
+    this.spawnTimer = 0;
+    this.spawnInterval = 4.8;
+    this.maxEnemies = 14;
+    this.patrolTimer = 15;
+    this.bossSpawned = false;
+    this._eliteDone = false;
+    this._lastSpike = 0;
+    this.buildObstacles();
+    ScavengeSites.reset();
+    FieldObjectives.reset();
+  },
+  buildObstacles() {
+    this.obstacles = [
+      { x: -410, y: -290, w: 92, h: 34, type: 'wall' },
+      { x: 430, y: -250, w: 62, h: 62, type: 'tower' },
+      { x: 410, y: 350, w: 98, h: 36, type: 'wall' }
+    ];
+  },
+  seedVisibleThreats() {
+    if (Game.isOperationRun && Game.isOperationRun()) return;
+    for (var i = 0; i < ScavengeSites.sites.length; i++) {
+      if (!ScavengeSites.sites[i].guardSpawned) ScavengeSites.spawnGuards(ScavengeSites.sites[i]);
+    }
+    for (var pi = 0; pi < Math.max(2, Math.ceil(ScavengeSites.sites.length * 0.75)); pi++) {
+      var site = ScavengeSites.sites[pi % ScavengeSites.sites.length];
+      var pos = this.randomSpawnPoint(site.x, site.y, 180, 250);
+      var patrol = Enemies.spawn(Utils.choice(['grunt', 'stalker', 'sniper']), pos.x, pos.y);
+      patrol.scavengeGuard = true;
+      patrol.guardLabel = 'PATROL';
+      patrol.accent = site.color;
+      patrol.anchorX = site.x;
+      patrol.anchorY = site.y;
+      patrol.guardRadius = 250;
+      patrol.guardLeash = 320;
+      patrol.zoneRole = 'PATROL';
+    }
+  },
+  isBlockedPosition(x, y, radius, padding) {
+    padding = padding || 0;
+    radius = radius || 0;
+    for (var i = 0; i < this.obstacles.length; i++) {
+      var ob = this.obstacles[i];
+      var nearestX = Math.max(ob.x - ob.w * 0.5 - padding, Math.min(x, ob.x + ob.w * 0.5 + padding));
+      var nearestY = Math.max(ob.y - ob.h * 0.5 - padding, Math.min(y, ob.y + ob.h * 0.5 + padding));
+      var dx = x - nearestX;
+      var dy = y - nearestY;
+      if ((dx * dx + dy * dy) < radius * radius) return true;
+    }
+    return false;
+  },
+  safeSpawnPosition(radius) {
+    radius = radius || 18;
+    if (!this.isBlockedPosition(0, 0, radius + 18, 18)) return { x: 0, y: 0 };
+    for (var i = 0; i < 18; i++) {
+      var ang = Math.random() * Math.PI * 2;
+      var dist = Utils.rand(40, 160);
+      var x = Math.cos(ang) * dist;
+      var y = Math.sin(ang) * dist;
+      if (!this.isBlockedPosition(x, y, radius + 18, 18)) return { x: x, y: y };
+    }
+    return { x: 0, y: -140 };
+  },
+  projectileHitsObstacle(x1, y1, x2, y2, radius) {
+    radius = radius || 2;
+    var steps = Math.max(2, Math.ceil(Utils.dist(x1, y1, x2, y2) / Math.max(10, radius * 1.5)));
+    for (var s = 1; s <= steps; s++) {
+      var t = s / steps;
+      var sx = x1 + (x2 - x1) * t;
+      var sy = y1 + (y2 - y1) * t;
+      if (this.isBlockedPosition(sx, sy, radius, 0)) return true;
+    }
+    return false;
+  },
+  resolveEntityCollision(entity, prevX, prevY) {
+    for (var i = 0; i < this.obstacles.length; i++) {
+      var ob = this.obstacles[i];
+      var nearestX = Math.max(ob.x - ob.w * 0.5, Math.min(entity.x, ob.x + ob.w * 0.5));
+      var nearestY = Math.max(ob.y - ob.h * 0.5, Math.min(entity.y, ob.y + ob.h * 0.5));
+      var dx = entity.x - nearestX;
+      var dy = entity.y - nearestY;
+      var dist2 = dx * dx + dy * dy;
+      if (dist2 >= entity.radius * entity.radius) continue;
+      if (prevX < ob.x - ob.w * 0.5 || prevX > ob.x + ob.w * 0.5) {
+        entity.x = prevX < ob.x ? ob.x - ob.w * 0.5 - entity.radius : ob.x + ob.w * 0.5 + entity.radius;
+      } else if (prevY < ob.y - ob.h * 0.5 || prevY > ob.y + ob.h * 0.5) {
+        entity.y = prevY < ob.y ? ob.y - ob.h * 0.5 - entity.radius : ob.y + ob.h * 0.5 + entity.radius;
+      } else {
+        entity.x = prevX;
+        entity.y = prevY;
+      }
+    }
+    if (this.isBlockedPosition(entity.x, entity.y, entity.radius + 2, 0)) {
+      entity.x = prevX;
+      entity.y = prevY;
+    }
   },
   currentDifficulty() {
     if (Game.isOperationRun && Game.isOperationRun() && OperationSystem.active) return OperationSystem.enemyScale();
-    // base scale × time-based creep × zone difficulty
     return this.zone.difficulty * (1 + this.time / 80);
+  },
+  haulHeat() {
+    var haulValue = RunInventory.totalValue ? RunInventory.totalValue() : 0;
+    var fillRatio = RunInventory.maxSlots ? (RunInventory.items.length / RunInventory.maxSlots) : 0;
+    var materialKinds = Object.keys(RunInventory.materialManifest ? RunInventory.materialManifest() : {}).length;
+    return Math.min(4, fillRatio * 1.8 + haulValue / 140 + materialKinds * 0.35 + ScavengeSites.searchedCount * 0.45);
+  },
+  randomSpawnPoint(cx, cy, minDist, maxDist) {
+    cx = cx || 0;
+    cy = cy || 0;
+    minDist = minDist || this.radius * 0.65;
+    maxDist = maxDist || this.radius * 0.92;
+    for (var i = 0; i < 24; i++) {
+      var ang = Math.random() * Math.PI * 2;
+      var dist = Utils.rand(minDist, maxDist);
+      var x = cx + Math.cos(ang) * dist;
+      var y = cy + Math.sin(ang) * dist;
+      var arenaDist = Math.hypot(x, y);
+      if (arenaDist > this.radius - 28) continue;
+      if (this.isBlockedPosition(x, y, 22, 10)) continue;
+      return { x: x, y: y };
+    }
+    var fallbackAng = Math.random() * Math.PI * 2;
+    return { x: Math.cos(fallbackAng) * (this.radius * 0.75), y: Math.sin(fallbackAng) * (this.radius * 0.75) };
   },
   update(dt) {
     this.time += dt;
@@ -3890,10 +5211,12 @@ const World = {
       OperationSystem.update(dt);
       return;
     }
+    ScavengeSites.update(dt);
+    FieldObjectives.update(dt);
 
-    // gradually ramp spawn rate & cap
-    this.spawnInterval = Math.max(0.2, 1.2 - this.time * 0.006);
-    this.maxEnemies = Math.min(100, 35 + Math.floor(this.time / 8));
+    var heat = this.haulHeat();
+    this.spawnInterval = Math.max(2.8, 5.1 - this.time * 0.0048 - heat * 0.24);
+    this.maxEnemies = Math.min(28, 12 + Math.floor(this.time / 34) + Math.floor(heat * 1.2) + Math.max(0, ScavengeSites.activeSitesLeft()));
 
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0 && Enemies.list.length < this.maxEnemies) {
@@ -3901,626 +5224,228 @@ const World = {
       this.spawnWave();
     }
 
-    // === DANGER SPIKES: every 60 seconds, surge of enemies + announce ===
-    var minute = Math.floor(this.time / 60);
+    this.patrolTimer -= dt;
+    if (this.patrolTimer <= 0) {
+      this.patrolTimer = Math.max(16, 28 - heat * 2.2 - ScavengeSites.searchedCount * 0.8);
+      this.spawnPatrolSweep();
+    }
+
+    var minute = Math.floor(this.time / 95);
     if (minute > 0 && minute !== this._lastSpike) {
       this._lastSpike = minute;
-      var surgeCount = 5 + minute * 2;
+      var surgeCount = 2 + Math.floor(minute / 2) + Math.floor(heat * 0.8);
       for (var si = 0; si < surgeCount; si++) {
-        var pos = this.randomSpawnPoint();
-        var pool = this.zone.enemyPool;
+        var siteForSpike = ScavengeSites.nearestActiveSite();
+        var pos = siteForSpike ? this.randomSpawnPoint(siteForSpike.site.x, siteForSpike.site.y, 150, 230) : this.randomSpawnPoint();
+        var pool = siteForSpike ? (siteForSpike.site.threatMix || this.zone.enemyPool) : this.zone.enemyPool;
         Enemies.spawn(Utils.choice(pool), pos.x, pos.y);
       }
-      Game.announce('⚠  DANGER SPIKE — WAVE ' + minute);
-      Game.cameraShake(10, 0.4);
-      // === TASK 3: recurring elites every 2 minutes ===
-      if (minute % 2 === 0) {
-        for (var ei = 0; ei < 1 + minute; ei++) {
-          var ep = this.randomSpawnPoint();
-          Enemies.spawn('elite_grunt', ep.x, ep.y);
-        }
-        Game.announce('★ ELITE HUNTERS DEPLOYED');
+      Game.announce('REINFORCEMENTS MOVING ON ACTIVE SITES');
+      Game.cameraShake(7, 0.3);
+      if (minute % 2 === 0 && heat > 1.4) {
+        var ep = this.randomSpawnPoint();
+        Enemies.spawn('elite_grunt', ep.x, ep.y);
+        Game.announce('HUNTER TEAM DEPLOYED');
       }
     }
 
-    // first elite at threshold (legacy)
     if (this.time > this.zone.eliteAt && !this._eliteDone) {
       this._eliteDone = true;
       this.spawnEliteWave();
     }
 
-    // boss
     if (this.time > this.zone.bossAt && !this.bossSpawned) {
       this.bossSpawned = true;
       this.spawnBoss();
     }
   },
   spawnWave() {
-    const pool = this.zone.enemyPool;
-    const movingFast = Math.hypot(Game.player.vx, Game.player.vy) > Game.player.stats.moveSpeed * 0.78;
-    const count = Utils.randInt(1, 3) + (movingFast && Math.random() < 0.35 ? 1 : 0) + (this.time > 180 ? 1 : 0);
-    for (let i = 0; i < count; i++) {
-      const type = movingFast && Math.random() < 0.2 ? Utils.choice(['stalker', 'stalker', 'grunt']) : Utils.choice(pool);
-      const pos = this.randomSpawnPoint();
+    var heat = this.haulHeat();
+    var targetSite = ScavengeSites.nearestActiveSite();
+    if (!targetSite || targetSite.dist > 420) return;
+    var pool = targetSite.site.threatMix || this.zone.enemyPool;
+    var count = 1 + (heat > 2.2 ? 1 : 0) + (targetSite.site.threatLevel >= 4 ? 1 : 0);
+    for (var i = 0; i < count; i++) {
+      var type = Utils.choice(pool);
+      var pos = this.randomSpawnPoint(targetSite.site.x, targetSite.site.y, 120, 190);
       Enemies.spawn(type, pos.x, pos.y);
     }
   },
+  spawnPatrolSweep() {
+    var targetSite = ScavengeSites.nearestActiveSite();
+    if (!targetSite || !targetSite.site) return;
+    for (var i = 0; i < 1 + Math.floor(this.haulHeat() * 0.45) + (targetSite.site.threatLevel >= 4 ? 1 : 0); i++) {
+      var pos = this.randomSpawnPoint(targetSite.site.x, targetSite.site.y, 160, 240);
+      var patrol = Enemies.spawn(Utils.choice(targetSite.site.threatMix || ['grunt', 'stalker', 'sniper']), pos.x, pos.y);
+      patrol.scavengeGuard = true;
+      patrol.guardLabel = 'PATROL';
+      patrol.accent = targetSite.site.color;
+      patrol.anchorX = targetSite.site.x;
+      patrol.anchorY = targetSite.site.y;
+      patrol.guardRadius = 250;
+      patrol.guardLeash = 320;
+      patrol.zoneRole = 'PATROL';
+    }
+  },
   spawnEliteWave() {
-    for (let i = 0; i < 3; i++) {
-      const pos = this.randomSpawnPoint();
+    for (var i = 0; i < 3; i++) {
+      var pos = this.randomSpawnPoint();
       Enemies.spawn('elite_grunt', pos.x, pos.y);
     }
   },
   spawnBoss() {
-    const pos = this.randomSpawnPoint();
+    var pos = this.randomSpawnPoint();
     Enemies.spawn('boss_warden', pos.x, pos.y);
-    Game.announce('⚠  THE WARDEN APPROACHES');
-  },
-  randomSpawnPoint() {
-    const p = Game.player;
-    // Spawn offscreen-ish relative to player
-    const playerMove = Math.hypot(p.vx, p.vy);
-    let ang = Math.random() * Math.PI * 2;
-    if (playerMove > 30 && Math.random() < 0.45) {
-      const moveAng = Math.atan2(p.vy, p.vx);
-      ang = moveAng + Utils.rand(-1.05, 1.05);
-    }
-    const dist = Utils.rand(420, 600);
-    let x = p.x + Math.cos(ang) * dist;
-    let y = p.y + Math.sin(ang) * dist;
-    // Clamp inside arena
-    const d = Math.hypot(x, y);
-    if (d > this.radius - 40) {
-      const a = Math.atan2(y, x);
-      x = Math.cos(a) * (this.radius - 40);
-      y = Math.sin(a) * (this.radius - 40);
-    }
-    return { x, y };
+    Game.announce('THE WARDEN APPROACHES');
   },
   renderBackground(ctx, camX, camY) {
-    const bg = this.zone.bg;
-    // Base
-    ctx.fillStyle = bg.base;
+    ctx.fillStyle = (this.zone && this.zone.bg && this.zone.bg.base) || '#06101c';
     ctx.fillRect(0, 0, Game.width, Game.height);
-
-    // Grid
     ctx.save();
-    ctx.strokeStyle = bg.grid;
+    ctx.translate(Game.width / 2 - camX, Game.height / 2 - camY);
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.06)';
     ctx.lineWidth = 1;
-    ctx.globalAlpha = LOW_FX_MODE ? 0.25 : 0.4;
-    const gs = 64;
-    const ox = -((camX % gs) + gs) % gs;
-    const oy = -((camY % gs) + gs) % gs;
-    ctx.beginPath();
-    for (let x = ox; x < Game.width; x += gs) { ctx.moveTo(x, 0); ctx.lineTo(x, Game.height); }
-    for (let y = oy; y < Game.height; y += gs) { ctx.moveTo(0, y); ctx.lineTo(Game.width, y); }
-    ctx.stroke();
-    ctx.restore();
-
-    // Arena boundary (circle in world space)
-    ctx.save();
-    ctx.translate(-camX + Game.width/2, -camY + Game.height/2);
-    ctx.strokeStyle = bg.fog;
-    ctx.lineWidth = 4;
-    ctx.globalAlpha = 0.6;
+    for (var gx = -1400; gx <= 1400; gx += 80) {
+      ctx.beginPath(); ctx.moveTo(gx, -1400); ctx.lineTo(gx, 1400); ctx.stroke();
+    }
+    for (var gy = -1400; gy <= 1400; gy += 80) {
+      ctx.beginPath(); ctx.moveTo(-1400, gy); ctx.lineTo(1400, gy); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(125, 220, 245, 0.18)';
+    ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); ctx.stroke();
-    // faint inner glow
-    ctx.globalAlpha = 0.08;
-    ctx.fillStyle = '#22d3ee';
-    ctx.beginPath(); ctx.arc(0, 0, this.radius - 2, 0, Math.PI * 2); ctx.fill();
+    for (var i = 0; i < this.obstacles.length; i++) {
+      var ob = this.obstacles[i];
+      ctx.fillStyle = 'rgba(14, 34, 56, 0.92)';
+      ctx.strokeStyle = 'rgba(91, 140, 179, 0.45)';
+      ctx.fillRect(ob.x - ob.w * 0.5, ob.y - ob.h * 0.5, ob.w, ob.h);
+      ctx.strokeRect(ob.x - ob.w * 0.5, ob.y - ob.h * 0.5, ob.w, ob.h);
+    }
     ctx.restore();
-  },
+  }
 };
 
-/* =====================================================================
- § 18. AUDIO (stub — expandable via WebAudio)
-===================================================================== */
-const AudioBus = {
-  ctx: null,
-  muted: false,
-  _inited: false,
-  init() {
-    // Defer actual AudioContext creation to first user gesture (mobile requirement)
-    const resume = () => {
-      if (this._inited) return;
-      this._inited = true;
-      try {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        if (this.ctx.state === 'suspended') this.ctx.resume();
-      } catch (e) { this.ctx = null; }
-      window.removeEventListener('touchstart', resume);
-      window.removeEventListener('click', resume);
-      window.removeEventListener('keydown', resume);
-    };
-    window.addEventListener('touchstart', resume, { once: true });
-    window.addEventListener('click', resume, { once: true });
-    window.addEventListener('keydown', resume, { once: true });
-  },
-  play(type) {
-    if (!this.ctx || this.muted) return;
-    const now = this.ctx.currentTime;
-    const o = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.connect(g); g.connect(this.ctx.destination);
-    g.gain.value = 0.04;
-    switch (type) {
-      case 'shoot': o.type = 'square'; o.frequency.setValueAtTime(780, now); o.frequency.exponentialRampToValueAtTime(380, now + 0.06); break;
-      case 'hit':   o.type = 'sawtooth'; o.frequency.setValueAtTime(320, now); o.frequency.exponentialRampToValueAtTime(120, now + 0.05); g.gain.value = 0.03; break;
-      case 'kill':  o.type = 'sine'; o.frequency.setValueAtTime(600, now); o.frequency.exponentialRampToValueAtTime(200, now + 0.15); g.gain.value = 0.05; break;
-      case 'levelup': o.type = 'sine'; o.frequency.setValueAtTime(440, now); o.frequency.exponentialRampToValueAtTime(880, now + 0.25); g.gain.value = 0.06; break;
-      case 'pickup': o.type = 'sine'; o.frequency.setValueAtTime(1200, now); o.frequency.exponentialRampToValueAtTime(600, now + 0.08); g.gain.value = 0.025; break;
-    }
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-    o.start(now); o.stop(now + 0.13);
-  },
-};
-
-/* =====================================================================
- § 19. UI MANAGER  (src/ui/hud.js  + menus.js)
-===================================================================== */
-const UI = {
-  screens: ['mainMenu', 'classScreen', 'zoneScreen', 'metaScreen', 'workshopScreen', 'codexScreen', 'gameOverScreen'],
-  show(id) {
-    for (const s of this.screens) Utils.el(`#${s}`).classList.add('hidden');
-    Utils.el(`#${id}`).classList.remove('hidden');
-  },
-  hideAllScreens() { for (const s of this.screens) Utils.el(`#${s}`).classList.add('hidden'); },
-
-  renderMainMenu() {
-    if (Game.save.selectedRunMode === 'operation' && !Game.canPlayOperations()) Game.save.selectedRunMode = 'standard';
-    Utils.el('#accountLvl').textContent = Game.save.accountLevel;
-    Utils.el('#metaCredits').textContent = Game.save.credits;
-    const cls = CLASSES[Game.save.selectedClass];
-    const zone = ZONES[Game.save.selectedZone];
-    const weapon = WEAPONS[cls.startWeapon];
-    const best = Game.save.bestRun;
-    const isOperation = Game.currentRunMode() === 'operation';
-    const operation = Game.currentOperationDef();
-    const opStats = Game.operationStats(operation.id);
-    Utils.el('#bestRun').textContent = best
-      ? `Lv ${best.level} · ${best.kills} · ${Utils.formatTime(best.time)}`
-      : '—';
-    if (Utils.el('#menuClassValue')) Utils.el('#menuClassValue').textContent = cls.name;
-    if (Utils.el('#menuClassSub')) Utils.el('#menuClassSub').textContent = cls.role.toUpperCase();
-    if (Utils.el('#menuZoneValue')) Utils.el('#menuZoneValue').textContent = isOperation ? operation.name : zone.name.toUpperCase();
-    if (Utils.el('#menuZoneSub')) Utils.el('#menuZoneSub').textContent = isOperation
-      ? `${operation.tier} · ${opStats.bestBracket || 'UNRANKED'}`
-      : `${zone.tier} · DIFF ×${zone.difficulty.toFixed(1)}`;
-    if (Utils.el('#menuWeaponValue')) Utils.el('#menuWeaponValue').textContent = weapon.name.toUpperCase();
-    if (Utils.el('#menuWeaponSub')) Utils.el('#menuWeaponSub').textContent = isOperation
-      ? `${weapon.type.toUpperCase()} · ${operation.encounters.length} ENCOUNTERS`
-      : `${weapon.type.toUpperCase()} · ${weapon.rarity.toUpperCase()}`;
-    if (Utils.el('#btnStart')) Utils.el('#btnStart').textContent = isOperation ? '▶ BEGIN OPERATION' : '▶ BEGIN DESCENT';
-    if (Utils.el('#btnModeStandard')) Utils.el('#btnModeStandard').classList.toggle('active', !isOperation);
-    if (Utils.el('#btnModeOperation')) {
-      Utils.el('#btnModeOperation').classList.toggle('active', isOperation);
-      Utils.el('#btnModeOperation').classList.toggle('locked', !Game.canPlayOperations());
-    }
-    if (Utils.el('#menuModeNote')) Utils.el('#menuModeNote').textContent = isOperation
-      ? (Game.canPlayOperations()
-          ? `${operation.desc} Affix pool: ${operation.affixes.length} light modifiers.`
-          : `Unlock at account level ${operation.unlockLevel} to enter operations.`)
-      : 'Standard extraction stays on the live loot-and-extract loop.';
-    if (Utils.el('#perfHint')) Utils.el('#perfHint').textContent = 'Auto trims visual load on weaker devices and keeps the run readable.';
-    if (Utils.el('#balanceHint')) Utils.el('#balanceHint').textContent = isOperation
-      ? 'Operations use authored mechanics, timed reward tiers, and scripted bosses.'
-      : 'Standard is the current tuning target for extraction, loot, and combat pacing.';
-    if (Utils.el('#workshopCredits')) Utils.el('#workshopCredits').textContent = Game.save.credits;
-  },
-
-  renderClassScreen() {
-    const grid = Utils.el('#classGrid');
-    grid.innerHTML = '';
-    for (const [id, cls] of Object.entries(CLASSES)) {
-      const unlocked = Game.save.unlockedClasses.includes(id);
-      const selected = Game.save.selectedClass === id;
-      const card = document.createElement('div');
-      card.className = `class-card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}`;
-      const mastery = Game.classMastery(id);
-      card.innerHTML = `
-        <div class="class-icon">${cls.icon}</div>
-        <div class="class-name">${cls.name}</div>
-        <div class="class-role">${cls.role}</div>
-        <div class="class-desc">${cls.desc}</div>
-        <div class="class-perk">${cls.perk}</div>
-        <div class="class-perk">Mastery Lv ${mastery.level} · Runs ${mastery.runs}</div>
-        <div class="class-perk" style="color:var(--ink-dim)">${Game.classMasteryRewardText(id)}</div>
-        ${!unlocked && cls.unlockCost ? `<div class="class-perk" style="color:var(--gold)">Unlock: ${cls.unlockCost} ★</div>` : ''}
-      `;
-      card.onclick = () => {
-        if (!unlocked) {
-          if (cls.unlockCost && Game.save.credits >= cls.unlockCost) {
-            Game.save.credits -= cls.unlockCost;
-            Game.save.unlockedClasses.push(id);
-            SaveSystem.save(Game.save);
-            this.renderClassScreen();
-            this.renderMainMenu();
-          }
-          return;
-        }
-        Game.save.selectedClass = id;
-        SaveSystem.save(Game.save);
-        this.renderClassScreen();
-      };
-      grid.appendChild(card);
-    }
-  },
-
-  renderZoneScreen() {
-    const grid = Utils.el('#zoneGrid');
-    grid.innerHTML = '';
-    for (const [id, zone] of Object.entries(ZONES)) {
-      const unlocked = Game.save.unlockedZones.includes(id) || !zone.locked;
-      const selected = Game.save.selectedZone === id;
-      const card = document.createElement('div');
-      card.className = `zone-card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}`;
-      card.innerHTML = `
-        <div class="zone-icon" style="color:${zone.bg.fog}">${zone.icon}</div>
-        <div class="zone-info">
-          <div class="zone-name">${zone.name}</div>
-          <div class="zone-tier">${zone.tier} · DIFF ×${zone.difficulty.toFixed(1)}</div>
-          <div class="zone-desc">${zone.desc}</div>
-          ${!unlocked ? `<div class="zone-desc" style="color:var(--warn)">${zone.unlockReq}</div>` : ''}
-        </div>
-      `;
-      card.onclick = () => {
-        if (!unlocked) return;
-        Game.save.selectedZone = id;
-        SaveSystem.save(Game.save);
-        this.renderZoneScreen();
-      };
-      grid.appendChild(card);
-    }
-  },
-
-  renderMetaScreen() {
-    Utils.el('#metaCredits2').textContent = Game.save.credits;
-    const grid = Utils.el('#metaGrid');
-    grid.innerHTML = '';
-    for (const mu of META_UPGRADES) {
-      const rank = Game.save.metaUpgrades[mu.id] || 0;
-      const maxed = rank >= mu.max;
-      const cost = maxed ? 0 : mu.cost(rank);
-      const canAfford = Game.save.credits >= cost;
-      const node = document.createElement('div');
-      node.className = `meta-node ${maxed ? 'maxed' : ''} ${!canAfford && !maxed ? 'cannot' : ''}`;
-      node.innerHTML = `
-        <div class="meta-node-name">${mu.icon} ${mu.name}</div>
-        <div class="meta-node-desc">${mu.desc}</div>
-        <div class="meta-node-rank">
-          <span>${rank}/${mu.max}</span>
-          <span class="meta-node-cost">${maxed ? 'MAX' : cost + ' ★'}</span>
-        </div>
-      `;
-      node.onclick = () => {
-        if (maxed || !canAfford) return;
-        Game.save.credits -= cost;
-        Game.save.metaUpgrades[mu.id] = rank + 1;
-        SaveSystem.save(Game.save);
-        this.renderMetaScreen();
-      };
-      grid.appendChild(node);
-    }
-  },
-
-  renderCodex(tab = 'enemies') {
-    const body = Utils.el('#codexBody');
-    body.innerHTML = '';
-    Utils.els('.tab').forEach(t => t.classList.toggle('active', t.dataset.codex === tab));
-    const data = tab === 'enemies' ? ENEMIES : tab === 'weapons' ? WEAPONS : null;
-    if (!data) {
-      body.innerHTML = '<div class="codex-entry"><div class="codex-entry-name">Loot codex coming soon</div></div>';
-      return;
-    }
-    const discovered = tab === 'enemies' ? Game.save.codex.enemies : Game.save.codex.weapons;
-    for (const [id, item] of Object.entries(data)) {
-      const known = tab === 'enemies' ? (discovered[id] > 0) : true;
-      const entry = document.createElement('div');
-      entry.className = `codex-entry ${known ? '' : 'unknown'}`;
-      entry.innerHTML = `
-        <div class="codex-entry-name">${known ? item.name : '??????'}</div>
-        <div class="codex-entry-sub">${known ? (item.archetype || item.type || '').toUpperCase() : 'UNDISCOVERED'}</div>
-        ${known && item.hp ? `<div class="codex-entry-sub">HP ${item.hp} · DMG ${item.damage} · XP ${item.xp}</div>` : ''}
-        ${known && tab === 'enemies' && discovered[id] ? `<div class="codex-entry-sub">Killed ×${discovered[id]}</div>` : ''}
-      `;
-      body.appendChild(entry);
-    }
-  },
-
-  updateHUD() {
-    const p = Game.player;
-    const base = p.cls.base;
-    const signedPct = function(value) {
-      return (value >= 0 ? '+' : '') + value + '%';
-    };
-    const cappedProjectileScale = Math.min(p.stats.projectileSize, 1.85);
-    const moveBonus = Math.round(((p.stats.moveSpeed / base.moveSpeed) - 1) * 100);
-    const fireBonus = Math.round(((p.stats.attackSpeed / base.attackSpeed) - 1) * 100);
-    const sizeBonus = Math.round(((cappedProjectileScale / base.projectileSize) - 1) * 100);
-    const hpPct = Math.max(0, Math.round((p.hp / p.stats.maxHP) * 100));
-
-    Utils.el('#hpFill').style.width = `${(p.hp / p.stats.maxHP) * 100}%`;
-    Utils.el('#hpText').textContent = `HP ${hpPct}%`;
-    const xpNeeded = p.xpForNextLevel();
-    const xpPct = Math.max(0, Math.min(100, Math.round((p.xp / xpNeeded) * 100)));
-    Utils.el('#xpFill').style.width = `${(p.xp / xpNeeded) * 100}%`;
-    Utils.el('#xpText').textContent = `XP ${xpPct}%`;
-    Utils.el('#lvlText').textContent = p.level;
-    Utils.el('#creditsText').textContent = Math.floor(Game.runCredits);
-    Utils.el('#timeText').textContent = Utils.formatTime(World.time);
-    Utils.el('#classTag').textContent = p.cls.name;
-    Utils.el('#zoneTag').textContent = Game.isOperationRun()
-      ? `${OperationSystem.current.tier} — ${OperationSystem.current.name}`
-      : `${World.zone.tier} — ${World.zone.name.toUpperCase()}`;
-    Utils.el('#weaponIcon').textContent = p.weapon.icon;
-    Utils.el('#weaponName').textContent = p.weapon.name;
-    var readabilityTag = p.weapon.type === 'beam' ? 'LINE' : (p.weapon.type === 'explosive' ? 'BLAST' : (p.weapon.type === 'shotgun' ? 'CLOSE' : (p.weapon.type === 'rapid' ? 'SPRAY' : 'PRECISION')));
-    Utils.el('#weaponSub').textContent = `${p.weapon.type[0].toUpperCase()}${p.weapon.type.slice(1)} · ${p.weapon.rarity[0].toUpperCase()}${p.weapon.rarity.slice(1)} · ${readabilityTag}`;
-    const abilityPill = Utils.el('#abilityPill');
-    const abilityReady = p.abilityCD <= 0;
-    Utils.el('#abilityLabel').textContent = p.cls.ability ? p.cls.ability.name.toUpperCase() : 'ABILITY';
-    Utils.el('#abilityText').textContent = abilityReady ? 'READY' : `${p.abilityCD.toFixed(1)}s`;
-    abilityPill.classList.toggle('ready', abilityReady);
-    const mobileAbilityBtn = Utils.el('#btnAbilityMobile');
-    if (mobileAbilityBtn) {
-      mobileAbilityBtn.textContent = abilityReady ? (p.cls.ability ? p.cls.ability.name.toUpperCase() : 'ABILITY') : Math.ceil(p.abilityCD).toString();
-      mobileAbilityBtn.classList.toggle('ready', abilityReady);
-      mobileAbilityBtn.classList.toggle('cooldown', !abilityReady);
-    }
-    Utils.el('#moveBonusText').textContent = signedPct(moveBonus);
-    Utils.el('#fireBonusText').textContent = signedPct(fireBonus);
-    Utils.el('#sizeBonusText').textContent = signedPct(sizeBonus);
-    Utils.el('#pierceText').textContent = (p.weapon.pierce || 0) + p.extraPierce;
-    Utils.el('#ricochetText').textContent = p.ricochet || 0;
-    Utils.el('#aoeText').textContent = p.fragRounds ? 'ON' : (p.weapon.explodeRadius ? 'WPN' : '0');
-    Utils.el('#critText').textContent = Math.round(p.stats.critChance * 100) + '%';
-    Utils.el('#chainText').textContent = p.shockChains || 0;
-    Utils.el('#voidText').textContent = p.voidRounds || 0;
-    Utils.el('#killText').textContent = p.kills;
-    // === EXTRACTION HUD ===
-    var exHud = Utils.el('#extractHud');
-    if (Game.isOperationRun()) {
-      exHud.classList.remove('hidden');
-      exHud.classList.toggle('active', OperationSystem.stageIndex === 3 && OperationSystem.bossRef && OperationSystem.bossRef.invulnerable);
-      Utils.el('#extractLabel').textContent = 'OPERATION';
-      Utils.el('#extractDist').textContent = OperationSystem.stageStatusText();
-      Utils.el('#extractThreat').textContent = OperationSystem.objectiveText + ' · ' + OperationSystem.affixLabel() + ' · ' + Utils.formatTime(OperationSystem.rewardTimer);
-    } else if (ExtractionZone.active) {
-      exHud.classList.remove('hidden');
-      Utils.el('#extractLabel').textContent = 'EXTRACT';
-      exHud.classList.toggle('active', Utils.dist(p.x, p.y, ExtractionZone.x, ExtractionZone.y) < ExtractionZone.radius);
-      var exDist = Math.floor(Utils.dist(p.x, p.y, ExtractionZone.x, ExtractionZone.y));
-      Utils.el('#extractDist').textContent = exDist + 'm';
-      var haulManifest = RunInventory.materialManifest();
-      var haulKinds = Object.keys(haulManifest).length;
-      var haulValue = RunInventory.totalValue();
-      Utils.el('#extractThreat').textContent = 'HAUL: ' + haulValue + '★' + (haulKinds ? ' · ' + haulKinds + ' MAT' : '') + (RunInventory.isFull() ? ' · FULL' : '');
-    } else {
-      exHud.classList.add('hidden');
-      Utils.el('#extractLabel').textContent = 'EXTRACT';
-    }
-    Utils.el('#invCountHud').textContent = RunInventory.items.length;
-    var tier = Math.min(5, 1 + Math.floor(World.time / 60));
-    Utils.el('#lootTierHud').textContent = 'TIER ' + tier;
-  },
-
-  showLevelUpModal(choices) {
-    const modal = Utils.el('#lvlUpModal');
-    const body = Utils.el('#upgradeChoices');
-    body.innerHTML = '';
-    for (const up of choices) {
-      const btn = document.createElement('button');
-      btn.className = 'upgrade';
-      var tagsHtml = '';
-      if (up.tags && up.tags.length > 0) {
-        tagsHtml = '<div class="upgrade-tags">' + up.tags.map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div>';
-      }
-      btn.innerHTML = `
-        <div class="upgrade-icon">${up.icon}</div>
-        <div class="upgrade-body">
-          <div class="upgrade-name">${up.name}</div>
-          <div class="upgrade-desc">${up.desc}</div>
-          <div class="upgrade-rarity" style="color:${RARITY[up.rarity].color}">${up.rarity.toUpperCase()}</div>
-          ${tagsHtml}
-        </div>
-      `;
-      btn.onclick = () => {
-        up.apply(Game.player);
-        Game.player.takenUpgradeIds.push(up.id);
-        modal.classList.add('hidden');
-        Game.paused = false;
-      };
-      body.appendChild(btn);
-    }
-    modal.classList.remove('hidden');
-    Game.paused = true;
-  },
-
-  showPauseMenu() {
-    const p = Game.player;
-    const stats = Utils.el('#pauseStats');
-    stats.innerHTML = `
-      <div class="pause-stat"><div class="lbl">LEVEL</div><div class="val">${p.level}</div></div>
-      <div class="pause-stat"><div class="lbl">KILLS</div><div class="val">${p.kills}</div></div>
-      <div class="pause-stat"><div class="lbl">DAMAGE</div><div class="val">${Math.floor(p.damageDealt)}</div></div>
-      <div class="pause-stat"><div class="lbl">TIME</div><div class="val">${Utils.formatTime(World.time)}</div></div>
-      <div class="pause-stat"><div class="lbl">DMG/S</div><div class="val">${Math.floor(p.damageDealt / Math.max(1, World.time))}</div></div>
-      <div class="pause-stat"><div class="lbl">CREDITS</div><div class="val">${Math.floor(Game.runCredits)}</div></div>
-    `;
-    Utils.el('#pauseMenu').classList.remove('hidden');
-  },
-  hidePauseMenu() { Utils.el('#pauseMenu').classList.add('hidden'); },
-
-  showGameOver(outcome, earned, lootValue, lootItems) {
-    var p = Game.player;
-    var extracted = (outcome === 'extracted');
-    var titleEl = Utils.el('#gameOverTitle');
-    titleEl.textContent = extracted ? 'EXTRACTED' : 'YOU FELL';
-    titleEl.className = 'death-title' + (extracted ? ' extracted' : '');
-    var lootHtml = '';
-    if (extracted && lootItems && lootItems.length > 0) {
-      lootHtml = '<div class="summary-row" style="grid-column:1/-1"><div class="lbl">LOOT BANKED</div><div class="val" style="color:#4ade80">';
-      for (var li = 0; li < lootItems.length; li++) {
-        lootHtml += lootItems[li].icon + ' ';
-      }
-      lootHtml += '</div></div>';
-    }
-    var lostHtml = !extracted ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl" style="color:#ff4d6d">LOOT LOST</div><div class="val" style="color:#ff4d6d">ALL</div></div>' : '';
-    Utils.el('#gameOverSummary').innerHTML =
-      '<div class="summary-row"><div class="lbl">LEVEL</div><div class="val">' + p.level + '</div></div>' +
-      '<div class="summary-row"><div class="lbl">KILLS</div><div class="val">' + p.kills + '</div></div>' +
-      '<div class="summary-row"><div class="lbl">SURVIVED</div><div class="val">' + Utils.formatTime(World.time) + '</div></div>' +
-      '<div class="summary-row"><div class="lbl">CREDITS</div><div class="val">+' + earned + ' ★</div></div>' +
-      (lootValue > 0 ? '<div class="summary-row"><div class="lbl">LOOT VALUE</div><div class="val" style="color:#4ade80">+' + lootValue + '</div></div>' : '') +
-      lootHtml + lostHtml;
-    this.show('gameOverScreen');
-    Utils.el('#hud').classList.add('hidden');
-  },
-
-  // === INVENTORY UI ===
-  showInventory: function() {
-    var grid = Utils.el('#invGrid');
-    grid.innerHTML = '';
-    for (var i = 0; i < RunInventory.maxSlots; i++) {
-      var item = RunInventory.items[i];
-      var slot = document.createElement('div');
-      slot.className = 'inv-slot' + (item ? '' : ' inv-slot-empty');
-      if (item) {
-        slot.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[item.rarity] ? RARITY[item.rarity].color : '#9ab0c7') + '">' + item.icon + ' ' + item.name + '</div>' +
-          '<div class="inv-slot-sub">' + item.rarity.toUpperCase() + ' · ' + item.value + '★</div>' +
-          '<div class="inv-slot-stats">' + item.desc + '</div>';
-      } else {
-        slot.innerHTML = '<div class="inv-slot-sub">EMPTY</div>';
-      }
-      grid.appendChild(slot);
-    }
-    Utils.el('#invSlotCount').textContent = RunInventory.items.length + '/' + RunInventory.maxSlots;
-    Utils.el('#inventoryModal').classList.remove('hidden');
-    Game.paused = true;
-  },
-
-  hideInventory: function() {
-    Utils.el('#inventoryModal').classList.add('hidden');
-    Game.paused = false;
-  },
-
-  // === LOOT CHOICE (when backpack full) ===
-  showLootChoice: function(newItem, decision) {
-    Game.paused = true;
-    var newEl = Utils.el('#lootNew');
-    var newTag = newItem.materialType ? 'MATERIAL' : (newItem.consumable ? 'USE' : 'CARGO');
-    newEl.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[newItem.rarity] ? RARITY[newItem.rarity].color : '#9ab0c7') + '">' + newItem.icon + ' ' + newItem.name + '</div>' +
-      '<div class="inv-slot-sub">' + newItem.rarity.toUpperCase() + ' - ' + newTag + ' - ' + newItem.value + '*</div>' +
-      '<div class="inv-slot-stats">' + newItem.desc + '</div>';
-    Utils.el('#lootRecommendation').textContent = 'RECOMMENDED: ' + ((decision && decision.reason) ? decision.reason : 'CHOOSE WHAT TO KEEP');
-    Utils.el('#btnSwapLoot').textContent = 'TAKE RECOMMENDED';
-    Utils.el('#btnDropLoot').textContent = 'KEEP CURRENT';
-
-    var grid = Utils.el('#lootInvGrid');
-    grid.innerHTML = '';
-    var recommended = decision && typeof decision.idx === 'number' ? decision.idx : RunInventory._recommendedSwapIdx;
-    for (var i = 0; i < RunInventory.items.length; i++) {
-      (function(idx) {
-        var item = RunInventory.items[idx];
-        var itemTag = item.materialType ? 'MAT' : (item.consumable ? 'USE' : 'CARGO');
-        var slot = document.createElement('div');
-        slot.className = 'inv-slot' + (idx === recommended ? ' selected' : '');
-        slot.innerHTML = '<div class="inv-slot-name" style="color:' + (RARITY[item.rarity] ? RARITY[item.rarity].color : '#9ab0c7') + '">' + item.icon + ' ' + item.name + '</div>' +
-          '<div class="inv-slot-sub">' + itemTag + ' - ' + item.value + '*</div>';
-        slot.onclick = function() {
-          var slots = grid.querySelectorAll('.inv-slot');
-          for (var j = 0; j < slots.length; j++) slots[j].classList.remove('selected');
-          slot.classList.add('selected');
-          RunInventory._selectedSwapIdx = idx;
-        };
-        grid.appendChild(slot);
-      })(i);
-    }
-    if (typeof recommended === 'number' && recommended >= 0) RunInventory._selectedSwapIdx = recommended;
-    Utils.el('#lootChoiceModal').classList.remove('hidden');
-  },
-
-  hideLootChoice: function() {
-    Utils.el('#lootChoiceModal').classList.add('hidden');
-    RunInventory._pendingLoot = null;
-    RunInventory._selectedSwapIdx = -1;
-    RunInventory._recommendedSwapIdx = -1;
-    Utils.el('#lootRecommendation').textContent = 'RECOMMENDED: REVIEW PICKUP';
-    Utils.el('#btnSwapLoot').textContent = 'SWAP';
-    Utils.el('#btnDropLoot').textContent = 'DISCARD NEW';
-    Game.paused = false;
-  },
-
-  announceQueue: [],
-  announceEl: null,
-  announce(text) {
-    // Simple transient overlay — canvas-drawn
-    Game.announceText = text;
-    Game.announceTime = 3;
-  },
-};
-
-/* =====================================================================
- § 19b. EXTRACTION ZONE  (src/systems/extraction.js)
-   Appears after a delay. Player must stand inside to extract.
-===================================================================== */
 var ExtractionZone = {
   x: 0, y: 0,
-  radius: 78,
+  radius: 116,
   active: false,
   standTimer: 0,
-  standRequired: 3.2,   // seconds standing in zone to extract
-  spawnTime: 35,       // seconds into run before extraction appears
-  relocateInterval: 120, // moves every N seconds after first spawn
+  standRequired: 3.5,
+  spawnTime: 32,
+  emergencyTime: 72,
+  minSecureSites: 3,
+  minLootValue: 60,
+  relocateInterval: 9999,
   _lastRelocate: 0,
+  state: 'idle',
+  beaconX: 0,
+  beaconY: 0,
+  beaconRadius: 56,
+  beaconTimer: 0,
+  beaconRequired: 2.3,
+  inboundTimer: 0,
 
   reset: function() {
     this.active = false;
     this.standTimer = 0;
     this._lastRelocate = 0;
+    this._extractSpawnTimer = 0;
+    this._lastHP = undefined;
+    this.state = 'idle';
+    this.beaconTimer = 0;
+    this.inboundTimer = 0;
+  },
+
+  spawnBeacon: function() {
+    var pos = World.randomSpawnPoint(Game.player.x, Game.player.y, 260, 520);
+    this.beaconX = pos.x;
+    this.beaconY = pos.y;
+    this.state = 'beacon';
+    this.beaconTimer = 0;
+    Game.announce('EXTRACT BEACON AVAILABLE');
+  },
+
+  armBeacon: function() {
+    this.state = 'inbound';
+    this.inboundTimer = Math.max(6.5, 10.5 - Game.hideoutRank('beacon_relay') * 0.95);
+    var ang = Utils.angle(this.beaconX, this.beaconY, Game.player.x, Game.player.y) + (Math.random() < 0.5 ? 1 : -1) * 0.9;
+    var dist = 190 + Math.random() * 90;
+    this.x = this.beaconX + Math.cos(ang) * dist;
+    this.y = this.beaconY + Math.sin(ang) * dist;
+    var clamp = Math.hypot(this.x, this.y);
+    if (clamp > World.radius - this.radius - 20) {
+      var a = Math.atan2(this.y, this.x);
+      this.x = Math.cos(a) * (World.radius - this.radius - 20);
+      this.y = Math.sin(a) * (World.radius - this.radius - 20);
+    }
+    Game.announce('LZ INBOUND - MOVE TO LANDING ZONE');
+  },
+
+  openLZ: function() {
+    this.active = true;
+    this.state = 'hold';
+    this.standTimer = 0;
+    this._extractSpawnTimer = 0.5;
+    Game.announce('LANDING ZONE OPEN - HOLD TO EXTRACT');
   },
 
   update: function(dt) {
     if (Game.isOperationRun && Game.isOperationRun()) return;
-    // Spawn extraction after delay
-    if (!this.active && World.time >= this.spawnTime) {
-      this.activate();
-      Game.announce('◈ EXTRACTION ZONE AVAILABLE');
+    var enoughLoot = ScavengeSites.searchedCount >= this.minSecureSites || RunInventory.totalValue() >= this.minLootValue;
+    if (this.state === 'idle' && ((World.time >= this.spawnTime && enoughLoot) || World.time >= this.emergencyTime)) this.spawnBeacon();
+    if (this.state === 'beacon') {
+      var beaconDist = Utils.dist(Game.player.x, Game.player.y, this.beaconX, this.beaconY);
+      if (beaconDist < this.beaconRadius) {
+        var pressure = 0;
+        for (var bp = 0; bp < Enemies.list.length; bp++) {
+          if (!Enemies.list[bp].alive) continue;
+          if (Utils.dist(Enemies.list[bp].x, Enemies.list[bp].y, this.beaconX, this.beaconY) < 140) pressure++;
+        }
+        this.beaconTimer += dt * (pressure > 0 ? 0.55 : 1);
+        if (this.beaconTimer >= Math.max(0.9, this.beaconRequired - Game.hideoutRank('beacon_relay') * 0.22)) this.armBeacon();
+      } else {
+        this.beaconTimer = Math.max(0, this.beaconTimer - dt * 0.45);
+      }
+      return;
+    }
+    if (this.state === 'inbound') {
+      this.inboundTimer -= dt;
+      this._extractSpawnTimer = (this._extractSpawnTimer || 0) - dt;
+      if (this._extractSpawnTimer <= 0) {
+        this._extractSpawnTimer = 3.1;
+        var bpos = World.randomSpawnPoint(this.x, this.y, 160, 240);
+        var benemy = Enemies.spawn(Utils.choice(['stalker', 'sniper', 'grunt']), bpos.x, bpos.y);
+        benemy.scavengeGuard = true;
+        benemy.guardLabel = 'LZ RESPONSE';
+        benemy.accent = '#fb7185';
+      }
+      if (this.inboundTimer <= 0) this.openLZ();
+      return;
     }
     if (!this.active) return;
 
-    // Relocate periodically to force movement
-    var relocateTime = this.spawnTime + this.relocateInterval;
-    var minutesSinceSpawn = Math.floor((World.time - this.spawnTime) / this.relocateInterval);
-    if (minutesSinceSpawn > this._lastRelocate) {
-      this._lastRelocate = minutesSinceSpawn;
-      this.relocate();
-      Game.announce('◈ EXTRACTION MOVED');
-    }
-
-    // Check if player is inside
     var p = Game.player;
     var d = Utils.dist(p.x, p.y, this.x, this.y);
     if (d < this.radius) {
-      // === TASK 2: damage resets timer (checked via player.damageTaken changing) ===
       if (this._lastHP === undefined) this._lastHP = p.hp;
       if (p.hp < this._lastHP) {
-        this.standTimer = Math.max(0, this.standTimer - 0.75); // damage should punish, not fully erase the attempt
+        this.standTimer = Math.max(0, this.standTimer - 0.4);
         Game.announce('EXTRACTION INTERRUPTED');
       }
       this._lastHP = p.hp;
-
       this.standTimer += dt;
-      if (this.standTimer >= this.standRequired) {
-        Game.onExtraction();
-      }
-      // === TASK 2: spawn pressure while extracting ===
+      if (this.standTimer >= this.standRequired) Game.onExtraction();
       this._extractSpawnTimer = (this._extractSpawnTimer || 0) - dt;
       if (this._extractSpawnTimer <= 0) {
-        this._extractSpawnTimer = 1.8; // lower pressure so extraction feels achievable
-        for (var es = 0; es < 2; es++) {
-          var epos = World.randomSpawnPoint();
-          Enemies.spawn(Utils.choice(['stalker', 'grunt', 'sniper']), epos.x, epos.y);
+        var heat = World.haulHeat();
+        this._extractSpawnTimer = Math.max(1.7, 2.8 - heat * 0.18);
+        var spawnCount = 1 + (heat >= 2.5 ? 1 : 0) + (heat >= 3.6 ? 1 : 0);
+        for (var es = 0; es < spawnCount; es++) {
+          var epos = World.randomSpawnPoint(this.x, this.y, 160, 250);
+          var response = Enemies.spawn(Utils.choice(heat >= 3.2 ? ['stalker', 'sniper', 'bomber'] : ['stalker', 'grunt']), epos.x, epos.y);
+          response.scavengeGuard = true;
+          response.guardLabel = 'LZ RESPONSE';
+          response.accent = '#fb7185';
         }
       }
     } else {
@@ -4531,89 +5456,73 @@ var ExtractionZone = {
   },
 
   activate: function() {
-    this.active = true;
-    this.relocate();
+    this.spawnBeacon();
   },
 
   relocate: function() {
-    // Place extraction zone away from player
-    var ang = Math.random() * Math.PI * 2;
-    var dist = Utils.rand(300, 600);
-    this.x = Game.player.x + Math.cos(ang) * dist;
-    this.y = Game.player.y + Math.sin(ang) * dist;
-    // Clamp inside arena
-    var d = Math.hypot(this.x, this.y);
-    if (d > World.radius - this.radius - 20) {
-      var a = Math.atan2(this.y, this.x);
-      this.x = Math.cos(a) * (World.radius - this.radius - 20);
-      this.y = Math.sin(a) * (World.radius - this.radius - 20);
-    }
-    this.standTimer = 0;
+    this.armBeacon();
   },
 
   render: function(ctx) {
     if (Game.isOperationRun && Game.isOperationRun()) return;
-    if (!this.active) return;
+    if (this.state === 'idle') return;
     var p = Game.player;
-    var d = Utils.dist(p.x, p.y, this.x, this.y);
-    var inZone = d < this.radius;
+    var bx = this.state === 'beacon' ? this.beaconX : this.x;
+    var by = this.state === 'beacon' ? this.beaconY : this.y;
+    var radius = this.state === 'beacon' ? this.beaconRadius : this.radius;
+    var d = Utils.dist(p.x, p.y, bx, by);
+    var inZone = d < radius;
     var pulse = 1 + Math.sin(Game.time * 3) * 0.08;
-
-    // Outer glow
     ctx.save();
     ctx.globalAlpha = 0.08;
-    ctx.fillStyle = '#4ade80';
-    ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 2, 0, Math.PI * 2); ctx.fill();
-
-    // Zone ring
+    ctx.fillStyle = this.state === 'beacon' ? '#22d3ee' : '#4ade80';
+    ctx.beginPath(); ctx.arc(bx, by, radius * 2, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = inZone ? 0.7 : 0.35;
-    ctx.strokeStyle = '#4ade80';
+    ctx.strokeStyle = this.state === 'beacon' ? '#22d3ee' : '#4ade80';
     ctx.lineWidth = inZone ? 3 : 2;
-    ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * pulse, 0, Math.PI * 2); ctx.stroke();
-
-    // Fill when standing in it
+    ctx.beginPath(); ctx.arc(bx, by, radius * pulse, 0, Math.PI * 2); ctx.stroke();
     if (inZone) {
       ctx.globalAlpha = 0.12;
-      ctx.fillStyle = '#4ade80';
-      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
-
-      // Progress arc
-      var pct = this.standTimer / this.standRequired;
+      ctx.fillStyle = this.state === 'beacon' ? '#22d3ee' : '#4ade80';
+      ctx.beginPath(); ctx.arc(bx, by, radius, 0, Math.PI * 2); ctx.fill();
+      var pct = this.state === 'beacon'
+        ? (this.beaconTimer / Math.max(0.9, this.beaconRequired - Game.hideoutRank('beacon_relay') * 0.22))
+        : (this.standTimer / this.standRequired);
       ctx.globalAlpha = 0.8;
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius * 0.7, -Math.PI/2, -Math.PI/2 + pct * Math.PI * 2);
+      ctx.arc(bx, by, radius * 0.7, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
       ctx.stroke();
     }
-
-    // Label
     ctx.globalAlpha = 0.9;
-    ctx.fillStyle = '#4ade80';
+    ctx.fillStyle = this.state === 'beacon' ? '#22d3ee' : '#4ade80';
     ctx.font = 'bold 11px ui-monospace, monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('EXTRACT', this.x, this.y - this.radius - 8);
+    ctx.fillText(this.state === 'beacon' ? 'BEACON' : (this.state === 'inbound' ? 'LZ INBOUND' : 'EXTRACT'), bx, by - radius - 8);
     if (inZone) {
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(Math.ceil(this.standRequired - this.standTimer) + 's', this.x, this.y + 4);
+      ctx.fillText(this.state === 'beacon'
+        ? Math.ceil(Math.max(0, Math.max(0.9, this.beaconRequired - Game.hideoutRank('beacon_relay') * 0.22) - this.beaconTimer)) + 's'
+        : Math.ceil(this.standRequired - this.standTimer) + 's', bx, by + 4);
+    } else if (this.state === 'inbound') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(Math.ceil(this.inboundTimer) + 's', bx, by + 4);
     }
-
     ctx.restore();
-
-    // Off-screen indicator arrow (when zone is far away)
-    // This is drawn in screen space in Game.render
-  },
+  }
 };
 
 var OperationSystem = {
   active: false,
   current: null,
+  keystoneTier: 1,
   stageIndex: -1,
   timer: 0,
   stageTimer: 0,
   stageProgress: 0,
   objectiveText: '',
-  affix: null,
+  affixes: [],
   hazards: [],
   rewardTimer: 0,
   rewardBracket: 'BRONZE',
@@ -4633,14 +5542,15 @@ var OperationSystem = {
   reset: function() {
     this.active = Game.isOperationRun();
     this.current = this.active ? Game.currentOperationDef() : null;
+    this.keystoneTier = this.active ? Game.currentOperationTier() : 1;
     this.stageIndex = -1;
     this.timer = 0;
     this.stageTimer = 0;
     this.stageProgress = 0;
     this.objectiveText = '';
-    this.affix = this.current ? Utils.choice(this.current.affixes) : null;
+    this.affixes = this.current ? Game.operationAffixesForTier(this.keystoneTier) : [];
     this.hazards = [];
-    this.rewardTimer = this.current ? this.current.rewardTime : 0;
+    this.rewardTimer = this.current ? Math.max(150, this.current.rewardTime - Math.min(180, (this.keystoneTier - 1) * 9)) : 0;
     this.rewardBracket = 'BRONZE';
     this.mechanicPenalty = 0;
     this.enemySpawnTimer = 0;
@@ -4660,13 +5570,27 @@ var OperationSystem = {
   },
 
   enemyScale: function() {
-    return 1.15 + Math.max(0, this.stageIndex) * 0.22;
+    var tier = Math.max(1, this.keystoneTier || 1);
+    return 1.04 + Math.max(0, this.stageIndex) * 0.18 + tier * 0.12 + Math.pow(Math.max(0, tier - 1), 1.14) * 0.03;
   },
 
-  affixLabel: function() {
-    if (this.affix === 'volatile') return 'VOLATILE FAILSAFE';
-    if (this.affix === 'pulse') return 'PULSE STORM';
-    return 'NO AFFIX';
+  affixLabel: function(affix) {
+    affix = affix || '';
+    if (affix === 'volatile') return 'VOLATILE';
+    if (affix === 'pulse') return 'PULSE';
+    if (affix === 'hunters') return 'HUNTERS';
+    if (affix === 'crossfire') return 'CROSSFIRE';
+    if (affix === 'eruption') return 'ERUPTION';
+    return 'NONE';
+  },
+
+  affixSummary: function() {
+    if (!this.affixes || this.affixes.length === 0) return 'NO AFFIXES';
+    return this.affixes.map(a => this.affixLabel(a)).join(' / ');
+  },
+
+  hasAffix: function(affix) {
+    return this.affixes && this.affixes.indexOf(affix) !== -1;
   },
 
   stageName: function() {
@@ -4674,12 +5598,24 @@ var OperationSystem = {
   },
 
   stageStatusText: function() {
-    return 'STAGE ' + (this.stageIndex + 1) + '/4 · ' + this.stageName();
+    return 'K+' + this.keystoneTier + ' · STAGE ' + (this.stageIndex + 1) + '/4 · ' + this.stageName();
   },
 
   spawnTaggedEnemy: function(type, x, y, diff, tags) {
     var enemy = Enemies.spawn(type, x, y, diff || this.enemyScale());
     if (enemy && tags) Object.assign(enemy, tags);
+    if (enemy) {
+      if (this.hasAffix('hunters')) {
+        enemy.speed *= 1.12;
+      }
+      if (this.hasAffix('crossfire') && (type === 'sniper' || type === 'elite_grunt')) {
+        enemy.cooldown *= 0.82;
+        enemy.projectileSpeed *= 1.18;
+      }
+      if (this.hasAffix('eruption')) {
+        enemy.accent = enemy.accent || '#fb7185';
+      }
+    }
     return enemy;
   },
 
@@ -4691,6 +5627,7 @@ var OperationSystem = {
     this.collapseTelegraph = null;
     this.beamState = null;
     this.bossRef = null;
+    this.disruptorRespawn = 0;
     this.pendingBossThreshold = 0;
     this._lastSectorTick = -1;
     this._lastCollapseSecond = -1;
@@ -4699,6 +5636,7 @@ var OperationSystem = {
       this.objectiveText = 'STAND INSIDE THE SYNC PAD UNTIL IT REACHES 100%.';
       this.briefingTitle = 'SYNC PAD';
       this.briefingBody = 'Hold the green circle. More enemies nearby slows progress.';
+      this.spawnSyncDisruptor();
     } else if (index === 1) {
       this.objectiveText = 'DESTROY ALL RELAY ANCHORS. THEY ARE MARKED AND TANKIER THAN NORMAL MOBS.';
       this.briefingTitle = 'ANCHOR BREAK';
@@ -4743,6 +5681,7 @@ var OperationSystem = {
     this.spawnTaggedEnemy('sniper', -210, 120, 1.42);
     this.spawnTaggedEnemy('stalker', 220, 110, 1.45);
     this.spawnTaggedEnemy('bomber', 140, -220, 1.42);
+    Game.announce('BREACH GUARD LOCKING THE SAFE SECTOR');
   },
 
   spawnBoss: function() {
@@ -4787,13 +5726,40 @@ var OperationSystem = {
         }
       }
       if (hz.type === 'pulse' && hz.t >= hz.duration) this.hazards.splice(i, 1);
+      if (hz.type === 'eruption' && hz.t >= hz.delay && !hz.hit) {
+        hz.hit = true;
+        if (Utils.dist(Game.player.x, Game.player.y, hz.x, hz.y) < hz.radius) {
+          Game.player.damage(16 + Math.floor(this.keystoneTier * 0.5));
+          this.mechanicPenalty += 1;
+        }
+        VFX.burst(hz.x, hz.y, '#f97316', LOW_FX_MODE ? 5 : 12, 150);
+      }
+      if (hz.type === 'eruption' && hz.t > hz.delay + 0.28) this.hazards.splice(i, 1);
     }
+  },
+
+  spawnSyncDisruptor: function() {
+    var pos = Utils.choice([
+      { x: -180, y: -180 },
+      { x: 190, y: -150 },
+      { x: -200, y: 170 },
+      { x: 210, y: 160 }
+    ]);
+    this.spawnTaggedEnemy(Utils.choice(['sniper', 'elite_grunt']), pos.x, pos.y, 1.52 + this.keystoneTier * 0.02, {
+      operationDisruptor: true,
+      guardLabel: 'DISRUPTOR',
+      accent: '#fbbf24',
+      radius: 19
+    });
   },
 
   onEnemyKilled: function(enemy) {
     if (!this.active) return;
-    if (this.affix === 'volatile' && !enemy.boss) {
+    if (this.hasAffix('volatile') && !enemy.boss) {
       this.hazards.push({ type: 'volatile', x: enemy.x, y: enemy.y, radius: 54, delay: 0.72, t: 0, hit: false });
+    }
+    if (this.hasAffix('eruption') && !enemy.boss) {
+      this.hazards.push({ type: 'eruption', x: enemy.x, y: enemy.y, radius: 42, delay: 0.45, t: 0, hit: false });
     }
   },
 
@@ -4824,18 +5790,18 @@ var OperationSystem = {
       var dist = Math.hypot(px, py);
       var playerAng = Math.atan2(py, px);
       var delta = Math.atan2(Math.sin(playerAng - this.beamState.angle), Math.cos(playerAng - this.beamState.angle));
-      if (dist < 420 && Math.abs(delta) < 0.09) Game.player.damage(15 * dt * 3);
+      if (dist < 420 && Math.abs(delta) < 0.09) Game.player.damage((15 + this.keystoneTier * 0.6) * dt * 3);
     }
-    if (!this.collapseTelegraph && this.stageTimer > 0 && Math.floor(this.stageTimer) % 9 === 0 && this._lastCollapseSecond !== Math.floor(this.stageTimer)) {
+    if (!this.collapseTelegraph && this.stageTimer > 0 && Math.floor(this.stageTimer) % Math.max(5, 9 - Math.floor(this.keystoneTier * 0.18)) === 0 && this._lastCollapseSecond !== Math.floor(this.stageTimer)) {
       this._lastCollapseSecond = Math.floor(this.stageTimer);
-      this.collapseTelegraph = { start: Math.random() * Math.PI * 2, width: 1.15, timer: 1.15 };
+      this.collapseTelegraph = { start: Math.random() * Math.PI * 2, width: Math.max(0.8, 1.15 - this.keystoneTier * 0.012), timer: Math.max(0.72, 1.15 - this.keystoneTier * 0.018) };
     } else if (this.collapseTelegraph) {
       this.collapseTelegraph.timer -= dt;
       if (this.collapseTelegraph.timer <= 0) {
         var pAng = Math.atan2(Game.player.y, Game.player.x);
         var deltaCollapse = Math.atan2(Math.sin(pAng - this.collapseTelegraph.start), Math.cos(pAng - this.collapseTelegraph.start));
         if (Math.abs(deltaCollapse) < this.collapseTelegraph.width * 0.5) {
-          Game.player.damage(22);
+          Game.player.damage(22 + Math.floor(this.keystoneTier * 0.8));
           this.mechanicPenalty += 1;
         }
         VFX.burst(Math.cos(this.collapseTelegraph.start) * 220, Math.sin(this.collapseTelegraph.start) * 220, '#fb7185', LOW_FX_MODE ? 6 : 14, 180);
@@ -4849,81 +5815,100 @@ var OperationSystem = {
     this.timer += dt;
     this.stageTimer += dt;
     if (this.briefingTimer > 0) this.briefingTimer -= dt;
-    this.rewardTimer = Math.max(0, this.current.rewardTime - this.timer);
+    this.rewardTimer = Math.max(0, (this.current ? this.current.rewardTime : 0) - this.timer - Math.max(0, this.keystoneTier - 1) * 7);
     this.updateHazards(dt);
-    if (this.affix === 'pulse') {
+    if (this.hasAffix('pulse')) {
       this.pulseTimer -= dt;
       if (this.pulseTimer <= 0) {
-        this.pulseTimer = 7;
+        this.pulseTimer = Math.max(4.5, 7 - this.keystoneTier * 0.18);
         this.hazards.push({ type: 'pulse', t: 0, duration: 1.2, maxRadius: 520, hit: false });
       }
     }
     if (this.stageIndex === 0) {
-      this.objectiveText = 'SYNC PAD ' + Math.floor((this.stageProgress / 11) * 100) + '% · HOLD THE GREEN CIRCLE';
+      var disruptorsAlive = Enemies.list.filter(function(e) { return e.alive && e.operationDisruptor; }).length;
+      var syncProgress = Math.max(0, this.stageProgress);
+      var syncPct = Math.floor((syncProgress / 11) * 100);
+      this.objectiveText = disruptorsAlive > 0
+        ? 'KILL DISRUPTORS · SYNC FROZEN · ' + syncPct + '%'
+        : 'SYNC PAD ' + syncPct + '% · HOLD THE GREEN CIRCLE';
       this.enemySpawnTimer -= dt;
       if (this.enemySpawnTimer <= 0) {
-        this.enemySpawnTimer = 1.9;
+        this.enemySpawnTimer = Math.max(1.05, 1.9 - this.keystoneTier * 0.05 - (this.hasAffix('hunters') ? 0.2 : 0));
         this.spawnTaggedEnemy(Utils.choice(['grunt', 'stalker', 'sniper']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale());
         this.spawnTaggedEnemy(Utils.choice(['grunt', 'stalker', 'bomber']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale());
-        if (this.stageTimer > 5) this.spawnTaggedEnemy(Utils.choice(['stalker', 'sniper']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale() + 0.08);
+        if (this.stageTimer > Math.max(2.5, 5 - this.keystoneTier * 0.12)) this.spawnTaggedEnemy(Utils.choice(this.hasAffix('crossfire') ? ['sniper', 'sniper', 'stalker'] : ['stalker', 'sniper']), -260 + Math.random() * 520, -260 + Math.random() * 520, this.enemyScale() + 0.08);
+      }
+      this.disruptorRespawn -= dt;
+      if (disruptorsAlive <= 0 && this.stageProgress < 10.2 && this.disruptorRespawn <= 0 && this.stageTimer > 4.5) {
+        this.disruptorRespawn = Math.max(5.5, 8.5 - this.keystoneTier * 0.18);
+        this.spawnSyncDisruptor();
+        Game.announce('SYNC DISRUPTOR INBOUND');
       }
       var inPad = Utils.dist(Game.player.x, Game.player.y, 0, 0) < 92;
-      if (inPad) this.stageProgress += dt * (this.nearbyEnemies(0, 0, 130) > 3 ? 0.6 : 1);
-      else this.stageProgress = Math.max(0, this.stageProgress - dt * 0.5);
+      if (inPad && disruptorsAlive <= 0) this.stageProgress += dt * (this.nearbyEnemies(0, 0, 130) > (this.keystoneTier >= 6 ? 2 : 3) ? 0.55 : 1);
+      else this.stageProgress = Math.max(0, this.stageProgress - dt * (disruptorsAlive > 0 ? 0.85 : 0.5));
       if (this.stageProgress >= 11) this.completeStage();
     } else if (this.stageIndex === 1) {
-      this.objectiveText = 'ELIMINATE RELAY ANCHORS · YELLOW TARGETS';
+      var anchorsLeft = Enemies.list.filter(function(e) { return e.alive && e.operationAnchor; }).length;
+      this.objectiveText = 'ELIMINATE RELAY ANCHORS · ' + anchorsLeft + ' LEFT';
       this.enemySpawnTimer -= dt;
       if (this.enemySpawnTimer <= 0) {
-        this.enemySpawnTimer = 3.8;
-        this.spawnTaggedEnemy(Utils.choice(['stalker', 'sniper', 'grunt']), -240 + Math.random() * 480, -240 + Math.random() * 480, this.enemyScale() + 0.06);
+        this.enemySpawnTimer = Math.max(2.1, 3.8 - this.keystoneTier * 0.07);
+        this.spawnTaggedEnemy(Utils.choice(this.hasAffix('crossfire') ? ['sniper', 'sniper', 'stalker'] : ['stalker', 'sniper', 'grunt']), -240 + Math.random() * 480, -240 + Math.random() * 480, this.enemyScale() + 0.06);
       }
       if (!Enemies.list.some(function(e) { return e.alive && e.operationAnchor; })) this.completeStage();
     } else if (this.stageIndex === 2) {
-      this.sectorAngle += dt * 0.8;
+      this.sectorAngle += dt * (0.8 + this.keystoneTier * 0.015);
       var playerAngle = Math.atan2(Game.player.y, Game.player.x);
       var safeDelta = Math.atan2(Math.sin(playerAngle - this.sectorAngle), Math.cos(playerAngle - this.sectorAngle));
+      var miniAlive = Enemies.list.some(function(e) { return e.alive && e.operationMiniBoss; });
       if (Math.abs(safeDelta) < this.sectorWidth * 0.5) {
-        this.stageProgress += dt;
+        if (!miniAlive) this.stageProgress += dt;
       } else if (Math.floor(this.stageTimer * 2) !== this._lastSectorTick) {
         this._lastSectorTick = Math.floor(this.stageTimer * 2);
-        Game.player.damage(6);
+        Game.player.damage(6 + Math.floor(this.keystoneTier * 0.45));
         this.mechanicPenalty += 1;
       }
       if (this.enemySpawnTimer <= 0) {
-        this.enemySpawnTimer = 2.8;
-        this.spawnTaggedEnemy(Utils.choice(['stalker', 'sniper', 'bomber']), -220 + Math.random() * 440, -220 + Math.random() * 440, this.enemyScale());
+        this.enemySpawnTimer = Math.max(1.55, 2.8 - this.keystoneTier * 0.06);
+        this.spawnTaggedEnemy(Utils.choice(this.hasAffix('crossfire') ? ['sniper', 'bomber', 'sniper'] : ['stalker', 'sniper', 'bomber']), -220 + Math.random() * 440, -220 + Math.random() * 440, this.enemyScale());
       } else {
         this.enemySpawnTimer -= dt;
       }
-      var miniAlive = Enemies.list.some(function(e) { return e.alive && e.operationMiniBoss; });
-      this.objectiveText = 'SAFE SECTOR ' + Math.min(100, Math.floor((this.stageProgress / 12) * 100)) + '% · STAY INSIDE GREEN';
+      this.objectiveText = miniAlive
+        ? 'KILL BREACH GUARD · SAFE SECTOR PROGRESS LOCKED'
+        : 'SAFE SECTOR ' + Math.min(100, Math.floor((this.stageProgress / 12) * 100)) + '% · STAY GREEN';
       if (this.stageProgress >= 12 && !miniAlive) this.completeStage();
     } else if (this.stageIndex === 3) {
       this.updateBossMechanics(dt);
-      this.objectiveText = this.bossRef && this.bossRef.invulnerable ? 'BREAK SHIELD ANCHORS · BOSS IS IMMUNE' : 'DODGE MECHANICS · BURN THE WARDEN';
+      this.objectiveText = this.bossRef && this.bossRef.invulnerable
+        ? 'BREAK SHIELD ANCHORS · BOSS IMMUNE'
+        : (this.beamState && this.beamState.active ? 'DODGE THE BEAM · KEEP DPS UP' : 'BURN THE WARDEN · WATCH COLLAPSE SLICES');
       if (!this.bossRef || !this.bossRef.alive) this.completeStage();
     }
   },
 
   buildRewardReport: function() {
-    var tier = this.rewardTimer > 180 ? 3 : (this.rewardTimer > 70 ? 2 : 1);
-    var bracket = tier === 3 ? 'GOLD' : (tier === 2 ? 'SILVER' : 'BRONZE');
+    var rewardTier = this.rewardTimer > 180 ? 3 : (this.rewardTimer > 70 ? 2 : 1);
+    var bracket = rewardTier === 3 ? 'GOLD' : (rewardTier === 2 ? 'SILVER' : 'BRONZE');
+    var kTier = Math.max(1, this.keystoneTier || 1);
+    var rewardBand = 1 + Math.floor(kTier / 3);
     return {
-      credits: 80 + tier * 45,
+      credits: 70 + kTier * 18 + rewardTier * 30,
       materials: {
-        core: 1 + (tier >= 2 ? 1 : 0),
-        keystone: tier,
-        sigil: tier === 3 ? 1 : 0,
-        circuits: 2 + tier,
-        intel: 2 + (tier >= 2 ? 1 : 0),
-        void: tier === 3 ? 1 : 0,
+        core: 1 + Math.floor(kTier / 4) + (rewardTier >= 2 ? 1 : 0),
+        keystone: rewardTier + Math.floor(kTier / 3),
+        sigil: rewardTier === 3 ? 1 + Math.floor(kTier / 8) : 0,
+        circuits: 2 + rewardBand,
+        intel: 2 + Math.floor(kTier / 2) + (rewardTier >= 2 ? 1 : 0),
+        void: rewardTier === 3 ? 1 + Math.floor(kTier / 10) : (kTier >= 8 ? 1 : 0),
       },
       operation: {
         name: this.current.name,
-        tier: tier,
+        tier: kTier,
+        rewardTier: rewardTier,
         bracket: bracket,
-        affix: this.affixLabel(),
+        affix: this.affixSummary(),
         penalty: this.mechanicPenalty,
         time: this.timer,
       },
@@ -4934,12 +5919,13 @@ var OperationSystem = {
     if (!this.active) return;
     ctx.save();
     if (this.stageIndex === 0) {
+      var syncFill = Math.max(0, Math.min(1, this.stageProgress / 6.5));
       ctx.strokeStyle = 'rgba(74,222,128,0.85)';
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(0, 0, 92, 0, Math.PI * 2); ctx.stroke();
       ctx.globalAlpha = 0.15;
       ctx.fillStyle = '#4ade80';
-      ctx.beginPath(); ctx.arc(0, 0, 92 * Math.min(1, this.stageProgress / 6.5), 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, 92 * syncFill, 0, Math.PI * 2); ctx.fill();
     } else if (this.stageIndex === 2) {
       ctx.fillStyle = 'rgba(74,222,128,0.12)';
       ctx.beginPath();
@@ -4966,6 +5952,10 @@ var OperationSystem = {
         ctx.strokeStyle = 'rgba(34,211,238,0.4)';
         ctx.lineWidth = 4;
         ctx.beginPath(); ctx.arc(0, 0, hz.maxRadius * Math.min(1, hz.t / hz.duration), 0, Math.PI * 2); ctx.stroke();
+      } else if (hz.type === 'eruption') {
+        ctx.strokeStyle = 'rgba(249,115,22,' + (0.35 + hz.t * 0.4) + ')';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(hz.x, hz.y, hz.radius * Math.min(1, hz.t / hz.delay), 0, Math.PI * 2); ctx.stroke();
       }
     }
     if (this.beamState && this.bossRef) {
@@ -4989,10 +5979,13 @@ var OperationSystem = {
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 16px ui-monospace, monospace';
     ctx.textAlign = 'left';
-    ctx.fillText(this.briefingTitle, 34, 114);
+    ctx.fillText('K+' + this.keystoneTier + ' · ' + this.briefingTitle, 34, 114);
     ctx.fillStyle = '#d7e6f5';
     ctx.font = '12px ui-monospace, monospace';
     ctx.fillText(this.briefingBody, 34, 138);
+    ctx.fillStyle = '#22d3ee';
+    ctx.font = '10px ui-monospace, monospace';
+    ctx.fillText(this.affixSummary(), 34, 154);
     ctx.restore();
   },
 };
@@ -5045,6 +6038,36 @@ var RunInventory = {
     return value + rarityScore + typeScore + qtyScore;
   },
 
+  applyFieldBonus: function(lootItem) {
+    if (!Game.player || !lootItem) return '';
+    var qty = Math.max(1, lootItem.materialQty || 1);
+    if (lootItem.materialType === 'scrap') {
+      Game.player.stats.maxHP += 4 * qty;
+      Game.player.hp = Math.min(Game.player.stats.maxHP, Game.player.hp + 4 * qty);
+      Game.player.stats.armor += qty;
+      return '+' + (4 * qty) + ' HP / +' + qty + ' ARMOR';
+    }
+    if (lootItem.materialType === 'circuits') {
+      Game.player.stats.attackSpeed *= (1 + 0.03 * qty);
+      return '+' + (3 * qty) + '% FIRE RATE';
+    }
+    if (lootItem.materialType === 'biomass') {
+      Game.player.heal(12 * qty);
+      Game.player.stats.hpRegen += 0.25 * qty;
+      return 'HEAL +' + (12 * qty) + ' / REGEN +' + (0.25 * qty).toFixed(2);
+    }
+    if (lootItem.materialType === 'intel') {
+      Game.player.gainXP(12 * qty);
+      Game.player.stats.pickupRadius += 4 * qty;
+      return '+' + (12 * qty) + ' XP / +' + (4 * qty) + ' PICKUP';
+    }
+    if (lootItem.materialType === 'void') {
+      Game.player.stats.damage *= (1 + 0.06 * qty);
+      return '+' + (6 * qty) + '% DAMAGE';
+    }
+    return '';
+  },
+
   fullBackpackDecision: function(lootItem) {
     var worstIdx = 0;
     var worstScore = Infinity;
@@ -5086,7 +6109,8 @@ var RunInventory = {
     }
     if (!this.isFull()) {
       this.items.push(lootItem);
-      Game.announce('+ ' + lootItem.name.toUpperCase());
+      var fieldBonus = this.applyFieldBonus(lootItem);
+      Game.announce('+ ' + lootItem.name.toUpperCase() + (fieldBonus ? ' · ' + fieldBonus : ''));
       AudioBus.play('pickup');
       return true;
     }
@@ -5095,7 +6119,8 @@ var RunInventory = {
     if (decision.action === 'replace') {
       var replaced = this.items[decision.idx];
       this.items[decision.idx] = lootItem;
-      Game.announce('+ AUTO-SWAP ' + lootItem.name.toUpperCase() + ' > ' + replaced.name.toUpperCase());
+      var swapBonus = this.applyFieldBonus(lootItem);
+      Game.announce('+ AUTO-SWAP ' + lootItem.name.toUpperCase() + ' > ' + replaced.name.toUpperCase() + (swapBonus ? ' · ' + swapBonus : ''));
       AudioBus.play('pickup');
       return true;
     }
@@ -5142,7 +6167,7 @@ var RunInventory = {
       save.materials[key] = (save.materials[key] || 0) + manifest[key];
       save.bankedLoot.materials[key] = (save.bankedLoot.materials[key] || 0) + manifest[key];
     }
-    var credits = Math.floor(this.totalValue() * vendorMultiplier);
+    var credits = Math.floor(this.totalValue() * vendorMultiplier * (1 + Game.hideoutRank('broker_uplink') * 0.12));
     save.bankedLoot.credits = (save.bankedLoot.credits || 0) + credits;
     return { credits: credits, materials: manifest };
   },
@@ -5247,6 +6272,16 @@ const Game = {
       SaveSystem.save(this.save);
       UI.renderMainMenu();
     };
+    Utils.el('#btnTierDown').onclick = () => {
+      this.save.selectedOperationTier = Math.max(1, this.currentOperationTier() - 1);
+      SaveSystem.save(this.save);
+      UI.renderMainMenu();
+    };
+    Utils.el('#btnTierUp').onclick = () => {
+      this.save.selectedOperationTier = Math.min(this.maxSelectableOperationTier(), this.currentOperationTier() + 1);
+      SaveSystem.save(this.save);
+      UI.renderMainMenu();
+    };
     Utils.el('#btnClass').onclick = () => { UI.show('classScreen'); UI.renderClassScreen(); };
     Utils.el('#btnZone').onclick  = () => { UI.show('zoneScreen');  UI.renderZoneScreen(); };
     Utils.el('#btnMeta').onclick  = () => { UI.show('metaScreen');  UI.renderMetaScreen(); };
@@ -5278,6 +6313,8 @@ const Game = {
     Utils.el('#btnSwapLoot').onclick = function() {
       if (RunInventory._selectedSwapIdx >= 0 && RunInventory._pendingLoot) {
         RunInventory.items[RunInventory._selectedSwapIdx] = RunInventory._pendingLoot;
+        var selectedBonus = RunInventory.applyFieldBonus(RunInventory._pendingLoot);
+        Game.announce('+ STORED ' + RunInventory._pendingLoot.name.toUpperCase() + (selectedBonus ? ' · ' + selectedBonus : ''));
       }
       UI.hideLootChoice();
     };
@@ -5538,6 +6575,8 @@ const Game = {
 
     OperationSystem.renderGround(ctx);
     Pickups.render(ctx);
+    ScavengeSites.render(ctx);
+    FieldObjectives.render(ctx);
     Enemies.render(ctx);
     this.player.render(ctx);
     Projectiles.render(ctx);
