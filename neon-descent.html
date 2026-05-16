@@ -899,24 +899,24 @@ canvas#game {
 }
 .hud > * { pointer-events: auto; }
 .hud-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.hud-left { display: flex; flex-direction: column; gap: 4px; width: 260px; }
+.hud-left { display: flex; flex-direction: column; gap: 4px; width: 230px; }
 
 .class-tag, .zone-tag {
   font-family: var(--display); font-weight: 700;
   letter-spacing: 0.18em; font-size: 11px;
   padding: 5px 9px;
-  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
-  border: 1px solid var(--line);
+  background: rgba(5,12,22,0.62);
+  border: 1px solid rgba(76,135,166,0.38);
   color: var(--accent);
   backdrop-filter: blur(4px);
   box-shadow: inset 0 0 0 1px rgba(159,232,255,0.03);
   width: 100%;
-  min-height: 30px;
+  min-height: 28px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.zone-tag { color: var(--ink-dim); font-size: 10px; }
+.zone-tag { color: var(--ink-dim); font-size: 9px; }
 
 .hud-right {
   display: flex;
@@ -924,15 +924,15 @@ canvas#game {
   align-items: flex-start;
   flex-wrap: wrap;
   justify-content: flex-end;
-  max-width: min(520px, 48vw);
+  max-width: min(470px, 42vw);
 }
 .stat-pill {
   font-family: var(--mono); font-size: 10px;
   padding: 5px 8px;
-  width: 64px;
-  min-height: 30px;
-  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
-  border: 1px solid var(--line);
+  width: 58px;
+  min-height: 28px;
+  background: rgba(5,12,22,0.58);
+  border: 1px solid rgba(76,135,166,0.34);
   backdrop-filter: blur(4px);
   display: flex; gap: 6px; align-items: center; justify-content: center;
   font-variant-numeric: tabular-nums;
@@ -940,8 +940,8 @@ canvas#game {
 .stat-pill .lbl { color: var(--ink-faint); font-size: 8px; letter-spacing: 0.12em; }
 .stat-pill span:last-child { color: var(--accent); font-weight: 700; }
 .ability-pill {
-  width: 154px;
-  min-width: 154px;
+  width: 116px;
+  min-width: 116px;
   justify-content: center;
 }
 .ability-pill.ready {
@@ -953,9 +953,9 @@ canvas#game {
 .ability-pill.ready span:last-child { color: var(--gold); }
 
 .icon-btn {
-  width: 30px; height: 30px;
-  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
-  border: 1px solid var(--line);
+  width: 28px; height: 28px;
+  background: rgba(5,12,22,0.62);
+  border: 1px solid rgba(76,135,166,0.34);
   color: var(--ink); cursor: pointer;
   font-size: 10px;
   backdrop-filter: blur(4px);
@@ -1039,13 +1039,13 @@ canvas#game {
 .hud-left-stack {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
   align-items: flex-start;
   width: 260px;
   max-width: 260px;
 }
 .weapon-card {
-  display: flex; gap: 10px; align-items: flex-start;
+  display: none; gap: 10px; align-items: flex-start;
   background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid var(--line);
   backdrop-filter: blur(4px);
@@ -1129,20 +1129,20 @@ canvas#game {
 .hud-side-stack {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  width: min(300px, 28vw);
-  min-width: 260px;
+  align-items: stretch;
+  gap: 6px;
+  width: clamp(360px, 27vw, 430px);
+  min-width: 360px;
 }
 .objective-card {
   width: 100%;
-  min-height: 94px;
-  padding: 9px 11px 10px;
-  background: linear-gradient(180deg, rgba(7,17,31,0.9), rgba(5,12,22,0.92));
-  border: 1px solid rgba(34,211,238,0.28);
-  box-shadow: inset 0 0 0 1px rgba(159,232,255,0.03);
+  min-height: 78px;
+  padding: 9px 12px 10px;
+  background: linear-gradient(180deg, rgba(7,17,31,0.78), rgba(5,12,22,0.88));
+  border: 1px solid rgba(34,211,238,0.24);
+  box-shadow: inset 0 0 0 1px rgba(159,232,255,0.025), 0 10px 28px rgba(0,0,0,0.18);
   backdrop-filter: blur(4px);
-  opacity: 0.94;
+  opacity: 0.92;
 }
 .objective-card.urgent {
   border-color: rgba(251,191,36,0.42);
@@ -1157,7 +1157,7 @@ canvas#game {
 .objective-main {
   margin-top: 5px;
   font-family: var(--display);
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 0.1em;
   color: #eef7ff;
   min-height: 18px;
@@ -1171,7 +1171,7 @@ canvas#game {
   font-size: 9px;
   line-height: 1.35;
   color: var(--ink-dim);
-  min-height: 24px;
+  min-height: 22px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1180,12 +1180,16 @@ canvas#game {
 
 .hud-utility {
   display: grid;
-  grid-template-columns: auto auto minmax(178px, 220px) auto;
+  grid-template-columns: 42px minmax(0, 1fr);
   gap: 6px;
   align-items: stretch;
   width: 100%;
 }
+.hud-utility:has(.extract-hud:not(.hidden)) {
+  grid-template-columns: 124px 42px minmax(0, 1fr);
+}
 .kill-counter {
+  display: none;
   min-width: 68px;
   background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid var(--line);
@@ -1204,7 +1208,7 @@ canvas#game {
 
 /* === EXTRACTION HUD === */
 .extract-hud {
-  min-width: 128px;
+  min-width: 124px;
   background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid rgba(74,222,128,0.55);
   backdrop-filter: blur(4px);
@@ -1216,7 +1220,7 @@ canvas#game {
 .extract-label { font-family: var(--mono); font-size: 8px; color: var(--good); letter-spacing: 0.2em; }
 .extract-dist { margin-top: 4px; font-family: var(--display); font-weight: 700; font-size: 13px; color: var(--good); letter-spacing: 0.08em; }
 .inv-btn {
-  width: 40px; height: 40px;
+  width: 42px; height: 42px;
   background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9)); border: 1px solid var(--line);
   color: var(--accent); font-size: 14px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 2px;
@@ -1229,19 +1233,23 @@ canvas#game {
   background: var(--accent-deep); padding: 0 3px; font-size: 9px;
 }
 .loot-tier {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em;
   min-width: 0;
   max-width: none;
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 5px 8px;
-  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
-  border: 1px solid var(--line);
+  justify-content: flex-start;
+  padding: 6px 10px;
+  background: rgba(5,12,22,0.74);
+  border: 1px solid rgba(251,191,36,0.26);
   color: var(--gold); backdrop-filter: blur(4px);
-  line-height: 1.25;
-  text-align: center;
+  line-height: 1.35;
+  text-align: left;
+  white-space: pre-line;
+  overflow: hidden;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 /* === INVENTORY MODAL === */
@@ -1363,7 +1371,7 @@ canvas#game {
     position: absolute;
     right: calc(8px + env(safe-area-inset-right));
     bottom: calc(8px + env(safe-area-inset-bottom));
-    width: min(210px, calc(100vw - 208px));
+    width: min(220px, calc(100vw - 196px));
     min-width: 0;
     gap: 5px;
     align-items: flex-end;
@@ -1380,12 +1388,17 @@ canvas#game {
   .objective-sub { font-size: 8px; min-height: 20px; -webkit-line-clamp: 2; }
   .hud-utility {
     width: 100%;
-    display: flex;
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
     gap: 5px;
     pointer-events: auto;
   }
-  .weapon-card, .weapon-stats, .perk-strip, .kill-counter, .loot-tier { display: none; }
+  .hud-utility:has(.extract-hud:not(.hidden)) {
+    grid-template-columns: minmax(86px, 1fr) 38px;
+  }
+  .hud-utility:has(.extract-hud:not(.hidden)) .loot-tier { grid-column: 1 / -1; }
+  .weapon-card, .weapon-stats, .perk-strip, .kill-counter { display: none; }
+  .loot-tier { display: flex; min-height: 38px; padding: 5px 7px; font-size: 7px; line-height: 1.25; letter-spacing: 0.05em; }
   .inv-btn { width: 38px; height: 38px; }
   .extract-hud { min-width: 104px; padding: 6px 8px; }
   .extract-dist { font-size: 11px; }
@@ -2187,6 +2200,10 @@ const UI = {
       'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + ' - VALUE ' + haulValue + '/' + ExtractionZone.minLootValue + contractProgress + ' - ' + haulIntent;
     if (Utils.el('#lootTierHud') && !(Game.isOperationRun && Game.isOperationRun())) Utils.el('#lootTierHud').textContent =
       'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + ' - VALUE ' + haulValue + '/' + ExtractionZone.minLootValue + contractProgress + ' - EXTRACT ' + (SectorDirector.extractDistance ? SectorDirector.extractDistance() : 0) + 'm - ' + haulIntent;
+    var compactLootA = 'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + '  VALUE ' + haulValue + '/' + ExtractionZone.minLootValue;
+    var compactLootB = (contractObj && contractObj.progress ? contractObj.progress : 'CONTRACT') + '  ' + haulIntent;
+    if (!(Game.isOperationRun && Game.isOperationRun())) compactLootB = (contractObj && contractObj.progress ? contractObj.progress : 'CONTRACT') + '  EXT ' + (SectorDirector.extractDistance ? SectorDirector.extractDistance() : 0) + 'm';
+    if (Utils.el('#lootTierHud')) Utils.el('#lootTierHud').textContent = compactLootA + '\n' + compactLootB;
     var objectiveMain = 'FILL YOUR BACKPACK';
     var objectiveSub = 'Secure ' + secureNeed + ' more cache' + (secureNeed === 1 ? '' : 's') + ' or bank ' + valueNeed + ' more value to unlock extraction.';
     var objectiveUrgent = false;
