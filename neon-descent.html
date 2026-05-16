@@ -966,6 +966,8 @@ canvas#game {
 .hp-bar .bar-fill { background: linear-gradient(90deg, var(--warn-deep) 0%, var(--warn) 100%); }
 .xp-bar { height: 9px; }
 .xp-bar .bar-fill { background: linear-gradient(90deg, var(--accent-deep) 0%, var(--accent) 100%); }
+.stamina-bar { height: 9px; }
+.stamina-bar .bar-fill { background: linear-gradient(90deg, #15803d 0%, #4ade80 100%); }
 .bar-label {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -973,6 +975,37 @@ canvas#game {
   color: var(--ink); text-shadow: 0 0 4px #000;
   letter-spacing: 0.1em;
 }
+.tactical-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  width: 100%;
+  max-width: 360px;
+}
+.tactical-chip {
+  min-height: 28px;
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.11em;
+  color: var(--ink-faint);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.tactical-chip strong {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.tactical-chip.warning {
+  border-color: rgba(251,191,36,0.55);
+  background: linear-gradient(180deg, rgba(251,191,36,0.12), rgba(120,77,7,0.14));
+}
+.tactical-chip.danger strong { color: var(--warn); }
 
 .hud-bottom {
   display: flex; justify-content: space-between; align-items: flex-end;
@@ -1158,7 +1191,8 @@ canvas#game {
 }
 .loot-tier {
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
-  min-width: 84px;
+  min-width: 178px;
+  max-width: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1166,6 +1200,8 @@ canvas#game {
   background: linear-gradient(180deg, rgba(7,17,31,0.88), rgba(5,12,22,0.9));
   border: 1px solid var(--line);
   color: var(--gold); backdrop-filter: blur(4px);
+  line-height: 1.25;
+  text-align: center;
 }
 
 /* === INVENTORY MODAL === */
@@ -1549,6 +1585,15 @@ h3 {
               <div class="bar-fill" id="xpFill"></div>
               <div class="bar-label"><span id="xpText">0 / 10</span></div>
             </div>
+            <div class="bar stamina-bar">
+              <div class="bar-fill" id="staminaFill"></div>
+              <div class="bar-label"><span id="staminaText">STAMINA 100%</span></div>
+            </div>
+          </div>
+          <div class="tactical-strip">
+            <div class="tactical-chip" id="weaponHeatChip"><span>WEAPON</span><strong id="weaponHeatText">COOL</strong></div>
+            <div class="tactical-chip" id="heatChip"><span>HEAT</span><strong id="heatText">LOW</strong></div>
+            <div class="tactical-chip" id="packageChip"><span>PACKAGE</span><strong id="packageText">NONE</strong></div>
           </div>
           <div class="weapon-card">
             <div class="weapon-icon" id="weaponIcon">▲</div>
@@ -1887,17 +1932,34 @@ const UI = {
 
   announce(text) {
     Game.announceText = text;
-    Game.announceTime = 3;
+    var important = /EXTRACT|LZ|WARDEN|OPERATION|BEACON|REINFORCEMENTS|HUNTER|UPLINK|SECURED/.test(text || '');
+    Game.announceTime = important ? 3 : 1.8;
   },
 
   renderMainMenu() {
     if (!Game.save) return;
     const save = Game.save;
     if (Utils.el('#accountLvl')) Utils.el('#accountLvl').textContent = save.accountLevel || 1;
-    if (Utils.el('#creditsMeta')) Utils.el('#creditsMeta').textContent = save.credits || 0;
-    if (Utils.el('#bestRunMeta')) Utils.el('#bestRunMeta').textContent = save.bestRun ? (save.bestRun.kills + 'K') : '—';
-    if (Utils.el('#perfHint')) Utils.el('#perfHint').textContent = 'Mobile Perf Auto: detecta dispositivo y ajusta calidad automáticamente.';
-    if (Utils.el('#balanceHint')) Utils.el('#balanceHint').textContent = 'Standard: ritmo equilibrado para runs consistentes.';
+    if (Utils.el('#metaCredits')) Utils.el('#metaCredits').textContent = save.credits || 0;
+    if (Utils.el('#bestRun')) Utils.el('#bestRun').textContent = save.bestRun ? (save.bestRun.kills + 'K') : '---';
+    const perfMode = save.perfMode || 'auto';
+    const perfLabels = { auto: 'PERF: AUTO', on: 'PERF: LOW FX', off: 'PERF: FULL FX' };
+    const perfHints = {
+      auto: 'Auto picks low FX on mobile-sized touch devices.',
+      on: 'Low FX mode reduces particles, glow, and device pixel ratio.',
+      off: 'Full FX mode keeps richer visuals when your device can handle it.',
+    };
+    if (Utils.el('#btnPerfMode')) Utils.el('#btnPerfMode').textContent = perfLabels[perfMode] || perfLabels.auto;
+    if (Utils.el('#perfHint')) Utils.el('#perfHint').textContent = perfHints[perfMode] || perfHints.auto;
+    const balanceMode = save.balancePreset || 'standard';
+    const balanceLabels = { arcade: 'TUNE: ARCADE', standard: 'TUNE: STANDARD', hardcore: 'TUNE: HARDCORE' };
+    const balanceHints = {
+      arcade: 'Arcade: lighter pressure for faster, looser runs.',
+      standard: 'Standard: balanced pressure for consistent runs.',
+      hardcore: 'Hardcore: higher pressure for sharper playtests.',
+    };
+    if (Utils.el('#btnBalanceMode')) Utils.el('#btnBalanceMode').textContent = balanceLabels[balanceMode] || balanceLabels.standard;
+    if (Utils.el('#balanceHint')) Utils.el('#balanceHint').textContent = balanceHints[balanceMode] || balanceHints.standard;
     const cls = CLASSES[save.selectedClass];
     const zone = ZONES[save.selectedZone];
     const startWeapon = cls && cls.weapon ? cls.weapon : null;
@@ -1976,6 +2038,18 @@ const UI = {
     const xpPct = Math.max(0, Math.min(100, Math.round((p.xp / xpNeeded) * 100)));
     if (Utils.el('#xpFill')) Utils.el('#xpFill').style.width = `${Math.max(0, (p.xp / xpNeeded) * 100)}%`;
     if (Utils.el('#xpText')) Utils.el('#xpText').textContent = `XP ${xpPct}%`;
+    var staminaPct = Math.max(0, Math.min(100, Math.round((p.stamina / p.maxStamina) * 100)));
+    if (Utils.el('#staminaFill')) Utils.el('#staminaFill').style.width = staminaPct + '%';
+    if (Utils.el('#staminaText')) Utils.el('#staminaText').textContent = 'STAMINA ' + staminaPct + '%';
+    var heatPct = Math.max(0, Math.min(100, Math.round((p.weaponHeat / p.weaponHeatMax) * 100)));
+    if (Utils.el('#weaponHeatText')) Utils.el('#weaponHeatText').textContent = p.weaponOverheated ? 'VENTING' : (heatPct + '%');
+    if (Utils.el('#weaponHeatChip')) Utils.el('#weaponHeatChip').classList.toggle('warning', heatPct > 70 || p.weaponOverheated);
+    var worldHeat = World.haulHeat ? World.haulHeat() : 0;
+    var heatLabel = p.tacticalWarning || (worldHeat >= 3 ? 'HIGH' : (worldHeat >= 1.6 ? 'RISING' : 'LOW'));
+    if (Utils.el('#heatText')) Utils.el('#heatText').textContent = heatLabel;
+    if (Utils.el('#heatChip')) Utils.el('#heatChip').classList.toggle('danger', worldHeat >= 3 || !!p.tacticalWarning);
+    if (Utils.el('#packageText')) Utils.el('#packageText').textContent = FieldContracts && FieldContracts.packageSecured ? 'HEAVY' : 'NONE';
+    if (Utils.el('#packageChip')) Utils.el('#packageChip').classList.toggle('warning', !!(FieldContracts && FieldContracts.packageSecured));
     if (Utils.el('#lvlText')) Utils.el('#lvlText').textContent = p.level;
     if (Utils.el('#creditsText')) Utils.el('#creditsText').textContent = Math.floor(Game.runCredits || 0);
     if (Utils.el('#timeText')) Utils.el('#timeText').textContent = Utils.formatTime(World.time || 0);
@@ -1987,13 +2061,22 @@ const UI = {
     if (Utils.el('#weaponIcon')) Utils.el('#weaponIcon').textContent = p.weapon.icon;
     if (Utils.el('#abilityLabel')) Utils.el('#abilityLabel').textContent = p.cls.ability ? p.cls.ability.name.toUpperCase() : 'ABILITY';
     if (Utils.el('#abilityText')) Utils.el('#abilityText').textContent = p.abilityCD <= 0 ? 'READY' : `${p.abilityCD.toFixed(1)}s`;
-    if (Utils.el('#invCountHud')) Utils.el('#invCountHud').textContent = RunInventory.items.length;
+    if (Utils.el('#invCountHud')) Utils.el('#invCountHud').textContent = RunInventory.items.length + '/' + RunInventory.maxSlots;
     if (Utils.el('#killText')) Utils.el('#killText').textContent = p.kills || 0;
-    if (Utils.el('#lootTierHud')) Utils.el('#lootTierHud').textContent = 'TIER ' + Math.max(1, Math.min(4, Math.ceil((World.haulHeat ? World.haulHeat() : 0.4))));
-
     var objectiveKicker = 'CURRENT TASK';
-    var objectiveMain = 'SCAVENGE THE ZONE';
-    var objectiveSub = 'Secure caches, build haul, then call extraction.';
+    var haulValue = RunInventory.totalValue ? RunInventory.totalValue() : 0;
+    var secureNeed = Math.max(0, ExtractionZone.minSecureSites - ScavengeSites.searchedCount);
+    var valueNeed = Math.max(0, ExtractionZone.minLootValue - haulValue);
+    var contractObj = FieldContracts && FieldContracts.objectiveText ? FieldContracts.objectiveText() : null;
+    var extractionReady = secureNeed <= 0 || valueNeed <= 0 || (FieldContracts && FieldContracts.isContractComplete && FieldContracts.isContractComplete());
+    var haulIntent = RunInventory.haulIntentSummary ? RunInventory.haulIntentSummary() : 'EMPTY HAUL';
+    var contractProgress = contractObj && contractObj.progress ? (' - ' + contractObj.progress) : '';
+    if (Utils.el('#lootTierHud')) Utils.el('#lootTierHud').textContent =
+      'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + ' · VALUE ' + haulValue + '/' + ExtractionZone.minLootValue + ' · ' + haulIntent;
+    if (Utils.el('#lootTierHud')) Utils.el('#lootTierHud').textContent =
+      'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + ' - VALUE ' + haulValue + '/' + ExtractionZone.minLootValue + contractProgress + ' - ' + haulIntent;
+    var objectiveMain = 'FILL YOUR BACKPACK';
+    var objectiveSub = 'Secure ' + secureNeed + ' more cache' + (secureNeed === 1 ? '' : 's') + ' or bank ' + valueNeed + ' more value to unlock extraction.';
     var objectiveUrgent = false;
     var extractHud = Utils.el('#extractHud');
     if (extractHud) extractHud.classList.add('hidden');
@@ -2025,6 +2108,16 @@ const UI = {
         if (Utils.el('#extractDist')) Utils.el('#extractDist').textContent = Math.round(Utils.dist(p.x, p.y, ex, ey)) + 'm';
         if (Utils.el('#extractThreat')) Utils.el('#extractThreat').textContent = 'HEAT ' + (World.haulHeat ? World.haulHeat().toFixed(1) : '0.0');
       }
+    } else if (contractObj) {
+      objectiveKicker = contractObj.kicker;
+      objectiveMain = contractObj.main;
+      objectiveSub = contractObj.sub;
+      objectiveUrgent = !!contractObj.urgent;
+    } else if (extractionReady) {
+      objectiveKicker = 'EXTRACTION READY';
+      objectiveMain = 'CALL EXTRACTION';
+      objectiveSub = 'EXTRACT READY: arm the beacon now. PUSH FOR MORE: hit another POI and accept higher heat.';
+      objectiveUrgent = true;
     } else if (FieldObjectives.uplink && !FieldObjectives.completed) {
       objectiveKicker = 'OPTIONAL';
       objectiveMain = 'SECURE THE UPLINK';
@@ -2041,14 +2134,16 @@ const UI = {
         }
       }
       objectiveKicker = 'SCAVENGE';
-      objectiveMain = nearest ? nearest.label : 'SECURE MORE CACHES';
+      objectiveMain = nearest ? ('GO TO ' + nearest.label) : 'SECURE MORE CACHES';
       if (nearest) {
         var guarded = ScavengeSites.enemyCountNear ? ScavengeSites.enemyCountNear(nearest, 150) > 0 : false;
+        var nearestMeters = Math.round(nearestDist);
+        var progressText = 'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + ' - VALUE ' + haulValue + '/' + ExtractionZone.minLootValue + ' - CACHES ' + ScavengeSites.searchedCount + '/' + ExtractionZone.minSecureSites;
         objectiveSub = guarded
-          ? 'Guards are still on site. Clear the area before you can search it.'
-          : 'Move in and search the site. More haul opens extraction sooner.';
+          ? nearestMeters + 'm away. Clear guards to search. ' + progressText
+          : nearestMeters + 'm away. Search it to fill the backpack. ' + progressText;
       } else {
-        objectiveSub = 'Secure more value and wait for the next field objective.';
+        objectiveSub = 'No visible cache nearby. Hold out and watch for the next loot signal.';
       }
     }
 
@@ -2310,9 +2405,14 @@ Object.assign(Game, {
         for (var tg = 0; tg < taken.tags.length; tg++) tagCounts[taken.tags[tg]] = (tagCounts[taken.tags[tg]] || 0) + 1;
       }
     }
+    filtered = filtered.map(function(up) { return UpgradeDirector.normalize(up); });
     var choices = [];
+    var desiredBands = ['power', 'power', 'utility'];
     for (var ci = 0; ci < 3 && filtered.length > 0; ci++) {
-      var bag = filtered.map(upgrade => {
+      var band = desiredBands[ci] || 'power';
+      var sourcePool = filtered.filter(function(up) { return band === 'utility' ? up.impactTier <= 2 : up.impactTier >= 3; });
+      if (!sourcePool.length) sourcePool = filtered;
+      var bag = sourcePool.map(upgrade => {
         var weight = RARITY[upgrade.rarity].weight;
         if (upgrade.tags) {
           for (var si = 0; si < upgrade.tags.length; si++) {
@@ -2356,7 +2456,7 @@ Object.assign(Game, {
     OperationSystem.reset();
     RunInventory.reset();
     RunInventory.maxSlots += Game.hideoutRank('stash_rack');
-    Enemies.clear(); Projectiles.clear(); Pickups.clear(); VFX.clear();
+    Enemies.clear(); Projectiles.clear(); Pickups.clear(); LootDirector.clear(); VFX.clear();
     this.player = new Player(this.save.selectedClass, this.save);
     var safeSpawn = World.safeSpawnPosition(this.player.radius);
     this.player.x = safeSpawn.x;
@@ -2393,6 +2493,8 @@ Object.assign(Game, {
     } else if (this.hasMetaNode('keystone_salvage')) {
       bankReport = RunInventory.salvageOnDeath(this.save);
     }
+    var contractReport = extracted && FieldContracts && FieldContracts.rewardReport ? FieldContracts.rewardReport() : { credits: 0 };
+    if (contractReport.credits) this.runCredits += contractReport.credits;
     var lootValue = (extracted || operationWin) ? bankReport.credits : 0;
     var creditMult = operationWin ? 0.45 : (extracted ? 1.0 : 0.2);
     var earned = Math.floor(this.runCredits * creditMult) + lootValue;
@@ -2438,7 +2540,8 @@ Object.assign(Game, {
       rescued: bankReport.rescued || null,
       operation: operationReport,
       scavenge: { caches: ScavengeSites.searchedCount, securedValue: ScavengeSites.totalSecuredValue, peakHeat: ScavengeSites.peakHeat },
-      fieldObjectiveBonus: FieldObjectives.totalBonusCredits || 0
+      fieldObjectiveBonus: FieldObjectives.totalBonusCredits || 0,
+      contract: contractReport
     };
     SaveSystem.save(this.save);
     UI.showGameOver(outcome, earned, lootValue, RunInventory.items);
@@ -2645,6 +2748,7 @@ UI.showLevelUpModal = function(choices) {
   Utils.el('#levelRerollText').textContent = `REROLLS ${Game.player.levelUpRerolls}`;
   Utils.el('#btnRerollUpgrades').disabled = Game.player.levelUpRerolls <= 0;
   var quickType = function(up) {
+    if (up.archetype) return up.archetype + ' T' + (up.impactTier || 1);
     if (up.weaponSwap) return 'WEAPON SWAP';
     if (up.tags && up.tags.indexOf('evolution') >= 0) return 'EVOLUTION';
     if (up.tags && up.tags.indexOf('defense') >= 0) return 'DEFENSE';
@@ -2792,6 +2896,8 @@ const SaveSystem = {
     selectedRunMode: 'standard',
     selectedOperation: 'glassvault',
     selectedOperationTier: 1,
+    perfMode: 'auto',
+    balancePreset: 'standard',
     unlockedClasses: ['soldier', 'techhunter', 'biorunner'],
     unlockedZones: ['docks'],
     metaUpgrades: {},            // id -> rank
@@ -3141,6 +3247,18 @@ const UPGRADES = [
     apply: p => { p.ricochet = (p.ricochet || 0) + 1; p.stats.moveSpeed *= 1.1; p.relayCascade = true; } },
   { id: 'biorunner_bloom', name: 'Spore Bloom', icon: '✿', rarity: 'rare', desc: 'Bio-Runner mastery: bio bursts heal and spread wider', tags: ['class','mutation'], classId: 'biorunner', classMinMastery: 1,
     apply: p => { p.bioNova = (p.bioNova || 0) + 1; p.sporeBloom = true; } },
+  { id: 'coolant_vents', name: 'Coolant Vents', icon: 'CV', rarity: 'rare', desc: 'Kills vent weapon heat and let you keep firing longer', tags: ['weapon','tech'], archetype: 'GUNNER', impactTier: 3,
+    apply: p => { p.coolantVents = (p.coolantVents || 0) + 1; p.weaponCooling *= 1.18; } },
+  { id: 'combat_slide', name: 'Combat Slide', icon: 'SL', rarity: 'rare', desc: 'Dash leaves a slowing field and refunds stamina on close escapes', tags: ['mobility','control'], archetype: 'MOBILITY', impactTier: 3,
+    apply: p => { p.combatSlide = true; p.dashCost = Math.max(22, p.dashCost - 6); } },
+  { id: 'marked_shot', name: 'Marked Shot', icon: 'MS', rarity: 'rare', desc: 'First shot after cooling down hits much harder', tags: ['damage','weapon'], archetype: 'GUNNER', impactTier: 3,
+    apply: p => { p.markedShot = true; } },
+  { id: 'field_turret', name: 'Field Turret', icon: 'FT', rarity: 'rare', desc: 'Securing a POI drops a temporary sentry burst', tags: ['tech','control'], archetype: 'TECH', impactTier: 3,
+    apply: p => { p.fieldTurret = true; } },
+  { id: 'hard_brake', name: 'Hard Brake', icon: 'HB', rarity: 'uncommon', desc: 'Standing still cools weapons faster and charges precision', tags: ['weapon','control'], archetype: 'GUNNER', impactTier: 2,
+    apply: p => { p.hardBrake = true; p.weaponCooling *= 1.12; } },
+  { id: 'emergency_injector', name: 'Emergency Injector', icon: 'EI', rarity: 'rare', desc: 'Below 30% HP, recover stamina and a small heal once per fight', tags: ['survival','sustain'], archetype: 'SURVIVOR', impactTier: 3,
+    apply: p => { p.emergencyInjector = true; } },
   { id: 'evo_swarm', name: 'Swarm Protocol', icon: '✹', rarity: 'legendary', desc: 'Evolve Needler into Swarm Array', tags: ['weapon','evolution'], unique: true, unlockNode: 'keystone_voidcraft',
     requiresPlayer: p => p.weapon && p.weapon.id === 'rapid_fire' && p.extraProjectiles >= 2,
     apply: p => { p.weapon = WEAPONS.swarm_array; p.weaponEvolution = 'SWARM'; } },
@@ -3153,6 +3271,38 @@ const UPGRADES = [
  § 8. DATA — META TREE  (src/data/meta.js)
    Persists across runs. Purchased with credits.
 ===================================================================== */
+const UpgradeDirector = {
+  archetypeOf: function(up) {
+    if (!up) return 'UTILITY';
+    if (up.archetype) return up.archetype;
+    var tags = up.tags || [];
+    if (tags.indexOf('weapon') >= 0 || tags.indexOf('spread') >= 0 || tags.indexOf('damage') >= 0 || tags.indexOf('crit') >= 0 || tags.indexOf('penetration') >= 0) return 'GUNNER';
+    if (tags.indexOf('defense') >= 0 || tags.indexOf('sustain') >= 0 || tags.indexOf('mutation') >= 0) return 'SURVIVOR';
+    if (tags.indexOf('mobility') >= 0 || tags.indexOf('speed') >= 0 || tags.indexOf('risk') >= 0) return 'MOBILITY';
+    if (tags.indexOf('tech') >= 0 || tags.indexOf('orbital') >= 0) return 'TECH';
+    if (tags.indexOf('void') >= 0 || tags.indexOf('evolution') >= 0) return 'VOID';
+    return 'UTILITY';
+  },
+  impactTierOf: function(up) {
+    if (!up) return 1;
+    if (up.impactTier) return up.impactTier;
+    if (up.rarity === 'legendary' || up.weaponSwap || (up.tags || []).indexOf('evolution') >= 0) return 4;
+    if (up.rarity === 'rare') return 3;
+    return 2;
+  },
+  normalize: function(up) {
+    if (!up) return up;
+    up.archetype = this.archetypeOf(up);
+    up.impactTier = this.impactTierOf(up);
+    up.synergyTags = up.synergyTags || (up.tags ? up.tags.slice() : []);
+    return up;
+  },
+  normalizeAll: function() {
+    for (var i = 0; i < UPGRADES.length; i++) this.normalize(UPGRADES[i]);
+  }
+};
+UpgradeDirector.normalizeAll();
+
 const MATERIAL_TYPES = {
   scrap: { name: 'SCRAP', icon: '⬡', color: '#9ab0c7', desc: 'Hardware and salvage for armory projects.' },
   circuits: { name: 'CIRCUITS', icon: '⬢', color: '#22d3ee', desc: 'Precision parts for rerolls, drones, and tech chains.' },
@@ -3415,6 +3565,61 @@ const Input = {
 /* =====================================================================
  § 11. ENTITIES — PLAYER  (src/entities/player.js)
 ===================================================================== */
+const PixelSprites = {
+  sprites: {},
+  palette: { '.': null, K: '#020617', O: '#07111f', B: '#0f2a44', C: '#22d3ee', c: '#67e8f9', G: '#4ade80', Y: '#fbbf24', R: '#fb7185', P: '#c084fc', W: '#e6f7ff', M: '#94a3b8', D: '#334155', A: '#f59e0b' },
+  makeSprite: function(id, palette, rows) {
+    var colors = Object.assign({}, this.palette, palette || {});
+    this.sprites[id] = { rows: rows, palette: colors, w: rows[0].length, h: rows.length };
+  },
+  init: function() {
+    if (this._ready) return;
+    this._ready = true;
+    this.makeSprite('operator', {}, ['....CC....','...CWWC...','..OBBBO..','..OBBBOC.','.DOBBBOCC','.DDBBD...','..D..D...','.DD..DD..']);
+    this.makeSprite('operator_package', { S: '#f59e0b' }, ['....CC....','...CWWC...','..OBBBO..','.SOBBBOC.','.SOBBBOCC','.SDDBD...','..D..D...','.DD..DD..']);
+    this.makeSprite('grunt', { N: '#26364a' }, ['...RR...','..RNNR..','.RNNNNR.','.RNNNNR.','..RNNR..','.RR..RR.']);
+    this.makeSprite('stalker', { N: '#2f1d4d' }, ['..PP..','.PNNP.','PNNNNP','..NN..','.P..P.','P....P']);
+    this.makeSprite('sniper', { N: '#1e293b' }, ['..YY....','.YNNY...','.NNNNYYY','..NN....','.Y..Y...','Y....Y..']);
+    this.makeSprite('bomber', { N: '#422006' }, ['..AA..','.ANNA.','ANNYNA','ANNNNA','.AAAA.','..YY..']);
+    this.makeSprite('elite', { N: '#3f1726' }, ['..RRRR..','.RNNNNR.','RNNWWNNR','RNNNNNNR','.RNNNNR.','RRR..RRR']);
+    this.makeSprite('boss', { N: '#111827' }, ['.RRRRRR.','RNNNNNNR','RNWWWWNR','RNNNNNNR','RNNRRNNR','.RR..RR.']);
+    this.makeSprite('poi_stash', { T: '#22d3ee' }, ['TTTTTTTT','TOOTTOOT','TOOOOOOT','TTOTTOOT','TOOOOOOT','TTTTTTTT']);
+    this.makeSprite('poi_locker', { L: '#4ade80' }, ['.LLLL.','LOOLLL','LOOLOL','LOOLOL','LOOLOL','LLLLLL']);
+    this.makeSprite('poi_data', { P: '#c084fc' }, ['...P...','..PPP..','.P.P.P.','...P...','..OOO..','.OOOOO.']);
+    this.makeSprite('poi_cache', { A: '#f59e0b' }, ['.AAAAAA.','AOOOOOOA','AOAAAAOA','AOOOOOOA','AOAAAAOA','.AAAAAA.']);
+    this.makeSprite('loot_crate', { L: '#fbbf24' }, ['LLLLLL','LOOLOL','LLLLLL','LOOLOL']);
+    this.makeSprite('loot_credit', { L: '#fbbf24' }, ['.LLLL.','LOYYOL','LOYYOL','.LLLL.']);
+    this.makeSprite('loot_xp', { L: '#22d3ee' }, ['..L..','.LWL.','LWWWL','.LWL.','..L..']);
+    this.makeSprite('contract_package', { S: '#f59e0b' }, ['SSSSSS','SOOOSS','SOSOSS','SOOOSS','SSSSSS']);
+    this.makeSprite('debris', { Z: '#334155' }, ['Z..Z','ZZ..','.ZZ.','..ZZ']);
+  },
+  draw: function(ctx, id, x, y, scale, options) {
+    this.init();
+    var sp = this.sprites[id];
+    if (!sp) return false;
+    options = options || {};
+    scale = scale || 3;
+    ctx.save();
+    ctx.translate(x, y);
+    if (options.rotate) ctx.rotate(options.rotate);
+    ctx.globalAlpha *= options.alpha === undefined ? 1 : options.alpha;
+    var ox = -sp.w * scale * 0.5;
+    var oy = -sp.h * scale * 0.5;
+    ctx.imageSmoothingEnabled = false;
+    for (var row = 0; row < sp.rows.length; row++) {
+      for (var col = 0; col < sp.rows[row].length; col++) {
+        var key = sp.rows[row][col];
+        var color = sp.palette[key];
+        if (!color) continue;
+        ctx.fillStyle = options.tint && key !== 'W' ? options.tint : color;
+        ctx.fillRect(Math.round(ox + col * scale), Math.round(oy + row * scale), Math.ceil(scale), Math.ceil(scale));
+      }
+    }
+    ctx.restore();
+    return true;
+  }
+};
+
 class Player {
   constructor(classId, saveData) {
     const cls = CLASSES[classId];
@@ -3434,6 +3639,23 @@ class Player {
     this.weapon = WEAPONS[cls.startWeapon];
     this.fireTimer = 0;
     this.burstQueue = [];
+    this.maxStamina = 100;
+    this.stamina = this.maxStamina;
+    this.dashCost = 34;
+    this.sprintDrain = 24;
+    this.packageCarryPenalty = 0.13;
+    this.weaponHeat = 0;
+    this.weaponHeatMax = 100;
+    this.weaponCooling = 44;
+    this.weaponOverheated = false;
+    this.tacticalWarning = '';
+    this.coolantVents = 0;
+    this.markedShot = false;
+    this.markedCharge = 0;
+    this.fieldTurret = false;
+    this.hardBrake = false;
+    this.emergencyInjector = false;
+    this.injectorCooldown = 0;
 
     // Modifiers
     this.extraProjectiles = 0;
@@ -3503,7 +3725,7 @@ class Player {
     this.usedSecondWind = false;
   }
 
-  xpForNextLevel() { return Math.floor(20 * Math.pow(this.level, 1.4)); }
+  xpForNextLevel() { return Math.floor(38 * Math.pow(this.level, 1.62)); }
 
   gainXP(amount) {
     this.xp += amount;
@@ -3521,7 +3743,8 @@ class Player {
     this.damageTaken += reduced;
     this.iframes = 0.5;
     VFX.hitFlash(this.x, this.y, '#ff4d6d');
-    Game.cameraShake(6, 0.2);
+    Game.playerDamagePulse(reduced);
+    Game.cameraShake(2.2, 0.1);
     if (this.bastionProtocol && this.hp > 0 && this.hp <= this.stats.maxHP * 0.5 && this.bastionCooldown <= 0) {
       this.bastionCooldown = 6;
       for (const e of Enemies.list) {
@@ -3537,16 +3760,18 @@ class Player {
       this.usedSecondWind = true;
       this.hp = this.stats.maxHP * 0.5;
       this.iframes = 2;
-      VFX.burst(this.x, this.y, '#fbbf24', 30);
-      Game.cameraShake(14, 0.4);
+      VFX.burst(this.x, this.y, '#fbbf24', 18, 160);
+      VFX.deathRing(this.x, this.y, '#fbbf24', 28, true);
+      Game.cameraShake(5, 0.18);
       return;
     }
     if (this.metaRevive && !this.usedRevive) {
       this.usedRevive = true;
       this.hp = this.stats.maxHP * 0.5;
       this.iframes = 2.5;
-      VFX.burst(this.x, this.y, '#22d3ee', 40);
-      Game.cameraShake(16, 0.4);
+      VFX.burst(this.x, this.y, '#22d3ee', 20, 170);
+      VFX.deathRing(this.x, this.y, '#22d3ee', 32, true);
+      Game.cameraShake(5.5, 0.2);
       return;
     }
     this.hp = 0;
@@ -3557,7 +3782,12 @@ class Player {
 
   update(dt) {
     // Movement
-    let speed = this.stats.moveSpeed * (this._berserkerActive ? this.berserkerSpeedMult : 1);
+    var carryingPackage = FieldContracts && FieldContracts.packageSecured;
+    var movingInput = Math.hypot(Input.move.x, Input.move.y) > 0.05;
+    var wantsSprint = (Input.keys['shift'] || Input.keys['shiftleft'] || Input.keys['shiftright']) && movingInput && this.stamina > 4;
+    var packagePenalty = carryingPackage ? this.packageCarryPenalty : 0;
+    var sprintMult = wantsSprint ? 1.22 : 1;
+    let speed = this.stats.moveSpeed * (this._berserkerActive ? this.berserkerSpeedMult : 1) * sprintMult * (1 - packagePenalty);
     this.vx = Input.move.x * speed;
     this.vy = Input.move.y * speed;
     const prevX = this.x;
@@ -3574,10 +3804,25 @@ class Player {
       this.y = Math.sin(a) * (R - this.radius);
     }
     if (Input.move.x !== 0 || Input.move.y !== 0) this.facing = Math.atan2(Input.move.y, Input.move.x);
+    if (wantsSprint) {
+      this.stamina = Math.max(0, this.stamina - this.sprintDrain * dt);
+    } else {
+      var regen = carryingPackage ? 17 : 28;
+      this.stamina = Math.min(this.maxStamina, this.stamina + regen * dt);
+    }
+    this.tacticalWarning = this.stamina < 22 ? 'LOW STAMINA' : (carryingPackage ? 'PACKAGE HEAVY' : '');
 
     // Regen
     this.hp = Math.min(this.stats.maxHP, this.hp + this.stats.hpRegen * dt);
     if (this.bastionCooldown > 0) this.bastionCooldown -= dt;
+    if (this.injectorCooldown > 0) this.injectorCooldown -= dt;
+    if (this.emergencyInjector && this.injectorCooldown <= 0 && this.hp > 0 && this.hp < this.stats.maxHP * 0.3) {
+      this.injectorCooldown = 24;
+      this.heal(this.stats.maxHP * 0.12);
+      this.stamina = this.maxStamina;
+      Game.announce('EMERGENCY INJECTOR');
+      VFX.burst(this.x, this.y, '#4ade80', LOW_FX_MODE ? 6 : 14, 140);
+    }
 
     // Iframes tick
     if (this.iframes > 0) this.iframes -= dt;
@@ -3586,6 +3831,11 @@ class Player {
     if (this.muzzleFlash > 0) this.muzzleFlash -= dt * 8;
     if (this.recoil > 0) this.recoil -= dt * 10;
     if (this._shotSoundTimer > 0) this._shotSoundTimer -= dt;
+    var coolingMult = movingInput ? 0.85 : (this.hardBrake ? 1.7 : 1.25);
+    this.weaponHeat = Math.max(0, this.weaponHeat - this.weaponCooling * dt * coolingMult);
+    if (!movingInput && this.hardBrake) this.markedCharge = Math.min(1, this.markedCharge + dt * 0.55);
+    else if (this.weaponHeat > 18) this.markedCharge = Math.max(0, this.markedCharge - dt * 0.4);
+    if (this.weaponOverheated && this.weaponHeat < this.weaponHeatMax * 0.36) this.weaponOverheated = false;
 
     // Soldier perk
     if (this.classId === 'soldier' && this.hp < this.stats.maxHP * 0.5 && !this._perkOn) {
@@ -3596,7 +3846,7 @@ class Player {
 
     // Weapon firing
     this.fireTimer -= dt;
-    if (this.fireTimer <= 0 && this.burstQueue.length === 0) {
+    if (this.fireTimer <= 0 && this.burstQueue.length === 0 && !this.weaponOverheated) {
       const target = Combat.findNearestEnemy(this.x, this.y);
       if (target) {
         this.fireAt(target);
@@ -3673,6 +3923,14 @@ class Player {
   }
 
   spawnShot(target) {
+    var heatCost = 8 + (this.weapon.projectiles + this.extraProjectiles) * 2.8 + (this.weapon.explodeRadius ? 7 : 0) + (this.weapon.type === 'beam' ? 6 : 0);
+    this.weaponHeat += heatCost;
+    if (this.weaponHeat >= this.weaponHeatMax) {
+      this.weaponHeat = this.weaponHeatMax;
+      this.weaponOverheated = true;
+      this.tacticalWarning = 'WEAPON HOT';
+      Game.announce('WEAPON OVERHEATED');
+    }
     const base = Utils.angle(this.x, this.y, target.x, target.y);
     // Face toward target when shooting
     this.facing = base;
@@ -3687,7 +3945,8 @@ class Player {
       const t = count === 1 ? 0 : (i / (count - 1)) - 0.5;
       const ang = base + t * spread * 2;
       const movingBonus = this.entropyDrive && (Math.abs(this.vx) > 0.1 || Math.abs(this.vy) > 0.1) ? 1.2 : 1;
-      const dmgMul = this.weapon.baseDamage * (this._perkOn ? 1.15 : 1) * (this._berserkerActive ? this.berserkerDamageMult : 1) * movingBonus;
+      var markedBonus = this.markedShot && this.markedCharge >= 0.85 ? 1.8 : 1;
+      const dmgMul = this.weapon.baseDamage * (this._perkOn ? 1.15 : 1) * (this._berserkerActive ? this.berserkerDamageMult : 1) * movingBonus * markedBonus;
       Projectiles.spawn({
         x: this.x, y: this.y,
         angle: ang,
@@ -3727,12 +3986,29 @@ class Player {
     switch (ab.id) {
       case 'dash':
       case 'blink': {
+        if (this.stamina < this.dashCost) {
+          Game.announce('LOW STAMINA');
+          this.abilityCD = Math.min(this.abilityCD, 0.35);
+          return;
+        }
+        this.stamina = Math.max(0, this.stamina - this.dashCost);
         const dist = ab.id === 'blink' ? 180 : 120;
         const ang = this.facing;
         this.x += Math.cos(ang) * dist;
         this.y += Math.sin(ang) * dist;
         this.iframes = 0.4;
         VFX.burst(this.x, this.y, this.cls.id === 'techhunter' ? '#a5f3fc' : '#22d3ee', 16);
+        if (this.combatSlide) {
+          for (var si = 0; si < Enemies.list.length; si++) {
+            var se = Enemies.list[si];
+            if (se.alive && Utils.dist(this.x, this.y, se.x, se.y) < 115) {
+              se.speed *= 0.72;
+              se.hitFlash = 0.14;
+            }
+          }
+          this.stamina = Math.min(this.maxStamina, this.stamina + 10);
+          VFX.deathRing(this.x, this.y, '#67e8f9', 30, true);
+        }
         break;
       }
       case 'heal_pulse': {
@@ -3748,8 +4024,9 @@ class Player {
         for (const e of Enemies.list) {
           if (Utils.dist(this.x, this.y, e.x, e.y) < 220) e.damage(this.stats.damage * 5);
         }
-        VFX.burst(this.x, this.y, '#c084fc', 50);
-        Game.cameraShake(10, 0.3);
+        VFX.burst(this.x, this.y, '#c084fc', 22, 170);
+        VFX.deathRing(this.x, this.y, '#c084fc', 38, true);
+        Game.cameraShake(3.5, 0.13);
         break;
       }
     }
@@ -3784,7 +4061,7 @@ class Player {
 
     // Body glow — reduced for clarity
     if (!LOW_FX_MODE) {
-      var glowColor = this.iframes > 0 ? 'rgba(255,255,255,0.4)' : 'rgba(34,211,238,0.2)';
+      var glowColor = this.iframes > 0 ? 'rgba(255,77,109,0.18)' : 'rgba(34,211,238,0.16)';
       var glowR = this.radius * 2.5;
       var g = ctx.createRadialGradient(this.x, this.y, this.radius * 0.5, this.x, this.y, glowR);
       g.addColorStop(0, glowColor);
@@ -3797,12 +4074,13 @@ class Player {
     if (!LOW_FX_MODE && this.muzzleFlash > 0) {
       var mfx = this.x + Math.cos(this.facing) * (this.radius + 8);
       var mfy = this.y + Math.sin(this.facing) * (this.radius + 8);
-      var mfSize = this.muzzleFlash * 60;
+      var mfSize = this.muzzleFlash * 24;
       ctx.save();
-      ctx.globalAlpha = this.muzzleFlash;
+      ctx.globalAlpha = this.muzzleFlash * 0.38;
       ctx.fillStyle = this.weapon.color || '#22d3ee';
       ctx.beginPath(); ctx.arc(mfx, mfy, mfSize, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#fbbf24';
+      ctx.globalAlpha = this.muzzleFlash * 0.24;
       ctx.beginPath(); ctx.arc(mfx, mfy, mfSize * 0.5, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
@@ -3815,19 +4093,24 @@ class Player {
     ctx.rotate(this.facing);
     ctx.translate(recoilOff, 0);
 
-    var flash = this.iframes > 0 && Math.floor(this.iframes * 20) % 2;
-    ctx.fillStyle = flash ? '#ffffff' : '#0b1a2b';
-    ctx.strokeStyle = '#22d3ee';
-    ctx.lineWidth = 2;
+    var flash = this.iframes > 0 && Math.floor(this.iframes * 16) % 2;
     var r = this.radius;
-    // Pointed ship shape
+    var spriteId = FieldContracts && FieldContracts.packageSecured ? 'operator_package' : 'operator';
+    PixelSprites.draw(ctx, spriteId, 0, 0, 3.2, { tint: flash ? '#7f1d35' : null });
+    ctx.strokeStyle = this.weapon.color || '#22d3ee';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(r + 4, 0);                         // nose
-    ctx.lineTo(-r * 0.7, -r * 0.75);              // top wing
-    ctx.lineTo(-r * 0.4, 0);                      // tail notch
-    ctx.lineTo(-r * 0.7, r * 0.75);               // bottom wing
-    ctx.closePath();
-    ctx.fill(); ctx.stroke();
+    ctx.moveTo(r * 0.32, -r * 0.08);
+    ctx.lineTo(r * 1.12, -r * 0.08);
+    ctx.stroke();
+    ctx.strokeStyle = '#5b8cb3';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.48, -r * 0.34);
+    ctx.lineTo(-r * 0.9, -r * 0.58);
+    ctx.moveTo(-r * 0.48, r * 0.34);
+    ctx.lineTo(-r * 0.9, r * 0.58);
+    ctx.stroke();
 
     // Engine glow
     if (Input.move.x !== 0 || Input.move.y !== 0) {
@@ -3860,8 +4143,10 @@ class Player {
         ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(ox, oy); ctx.stroke();
         ctx.fillStyle = '#22d3ee';
         ctx.beginPath(); ctx.arc(ox, oy, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#a5f3fc';
+        ctx.globalAlpha = 0.75;
         ctx.beginPath(); ctx.arc(ox, oy, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
       }
     }
     // === BERSERKER AURA ===
@@ -3907,6 +4192,15 @@ class Enemy {
     this.alive = true;
     this.hitFlash = 0;
     this.attackCD = 0;
+    this.attackState = 'idle';
+    this.telegraphTimer = 0;
+    this.windupTimer = 0;
+    this.chargeTimer = 0;
+    this.telegraphAngle = 0;
+    this.telegraphRange = 0;
+    this.telegraphRadius = 0;
+    this.chargeVX = 0;
+    this.chargeVY = 0;
     this.ranged = def.ranged;
     this.elite = def.elite;
     this.boss = def.boss;
@@ -3923,6 +4217,66 @@ class Enemy {
   update(dt) {
     if (!this.alive) return;
     const p = Game.player;
+    if (this.attackState === 'sniper_telegraph') {
+      this.telegraphTimer -= dt;
+      this.vx = 0; this.vy = 0;
+      if (this.telegraphTimer <= 0) {
+        Projectiles.spawn({
+          x: this.x, y: this.y, angle: this.telegraphAngle,
+          speed: this.ranged.projectileSpeed * 1.08,
+          size: 4.5, damage: this.atkDamage * 1.25,
+          color: this.ranged.projectileColor,
+          trail: this.ranged.projectileColor + '66',
+          pierce: 0, friendly: false,
+        });
+        this.attackState = 'idle';
+        this.attackCD = this.ranged.cooldown * 1.25;
+      }
+      return;
+    }
+    if (this.markedShot && this.markedCharge >= 0.85) {
+      this.markedCharge = 0;
+      VFX.impactFlash(this.x + Math.cos(base) * 22, this.y + Math.sin(base) * 22, '#fbbf24');
+    }
+    if (this.attackState === 'bomber_telegraph') {
+      this.telegraphTimer -= dt;
+      this.vx = 0; this.vy = 0;
+      if (this.telegraphTimer <= 0) {
+        var exR = this.def.explodeRadius || 82;
+        if (Utils.dist(p.x, p.y, this.x, this.y) < exR) p.damage((this.def.explodeDamage || 20) * 1.25);
+        VFX.burst(this.x, this.y, '#fbbf24', LOW_FX_MODE ? 6 : 14, 150);
+        VFX.deathRing(this.x, this.y, '#fbbf24', exR * 0.5, true);
+        this.alive = false;
+      }
+      return;
+    }
+    if (this.attackState === 'melee_windup') {
+      this.windupTimer -= dt;
+      this.vx = 0; this.vy = 0;
+      if (this.windupTimer <= 0) {
+        var ca = Utils.angle(this.x, this.y, p.x, p.y);
+        var cs = this.speed * (this.elite ? 3.1 : 2.55);
+        this.chargeVX = Math.cos(ca) * cs;
+        this.chargeVY = Math.sin(ca) * cs;
+        this.chargeTimer = this.elite ? 0.34 : 0.26;
+        this.attackState = 'melee_charge';
+      }
+      return;
+    }
+    if (this.attackState === 'melee_charge') {
+      this.chargeTimer -= dt;
+      this.x += this.chargeVX * dt;
+      this.y += this.chargeVY * dt;
+      if (Utils.dist(this.x, this.y, p.x, p.y) < this.radius + p.radius + 4) {
+        p.damage(this.atkDamage * (this.elite ? 1.75 : 1.35));
+        this.chargeTimer = 0;
+      }
+      if (this.chargeTimer <= 0) {
+        this.attackState = 'idle';
+        this.attackCD = this.elite ? 1.1 : 1.45;
+      }
+      return;
+    }
     var targetX = p.x, targetY = p.y;
     if (this.scavengeGuard && this.anchorX !== undefined) {
       var playerToAnchor = Utils.dist(p.x, p.y, this.anchorX, this.anchorY);
@@ -3946,19 +4300,27 @@ class Enemy {
       this.vy = ny * this.speed * moveDir + (nx * strafe);
       this.attackCD -= dt;
       if (targetX === p.x && d < this.ranged.range && this.attackCD <= 0) {
-        this.attackCD = this.ranged.cooldown;
         var leadTime = Math.min(0.24, d / Math.max(1, this.ranged.projectileSpeed));
         var aimX = p.x + p.vx * leadTime;
         var aimY = p.y + p.vy * leadTime;
         const ang = Math.atan2(aimY - this.y, aimX - this.x);
-        Projectiles.spawn({
-          x: this.x, y: this.y, angle: ang,
-          speed: this.ranged.projectileSpeed,
-          size: 4, damage: this.atkDamage,
-          color: this.ranged.projectileColor,
-          trail: this.ranged.projectileColor + '66',
-          pierce: 0, friendly: false,
-        });
+        this.telegraphAngle = ang;
+        this.telegraphRange = Math.min(this.ranged.range, d + 260);
+        this.telegraphTimer = this.type === 'sniper' ? 0.58 : 0.22;
+        this.attackState = this.type === 'sniper' ? 'sniper_telegraph' : 'idle';
+        if (this.type !== 'sniper') {
+          this.attackCD = this.ranged.cooldown;
+          Projectiles.spawn({
+            x: this.x, y: this.y, angle: ang,
+            speed: this.ranged.projectileSpeed,
+            size: 4, damage: this.atkDamage,
+            color: this.ranged.projectileColor,
+            trail: this.ranged.projectileColor + '66',
+            pierce: 0, friendly: false,
+          });
+        } else {
+          Game.player.tacticalWarning = 'SNIPER LINE';
+        }
       }
     } else {
       // Chase with wobble for organic movement
@@ -3967,6 +4329,20 @@ class Enemy {
       var chaseAng = Math.atan2(dy, dx) + wobble;
       this.vx = Math.cos(chaseAng) * this.speed;
       this.vy = Math.sin(chaseAng) * this.speed;
+      this.attackCD -= dt;
+      if ((this.def.explodeOnDeath || this.volatileMutator) && d < 72 && this.attackCD <= 0) {
+        this.attackState = 'bomber_telegraph';
+        this.telegraphTimer = 0.72;
+        this.telegraphRadius = this.mutatorExplodeRadius || this.def.explodeRadius || 82;
+        Game.player.tacticalWarning = 'BOMBER ZONE';
+        return;
+      }
+      if (!this.def.explodeOnDeath && d < (this.elite ? 135 : 92) && this.attackCD <= 0) {
+        this.attackState = 'melee_windup';
+        this.windupTimer = this.elite ? 0.42 : 0.34;
+        Game.player.tacticalWarning = this.elite ? 'ELITE CHARGE' : 'MELEE WINDUP';
+        return;
+      }
     }
 
     const prevX = this.x;
@@ -4003,11 +4379,11 @@ class Enemy {
     Game.player.damageDealt += amt;
     VFX.damageNumber(this.x, this.y - this.radius, Math.ceil(amt), isCrit);
     // Simplified impact — only on crits or in full FX mode
-    if (!LOW_FX_MODE || isCrit) {
+    if (isCrit || (!LOW_FX_MODE && this.elite)) {
       VFX.impactFlash(this.x, this.y, isCrit ? '#fbbf24' : this.accent);
     }
     // Hit-pause only on crits
-    if (isCrit) Game.hitPause(0.03);
+    if (isCrit) Game.hitPause(0.015);
     if (isCrit && Game.player.critPulse > 0) {
       for (const e of Enemies.list) {
         if (e !== this && e.alive && Utils.dist(this.x, this.y, e.x, e.y) < 90) {
@@ -4030,9 +4406,9 @@ class Enemy {
     var operationSpecial = this.operationAnchor || this.operationMiniBoss || this.operationDisruptor;
 
     // === BOMBER: explode on death, damage player + nearby enemies ===
-    if (this.def.explodeOnDeath) {
-      var exR = this.def.explodeRadius || 80;
-      var exD = this.def.explodeDamage || 20;
+    if (this.def.explodeOnDeath || this.volatileMutator) {
+      var exR = this.mutatorExplodeRadius || this.def.explodeRadius || 80;
+      var exD = this.mutatorExplodeDamage || this.def.explodeDamage || 20;
       var p = Game.player;
       if (Utils.dist(p.x, p.y, this.x, this.y) < exR) {
         p.damage(exD);
@@ -4045,28 +4421,28 @@ class Enemy {
           be.damage(exD * 0.5);
         }
       }
-      VFX.burst(this.x, this.y, '#fbbf24', LOW_FX_MODE ? 8 : 16, 160);
-      VFX.deathRing(this.x, this.y, '#fbbf24', exR * 0.5);
-      Game.cameraShake(LOW_FX_MODE ? 0 : 6, LOW_FX_MODE ? 0 : 0.18);
+      VFX.burst(this.x, this.y, '#fbbf24', LOW_FX_MODE ? 5 : 10, 140);
+      VFX.deathRing(this.x, this.y, '#fbbf24', exR * 0.45, true);
+      Game.cameraShake(LOW_FX_MODE ? 0 : 2.8, LOW_FX_MODE ? 0 : 0.12);
     } else {
       // Normal death VFX is aggressively reduced for regular mobs during kill streaks.
       var burstCount = operationSpecial
-        ? (LOW_FX_MODE ? 3 : 8)
-        : (this.boss ? (LOW_FX_MODE ? 18 : 60) : (this.elite ? (LOW_FX_MODE ? 8 : 30) : (LOW_FX_MODE ? 2 : 14)));
-      var burstSpeed = operationSpecial ? 120 : (this.boss ? 240 : (this.elite ? 200 : 140));
+        ? (LOW_FX_MODE ? 2 : 5)
+        : (this.boss ? (LOW_FX_MODE ? 12 : 28) : (this.elite ? (LOW_FX_MODE ? 5 : 14) : (LOW_FX_MODE ? 1 : 6)));
+      var burstSpeed = operationSpecial ? 110 : (this.boss ? 190 : (this.elite ? 160 : 115));
       VFX.burst(this.x, this.y, this.accent, burstCount, burstSpeed);
       if (!operationSpecial && (!LOW_FX_MODE || this.elite || this.boss)) {
         VFX.deathRing(this.x, this.y, this.accent, this.radius, this.elite || this.boss);
       }
       // === TASK 5: only shake on elite/boss kills ===
       if (!operationSpecial && (this.boss || this.elite)) {
-        Game.cameraShake(this.boss ? 12 : 5, this.boss ? 0.28 : 0.1);
+        Game.cameraShake(this.boss ? 5 : 1.8, this.boss ? 0.18 : 0.07);
       }
     }
     AudioBus.play('kill');
     // === TASK 7: slow-mo on elite/boss kill ===
-    if (this.boss) Game.triggerSlowMo(0.6, 0.2);
-    else if (this.elite) Game.triggerSlowMo(0.3, 0.35);
+    if (this.boss) Game.triggerSlowMo(0.28, 0.35);
+    else if (this.elite) Game.triggerSlowMo(0.12, 0.55);
     Game.player.kills += 1;
 
     // XP orb
@@ -4078,6 +4454,12 @@ class Enemy {
       VFX.damageNumber(this.x, this.y - this.radius - 12, 'CLOSE!', false);
     }
     Pickups.spawnXP(this.x, this.y, Math.ceil(this.xp * metaXPMult * pointBlankMult));
+    if (this.mutator === 'splitting' && !Game.isOperationRun()) {
+      for (var sp = 0; sp < 2; sp++) {
+        var split = Enemies.spawn('grunt', this.x + Utils.rand(-22, 22), this.y + Utils.rand(-22, 22), Math.max(0.75, World.currentDifficulty() * 0.65));
+        split.role = 'SWARM';
+      }
+    }
 
     // === CHAIN LIGHTNING: zap nearby enemies on kill ===
     if (Game.player.chainLightning > 0) {
@@ -4111,13 +4493,12 @@ class Enemy {
       Pickups.spawnCredits(this.x, this.y, Math.ceil(this.credits * metaGoldMult));
     }
 
-    // Item drop
-    // === EXTRACTION LOOT: drop into RunInventory instead of auto-equip ===
-    var lootDropChance = this.def.dropChance + (this.elite ? 0.25 : 0) + (this.boss ? 0.5 : 0);
-    if (!Game.isOperationRun() && Math.random() < Math.min(1, lootDropChance)) {
-      var lootTier = Math.min(4, Math.floor(World.time / 60));
-      var loot = RunInventory.rollLoot(lootTier);
-      RunInventory.tryAdd(loot);
+    // Loot piles are reserved for elites/bosses so common mobs feed XP flow instead of backpack friction.
+    if (!Game.isOperationRun() && (this.elite || this.guaranteedPile) && !this.boss) {
+      var lootTier = Math.min(4, Math.floor(World.time / 60) + 1);
+      var drops = [RunInventory.rollLoot(lootTier)];
+      if (Math.random() < 0.55) drops.push(RunInventory.rollLoot(lootTier + 1));
+      LootDirector.spawnPile('elite', this.x, this.y, drops);
     }
 
     // Bio-runner lifesteal
@@ -4126,6 +4507,9 @@ class Enemy {
     // Kill-heal sustain
     if (Game.player.killHeal > 0) {
       Game.player.heal(Game.player.killHeal);
+    }
+    if (Game.player.coolantVents > 0) {
+      Game.player.weaponHeat = Math.max(0, Game.player.weaponHeat - 8 * Game.player.coolantVents);
     }
 
     if (this.boss) Game.onBossKilled(this);
@@ -4161,31 +4545,95 @@ class Enemy {
       ctx.beginPath(); ctx.arc(this.x, this.y, this.radius + 7, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
     }
+    if (this.attackState === 'sniper_telegraph') {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.telegraphAngle);
+      ctx.globalAlpha = 0.34 + Math.sin(Game.time * 18) * 0.08;
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(this.radius, 0);
+      ctx.lineTo(this.telegraphRange || 440, 0);
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (this.attackState === 'bomber_telegraph') {
+      ctx.save();
+      ctx.globalAlpha = 0.22 + Math.sin(Game.time * 18) * 0.07;
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.telegraphRadius || 82, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.74;
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.telegraphRadius || 82, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+    if (this.attackState === 'melee_windup') {
+      ctx.save();
+      ctx.globalAlpha = 0.52;
+      ctx.strokeStyle = this.elite ? '#fb7185' : '#fbbf24';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius + 13 + Math.sin(Game.time * 20) * 2, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
 
-    // Body
-    ctx.fillStyle = flash ? (this.elite || this.boss ? '#ffffff' : this.accent) : this.color;
+    // Body: readable creature/drone silhouettes instead of pure primitives.
+    ctx.fillStyle = flash ? this.accent : this.color;
     ctx.strokeStyle = this.accent;
     ctx.lineWidth = this.elite || this.boss ? 2.5 : 1.5;
-    ctx.beginPath();
     const r = this.radius;
-    switch (this.shape) {
-      case 'circle':
-        ctx.arc(this.x, this.y, r, 0, Math.PI * 2); break;
-      case 'square':
-        ctx.rect(this.x - r, this.y - r, r*2, r*2); break;
-      case 'triangle':
-        ctx.moveTo(this.x, this.y - r);
-        ctx.lineTo(this.x + r * 0.87, this.y + r * 0.5);
-        ctx.lineTo(this.x - r * 0.87, this.y + r * 0.5);
-        ctx.closePath(); break;
-      case 'diamond':
-        ctx.moveTo(this.x, this.y - r);
-        ctx.lineTo(this.x + r, this.y);
-        ctx.lineTo(this.x, this.y + r);
-        ctx.lineTo(this.x - r, this.y);
-        ctx.closePath(); break;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    var faceAng = Math.atan2((Game.player ? Game.player.y : this.y) - this.y, (Game.player ? Game.player.x : this.x) - this.x);
+    ctx.rotate(faceAng);
+    var spriteId = this.boss ? 'boss' : (this.elite ? 'elite' : (this.type === 'sniper' ? 'sniper' : (this.type === 'bomber' ? 'bomber' : (this.type === 'stalker' ? 'stalker' : 'grunt'))));
+    if (PixelSprites.draw(ctx, spriteId, 0, 0, this.boss ? 4.8 : (this.elite ? 4 : 3.2), { tint: flash ? this.accent : null })) {
+      // sprite handled
+    } else if (this.boss) {
+      ctx.fillRect(-r * 0.95, -r * 0.72, r * 1.9, r * 1.44);
+      ctx.strokeRect(-r * 0.95, -r * 0.72, r * 1.9, r * 1.44);
+      ctx.fillStyle = '#300f1b';
+      ctx.fillRect(r * 0.25, -r * 0.34, r * 0.52, r * 0.68);
+      ctx.strokeRect(r * 0.25, -r * 0.34, r * 0.52, r * 0.68);
+      ctx.strokeStyle = this.accent;
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.9, -r * 0.8); ctx.lineTo(-r * 1.28, -r * 1.15);
+      ctx.moveTo(-r * 0.9, r * 0.8); ctx.lineTo(-r * 1.28, r * 1.15);
+      ctx.moveTo(r * 0.96, -r * 0.46); ctx.lineTo(r * 1.36, -r * 0.68);
+      ctx.moveTo(r * 0.96, r * 0.46); ctx.lineTo(r * 1.36, r * 0.68);
+      ctx.stroke();
+    } else if (this.ranged) {
+      ctx.fillRect(-r * 0.62, -r * 0.55, r * 1.1, r * 1.1);
+      ctx.strokeRect(-r * 0.62, -r * 0.55, r * 1.1, r * 1.1);
+      ctx.strokeStyle = this.accent;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(r * 0.28, 0); ctx.lineTo(r * 1.18, 0); ctx.stroke();
+      ctx.fillStyle = '#07111f';
+      ctx.fillRect(-r * 0.3, -r * 0.22, r * 0.28, r * 0.44);
+    } else if (this.def.explodeOnDeath || this.volatileMutator) {
+      ctx.beginPath();
+      ctx.moveTo(r * 0.92, 0);
+      ctx.lineTo(0, -r * 0.76);
+      ctx.lineTo(-r * 0.86, -r * 0.34);
+      ctx.lineTo(-r * 0.86, r * 0.34);
+      ctx.lineTo(0, r * 0.76);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#fbbf24';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.36, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      ctx.fillRect(-r * 0.56, -r * 0.62, r * 1.12, r * 1.24);
+      ctx.strokeRect(-r * 0.56, -r * 0.62, r * 1.12, r * 1.24);
+      ctx.strokeStyle = this.accent;
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.52, -r * 0.42); ctx.lineTo(-r * 0.96, -r * 0.7);
+      ctx.moveTo(-r * 0.52, r * 0.42); ctx.lineTo(-r * 0.96, r * 0.7);
+      ctx.moveTo(r * 0.52, -r * 0.32); ctx.lineTo(r * 0.94, -r * 0.46);
+      ctx.moveTo(r * 0.52, r * 0.32); ctx.lineTo(r * 0.94, r * 0.46);
+      ctx.stroke();
     }
-    ctx.fill(); ctx.stroke();
+    ctx.restore();
     if (this.operationAnchor || this.operationMiniBoss) {
       ctx.fillStyle = this.operationAnchor ? '#fbbf24' : '#4ade80';
       ctx.font = 'bold 10px ui-monospace, monospace';
@@ -4197,12 +4645,6 @@ class Enemy {
       ctx.font = 'bold 10px ui-monospace, monospace';
       ctx.textAlign = 'center';
       ctx.fillText('DISRUPTOR', this.x, this.y - this.radius - 12);
-    }
-    if (this.scavengeGuard && !this.operationAnchor && !this.operationMiniBoss) {
-      ctx.fillStyle = this.accent;
-      ctx.font = 'bold 9px ui-monospace, monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(this.guardLabel || 'GUARD', this.x, this.y - this.radius - 11);
     }
     if (this.operationBoss && this.invulnerable) {
       ctx.fillStyle = '#fbbf24';
@@ -4231,6 +4673,7 @@ const Enemies = {
   spawn(type, x, y, diffOverride) {
     const diff = diffOverride || World.currentDifficulty();
     const enemy = new Enemy(type, x, y, diff);
+    if (typeof EnemyDirector !== 'undefined' && EnemyDirector.applyMutator) EnemyDirector.applyMutator(enemy);
     this.list.push(enemy);
     return enemy;
   },
@@ -4240,6 +4683,73 @@ const Enemies = {
   },
   render(ctx) { for (const e of this.list) e.render(ctx); },
   clear() { this.list = []; },
+};
+
+const EnemyDirector = {
+  heatTier: 0,
+  spawnBudget: 0,
+  lastEliteEvent: 0,
+  roleFor: function(type) {
+    if (type === 'grunt') return 'SWARM';
+    if (type === 'stalker') return 'STALKER';
+    if (type === 'sniper') return 'SNIPER';
+    if (type === 'bomber') return 'BOMBER';
+    if (type === 'hulk') return 'HULK';
+    if (type === 'elite_grunt') return 'ELITE';
+    if (type === 'boss_warden') return 'BOSS';
+    return 'SWARM';
+  },
+  update: function(dt) {
+    var heat = World.haulHeat ? World.haulHeat() : 0;
+    var deeper = FieldContracts && FieldContracts.packageSecured;
+    this.heatTier = Math.max(0, Math.floor(heat + (deeper ? 1 : 0) + World.time / 130));
+    this.spawnBudget += dt * (1.1 + this.heatTier * 0.28 + (deeper ? 0.55 : 0));
+    if (deeper && World.time - this.lastEliteEvent > 70) this.spawnEliteEvent();
+  },
+  pickWaveComposition: function(site) {
+    var pool = site && site.threatMix ? site.threatMix.slice() : (World.zone.enemyPool || ['grunt']);
+    var heat = this.heatTier;
+    var wave = [];
+    var count = Math.min(8, 2 + Math.floor(heat * 0.7) + (FieldContracts && FieldContracts.packageSecured ? 2 : 0));
+    for (var i = 0; i < count; i++) {
+      if (heat >= 2 && Math.random() < 0.36) wave.push('grunt');
+      else if (heat >= 3 && Math.random() < 0.18) wave.push(Utils.choice(['sniper', 'bomber', 'hulk']));
+      else wave.push(Utils.choice(pool));
+    }
+    return wave;
+  },
+  applyMutator: function(enemy) {
+    if (!enemy) return enemy;
+    enemy.role = this.roleFor(enemy.type);
+    enemy.mutator = null;
+    if (enemy.boss || enemy.operationAnchor || enemy.operationDisruptor) return enemy;
+    var tier = this.heatTier || 0;
+    if (tier < 1) return enemy;
+    if (Math.random() < Math.min(0.16 + tier * 0.055, 0.42)) {
+      var mutators = tier >= 4 ? ['armored','volatile','fast','shielded','splitting'] : ['armored','volatile','fast'];
+      enemy.mutator = Utils.choice(mutators);
+      if (enemy.mutator === 'armored') { enemy.maxHP *= 1.45; enemy.hp *= 1.45; enemy.accent = '#94a3b8'; }
+      if (enemy.mutator === 'volatile') { enemy.volatileMutator = true; enemy.mutatorExplodeRadius = Math.max(enemy.def.explodeRadius || 0, 62); enemy.mutatorExplodeDamage = Math.max(enemy.def.explodeDamage || 0, 16); enemy.accent = '#f59e0b'; }
+      if (enemy.mutator === 'fast') { enemy.speed *= 1.35; enemy.accent = '#4ade80'; }
+      if (enemy.mutator === 'shielded') { enemy.maxHP *= 1.25; enemy.hp *= 1.25; enemy.shieldedMutator = true; enemy.accent = '#22d3ee'; }
+      if (enemy.mutator === 'splitting') { enemy.accent = '#c084fc'; }
+    }
+    return enemy;
+  },
+  spawnEliteEvent: function() {
+    this.lastEliteEvent = World.time;
+    var target = ScavengeSites.nearestActiveSite();
+    var cx = target ? target.site.x : Game.player.x;
+    var cy = target ? target.site.y : Game.player.y;
+    for (var i = 0; i < 2; i++) {
+      var pos = World.randomSpawnPoint(cx, cy, 170, 260);
+      var elite = Enemies.spawn('elite_grunt', pos.x, pos.y);
+      elite.eliteRole = 'CHEST ELITE';
+      elite.guaranteedPile = true;
+    }
+    Game.announce('ELITE CONVOY - RARE LOOT');
+    Game.threatPulse(0.32);
+  }
 };
 
 /* =====================================================================
@@ -4397,7 +4907,8 @@ const Projectiles = {
           ctx.lineTo(lowFxSize * 2.1, 0);
           ctx.stroke();
           ctx.globalAlpha = 1;
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = '#a5f3fc';
+          ctx.globalAlpha = 0.62;
           ctx.beginPath(); ctx.arc(0, 0, Math.max(1.5, lowFxSize * 0.35), 0, Math.PI * 2); ctx.fill();
           ctx.restore();
           continue;
@@ -4410,7 +4921,8 @@ const Projectiles = {
           ctx.globalAlpha = 1;
           ctx.fillStyle = pr.color;
           ctx.beginPath(); ctx.arc(0, 0, lowFxSize * 0.9, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = '#fde68a';
+          ctx.globalAlpha = 0.62;
           ctx.beginPath(); ctx.arc(0, 0, Math.max(1.6, lowFxSize * 0.28), 0, Math.PI * 2); ctx.fill();
           ctx.restore();
           continue;
@@ -4424,7 +4936,7 @@ const Projectiles = {
         ctx.stroke();
         if (pr.weaponType === 'shotgun') {
           ctx.globalAlpha = 1;
-          ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
+          ctx.fillStyle = pr.crit ? '#fbbf24' : pr.color;
           ctx.beginPath();
           ctx.moveTo(lowFxSize, 0);
           ctx.lineTo(-lowFxSize * 0.8, -lowFxSize * 0.7);
@@ -4435,10 +4947,10 @@ const Projectiles = {
           continue;
         }
         ctx.globalAlpha = 1;
-        ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
+        ctx.fillStyle = pr.crit ? '#fbbf24' : pr.color;
         ctx.beginPath(); ctx.arc(0, 0, lowFxSize, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#a5f3fc';
+        ctx.globalAlpha = 0.46;
         ctx.beginPath(); ctx.arc(0, 0, Math.max(1.8, lowFxSize * 0.4), 0, Math.PI * 2); ctx.fill();
         ctx.restore();
         continue;
@@ -4457,7 +4969,8 @@ const Projectiles = {
         ctx.lineTo(pr.size * 3, 0);
         ctx.stroke();
         ctx.globalAlpha = 1;
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#a5f3fc';
+        ctx.globalAlpha = 0.62;
         ctx.beginPath(); ctx.arc(0, 0, Math.max(1.5, pr.size * 0.45), 0, Math.PI * 2); ctx.fill();
         ctx.restore();
         continue;
@@ -4470,8 +4983,8 @@ const Projectiles = {
         ctx.globalAlpha = 0.9;
         ctx.fillStyle = pr.color;
         ctx.beginPath(); ctx.arc(0, 0, pr.size * 1.2, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#fde68a';
+        ctx.globalAlpha = 0.55;
         ctx.beginPath(); ctx.arc(0, 0, pr.size * 0.35, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
         continue;
@@ -4484,7 +4997,7 @@ const Projectiles = {
       ctx.beginPath(); ctx.ellipse(-pr.size * 1.5, 0, pr.size * 2.5, pr.size * 0.8, 0, 0, Math.PI * 2); ctx.fill();
       if (pr.weaponType === 'shotgun') {
         ctx.globalAlpha = 1;
-        ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
+        ctx.fillStyle = pr.crit ? '#fbbf24' : pr.color;
         ctx.beginPath();
         ctx.moveTo(pr.size * 1.1, 0);
         ctx.lineTo(-pr.size * 0.9, -pr.size * 0.75);
@@ -4495,10 +5008,10 @@ const Projectiles = {
         continue;
       }
       ctx.globalAlpha = 1;
-      ctx.fillStyle = pr.crit ? '#ffffff' : pr.color;
+      ctx.fillStyle = pr.crit ? '#fbbf24' : pr.color;
       ctx.beginPath(); ctx.arc(0, 0, pr.size, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = '#a5f3fc';
+      ctx.globalAlpha = 0.42;
       ctx.beginPath(); ctx.arc(0, 0, pr.size * 0.4, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
@@ -4509,6 +5022,82 @@ const Projectiles = {
 /* =====================================================================
  § 14. ENTITIES — PICKUPS  (src/entities/pickup.js)
 ===================================================================== */
+const LootDirector = {
+  piles: [],
+  spawnPile: function(source, x, y, drops) {
+    if (!drops || !drops.length) return null;
+    var pile = { source: source || 'poi', x: x, y: y, drops: drops, radius: 26, pulse: Math.random() * 10, life: 90 };
+    this.piles.push(pile);
+    VFX.deathRing(x, y, '#fbbf24', 18, true);
+    return pile;
+  },
+  autoPolicy: function(item) {
+    if (!item) return 'skip';
+    if (item.consumable) return 'use';
+    if (item.materialType || item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary') return 'keep';
+    if (RunInventory.isFull && RunInventory.isFull() && item.category === 'vendor' && item.rarity === 'common') return 'skip';
+    return 'keep';
+  },
+  shouldShowSwapModal: function(item, decision, source) {
+    if (source === 'contract') return true;
+    if (!item) return false;
+    return item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary' || source === 'boss';
+  },
+  summarizePickup: function(items) {
+    var parts = [];
+    var mats = {};
+    var rare = null;
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (it.materialType) mats[it.materialType] = (mats[it.materialType] || 0) + (it.materialQty || 1);
+      if (!rare && (it.rarity === 'rare' || it.rarity === 'epic' || it.rarity === 'legendary')) rare = it.name;
+    }
+    Object.keys(mats).forEach(function(k) { parts.push('+' + mats[k] + ' ' + k.toUpperCase()); });
+    if (rare) parts.push('RARE CARGO');
+    return parts.length ? parts.join(' / ') : '+' + items.length + ' LOOT';
+  },
+  collectPile: function(pile) {
+    var kept = [];
+    for (var i = 0; i < pile.drops.length; i++) {
+      var item = pile.drops[i];
+      var policy = this.autoPolicy(item);
+      if (policy === 'skip') continue;
+      if (RunInventory.tryAdd(item, pile.source)) kept.push(item);
+    }
+    Game.announce(this.summarizePickup(kept.length ? kept : pile.drops));
+    return kept;
+  },
+  update: function(dt) {
+    if (!Game.player) return;
+    for (var i = 0; i < this.piles.length; i++) {
+      var pile = this.piles[i];
+      pile.life -= dt;
+      if (Utils.dist(Game.player.x, Game.player.y, pile.x, pile.y) < Game.player.stats.pickupRadius * 0.75) {
+        this.collectPile(pile);
+        pile.life = 0;
+      }
+    }
+    this.piles = this.piles.filter(function(p) { return p.life > 0; });
+  },
+  render: function(ctx) {
+    for (var i = 0; i < this.piles.length; i++) {
+      var p = this.piles[i];
+      var pulse = 1 + Math.sin(Game.time * 5 + p.pulse) * 0.08;
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 1.7 * pulse, 0, Math.PI * 2); ctx.fill();
+      PixelSprites.draw(ctx, 'loot_crate', p.x, p.y, 4.2, { alpha: 0.96 });
+      ctx.fillStyle = '#fde68a';
+      ctx.font = 'bold 8px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('LOOT PILE', p.x, p.y - 24);
+      ctx.restore();
+    }
+  },
+  clear: function() { this.piles = []; }
+};
+
 const Pickups = {
   list: [],
   spawnXP(x, y, amount) {
@@ -4554,32 +5143,43 @@ const Pickups = {
       const pulse = 1 + Math.sin(Game.time * 6 + pk.x) * 0.2;
       ctx.save();
       if (pk.type === 'item') {
-        // diamond loot marker with glow
+        if (PixelSprites.draw(ctx, 'loot_crate', pk.x, pk.y, 3.4, { tint: pk.color })) { ctx.restore(); continue; }
+        // Loot crate marker with lid stripes.
         ctx.save();
-        ctx.translate(pk.x, pk.y); ctx.rotate(Math.PI / 4);
-        // glow
+        ctx.translate(pk.x, pk.y);
         ctx.globalAlpha = 0.3;
         ctx.fillStyle = pk.color;
-        ctx.fillRect(-pk.size * 2, -pk.size * 2, pk.size*4, pk.size*4);
+        ctx.fillRect(-pk.size * 1.8, -pk.size * 1.4, pk.size * 3.6, pk.size * 2.8);
         ctx.globalAlpha = 1;
         ctx.fillStyle = pk.color;
-        ctx.fillRect(-pk.size, -pk.size, pk.size*2, pk.size*2);
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
-        ctx.strokeRect(-pk.size, -pk.size, pk.size*2, pk.size*2);
+        ctx.fillRect(-pk.size * 1.25, -pk.size * 0.85, pk.size * 2.5, pk.size * 1.7);
+        ctx.strokeStyle = '#d7ecff'; ctx.lineWidth = 1;
+        ctx.strokeRect(-pk.size * 1.25, -pk.size * 0.85, pk.size * 2.5, pk.size * 1.7);
+        ctx.strokeStyle = '#07111f';
+        ctx.beginPath();
+        ctx.moveTo(-pk.size * 1.25, -pk.size * 0.18);
+        ctx.lineTo(pk.size * 1.25, -pk.size * 0.18);
+        ctx.moveTo(0, -pk.size * 0.85);
+        ctx.lineTo(0, pk.size * 0.85);
+        ctx.stroke();
         ctx.restore();
       } else {
-        // === XP/Credit orb with halo glow ===
+        var tokenSprite = pk.type === 'credits' ? 'loot_credit' : 'loot_xp';
+        if (PixelSprites.draw(ctx, tokenSprite, pk.x, pk.y, pk.type === 'credits' ? 2.7 : 2.3, { alpha: 0.92 })) { ctx.restore(); continue; }
+        // Small tokens instead of bright white-core orbs.
         var glowR = pk.size * pulse * 2.5;
-        ctx.globalAlpha = 0.15;
+        ctx.globalAlpha = 0.08;
         ctx.fillStyle = pk.color;
         ctx.beginPath(); ctx.arc(pk.x, pk.y, glowR, 0, Math.PI * 2); ctx.fill();
-        ctx.globalAlpha = 0.9;
+        ctx.globalAlpha = 0.78;
         ctx.fillStyle = pk.color;
-        ctx.beginPath(); ctx.arc(pk.x, pk.y, pk.size * pulse, 0, Math.PI * 2); ctx.fill();
-        // white core
-        ctx.fillStyle = '#ffffff';
-        ctx.globalAlpha = 0.7;
-        ctx.beginPath(); ctx.arc(pk.x, pk.y, pk.size * pulse * 0.4, 0, Math.PI * 2); ctx.fill();
+        if (pk.type === 'credits') {
+          ctx.fillRect(pk.x - pk.size * 0.75, pk.y - pk.size * 0.55, pk.size * 1.5, pk.size * 1.1);
+          ctx.strokeStyle = '#fde68a'; ctx.lineWidth = 1; ctx.strokeRect(pk.x - pk.size * 0.75, pk.y - pk.size * 0.55, pk.size * 1.5, pk.size * 1.1);
+        } else {
+          ctx.beginPath(); ctx.arc(pk.x, pk.y, pk.size * 0.9 * pulse, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#a5f3fc'; ctx.lineWidth = 1; ctx.stroke();
+        }
       }
       ctx.restore();
     }
@@ -4596,7 +5196,12 @@ const VFX = {
   rings: [],
   maxParticles: 140,
   maxRings: 24,
-  hitFlash(x, y, color) { this.burst(x, y, color, 4, 80); },
+  hitFlash(x, y, color) {
+    this.particles.push({
+      x, y, vx: 0, vy: 0,
+      life: 0.16, maxLife: 0.16, color: color, size: 7, glow: false,
+    });
+  },
   burst(x, y, color, count, speed) {
     count = Math.min(count || 10, LOW_FX_MODE ? 8 : 28);
     speed = speed || 160;
@@ -4618,18 +5223,14 @@ const VFX = {
   },
   // === Impact flash — simplified in LOW_FX_MODE ===
   impactFlash(x, y, color) {
-    this.particles.push({
-      x, y, vx: 0, vy: 0,
-      life: 0.1, maxLife: 0.1, color: '#ffffff', size: LOW_FX_MODE ? 6 : 12, glow: !LOW_FX_MODE,
-    });
-    if (!LOW_FX_MODE) {
-      for (var i = 0; i < 3; i++) {
-        var ang = Math.random() * Math.PI * 2;
-        this.particles.push({
-          x, y, vx: Math.cos(ang) * 80, vy: Math.sin(ang) * 80,
-          life: 0.15, maxLife: 0.15, color: color, size: 2, glow: false,
-        });
-      }
+    var count = LOW_FX_MODE ? 2 : 4;
+    for (var i = 0; i < count; i++) {
+      var ang = Math.random() * Math.PI * 2;
+      var sp = Utils.rand(55, 115);
+      this.particles.push({
+        x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+        life: Utils.rand(0.1, 0.18), maxLife: 0.18, color: color, size: Utils.rand(1.5, 3.2), glow: false,
+      });
     }
   },
   // === NEW: expanding ring on enemy death ===
@@ -4694,7 +5295,7 @@ const VFX = {
       ctx.fillStyle = '#000000';
       ctx.fillText(n.crit ? n.val + '!' : n.val, n.x + 1, n.y + 1);
       // text
-      ctx.fillStyle = n.crit ? '#fbbf24' : '#ffffff';
+      ctx.fillStyle = n.crit ? '#fbbf24' : '#d7ecff';
       ctx.fillText(n.crit ? n.val + '!' : n.val, n.x, n.y);
     }
     ctx.globalAlpha = 1;
@@ -4723,10 +5324,10 @@ var ScavengeSites = {
   totalSecuredValue: 0,
   peakHeat: 0,
   siteDefs: [
-    { kind: 'stash', label: 'BROKER STASH', icon: 'S', color: '#22d3ee', accent: '#9fe8ff', rewardBias: 'material' },
-    { kind: 'locker', label: 'FIELD LOCKER', icon: 'L', color: '#4ade80', accent: '#bbf7d0', rewardBias: 'mixed' },
-    { kind: 'data', label: 'DATA NEST', icon: 'D', color: '#c084fc', accent: '#e9d5ff', rewardBias: 'intel' },
-    { kind: 'cache', label: 'SUPPLY CACHE', icon: 'C', color: '#f59e0b', accent: '#fde68a', rewardBias: 'cargo' }
+    { kind: 'stash', label: 'BROKER STASH', icon: '$', color: '#22d3ee', accent: '#9fe8ff', rewardBias: 'material', intent: 'SELL/UPGRADE', guardBonus: 0 },
+    { kind: 'locker', label: 'FIELD LOCKER', icon: '+', color: '#4ade80', accent: '#bbf7d0', rewardBias: 'mixed', intent: 'SURVIVE', guardBonus: -1 },
+    { kind: 'data', label: 'DATA NEST', icon: 'i', color: '#c084fc', accent: '#e9d5ff', rewardBias: 'intel', intent: 'UPGRADE', guardBonus: 0 },
+    { kind: 'cache', label: 'SUPPLY CACHE', icon: '#', color: '#f59e0b', accent: '#fde68a', rewardBias: 'cargo', intent: 'SELL', guardBonus: 1 }
   ],
 
   reset: function() {
@@ -4735,7 +5336,8 @@ var ScavengeSites = {
     this.totalSecuredValue = 0;
     this.peakHeat = 0;
     if (Game.isOperationRun && Game.isOperationRun()) return;
-    for (var i = 0; i < 4; i++) this.spawnSite(i > 1 ? 1 : 0);
+    for (var i = 0; i < this.siteDefs.length; i++) this.spawnSite(i > 1 ? 1 : 0, this.siteDefs[i]);
+    if (typeof FieldContracts !== 'undefined' && FieldContracts.bindTargetSite) FieldContracts.bindTargetSite(this.sites);
   },
 
   activeSitesLeft: function() {
@@ -4768,8 +5370,17 @@ var ScavengeSites = {
     return best ? { site: best, dist: bestDist } : null;
   },
 
-  spawnSite: function(tierBoost) {
-    var def = Utils.choice(this.siteDefs);
+  nearestSiteFromPlayer: function() {
+    if (typeof FieldContracts !== 'undefined' && FieldContracts.routeSite) {
+      var contractSite = FieldContracts.routeSite();
+      if (contractSite) return contractSite;
+    }
+    var found = this.nearestActiveSite();
+    return found ? found.site : null;
+  },
+
+  spawnSite: function(tierBoost, defOverride) {
+    var def = defOverride || Utils.choice(this.siteDefs);
     var x = 0, y = 0;
     for (var attempts = 0; attempts < 12; attempts++) {
       var ang = Math.random() * Math.PI * 2;
@@ -4800,6 +5411,8 @@ var ScavengeSites = {
       color: def.color,
       accent: def.accent,
       rewardBias: def.rewardBias,
+      intent: def.intent,
+      guardBonus: def.guardBonus || 0,
       threatLevel: 2 + Math.floor(Math.random() * 3) + (tierBoost > 0 ? 1 : 0),
       threatMix: def.rewardBias === 'intel' ? ['sniper', 'sniper', 'stalker'] : (def.rewardBias === 'cargo' ? ['grunt', 'stalker', 'bomber'] : ['grunt', 'stalker', 'sniper'])
     });
@@ -4817,7 +5430,7 @@ var ScavengeSites = {
 
   spawnGuards: function(site) {
     site.guardSpawned = true;
-    var count = 3 + site.threatLevel + (site.tierBoost > 0 ? 1 : 0);
+    var count = Math.max(2, 3 + site.threatLevel + (site.tierBoost > 0 ? 1 : 0) + (site.guardBonus || 0));
     var pool = site.threatMix || ['grunt', 'stalker', 'sniper'];
     for (var i = 0; i < count; i++) {
       var ang = (Math.PI * 2 / count) * i + Math.random() * 0.4;
@@ -4854,6 +5467,23 @@ var ScavengeSites = {
     return RunInventory.rollLoot((tierBoost || 0) + 1);
   },
 
+  rollSiteLoot: function(site, slotIndex) {
+    var preferMaterial = slotIndex === 0 || site.rewardBias === 'material' || site.rewardBias === 'intel';
+    for (var attempts = 0; attempts < 8; attempts++) {
+      var rolled = RunInventory.rollLoot((site.tierBoost || 0) + (slotIndex > 0 ? 1 : 0));
+      if (site.rewardBias === 'mixed') {
+        if (rolled.consumable || rolled.materialType || attempts > 3) return rolled;
+      } else if (site.rewardBias === 'intel') {
+        if (rolled.materialType === 'intel' || rolled.rarity === 'rare' || rolled.rarity === 'epic' || attempts > 4) return rolled;
+      } else if (site.rewardBias === 'cargo') {
+        if (!rolled.consumable && (rolled.category === 'vendor' || rolled.vendorValue >= 58 || attempts > 4)) return rolled;
+      } else if (preferMaterial) {
+        if (rolled.materialType || attempts > 4) return rolled;
+      }
+    }
+    return this.rollPriorityLoot(site.tierBoost || 0, preferMaterial);
+  },
+
   secureSite: function(site) {
     site.cleared = true;
     site.progress = site.required;
@@ -4861,19 +5491,27 @@ var ScavengeSites = {
     var credits = 12 + Math.floor(World.time / 35) + site.tierBoost * 10;
     Game.runCredits += credits;
     var drops = [
-      this.rollPriorityLoot(site.tierBoost, true),
-      this.rollPriorityLoot(site.tierBoost + 1, false)
+      this.rollSiteLoot(site, 0),
+      this.rollSiteLoot(site, 1)
     ];
-    if (Math.random() < 0.32 + site.tierBoost * 0.08) drops.push(this.rollPriorityLoot(site.tierBoost + 1, true));
+    if (Math.random() < 0.32 + site.tierBoost * 0.08) drops.push(this.rollSiteLoot(site, 2));
     var securedValue = 0;
     for (var i = 0; i < drops.length; i++) {
-      RunInventory.tryAdd(drops[i]);
       securedValue += drops[i].vendorValue || drops[i].value || 0;
     }
+    if (typeof LootDirector !== 'undefined') LootDirector.spawnPile('poi', site.x, site.y, drops);
     this.totalSecuredValue += securedValue;
+    if (typeof FieldContracts !== 'undefined' && FieldContracts.onSiteSecured) FieldContracts.onSiteSecured(site);
+    if (Game.player && Game.player.fieldTurret) {
+      for (var ti = 0; ti < 4; ti++) {
+        var e = Combat.findNearestEnemy(site.x, site.y);
+        if (e && Utils.dist(site.x, site.y, e.x, e.y) < 260) e.damage(Game.player.stats.damage * 1.15, true);
+      }
+      VFX.deathRing(site.x, site.y, '#22d3ee', 44, true);
+    }
     VFX.burst(site.x, site.y, site.color, LOW_FX_MODE ? 6 : 14, 140);
     VFX.deathRing(site.x, site.y, site.color, 22, true);
-    Game.announce(site.icon + ' ' + site.label + ' SECURED +' + credits + '? - ' + drops.length + ' LOOT');
+    Game.announce(site.icon + ' ' + site.label + ' SECURED +' + credits + 'C - ' + drops.length + ' LOOT');
     if (this.activeSitesLeft() < 2) this.spawnSite(Math.min(2, Math.floor(World.time / 90)));
   },
 
@@ -4897,8 +5535,98 @@ var ScavengeSites = {
     }
   },
 
+  renderPoiStructure: function(ctx, site, pulse, nearEnemies, detailAlpha) {
+    var r = site.radius;
+    ctx.save();
+    ctx.globalAlpha = 0.08 * Math.max(0.55, detailAlpha);
+    ctx.fillStyle = nearEnemies > 0 ? '#f59e0b' : site.color;
+    ctx.beginPath();
+    ctx.ellipse(site.x, site.y + r * 0.45, r * 1.25, r * 0.38, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.9 * Math.max(0.55, detailAlpha);
+    ctx.fillStyle = 'rgba(7,17,31,0.92)';
+    ctx.strokeStyle = site.accent;
+    ctx.lineWidth = 1.5;
+    if (site.kind === 'stash') {
+      ctx.fillRect(site.x - r * 0.92, site.y - r * 0.46, r * 1.84, r * 0.92);
+      ctx.strokeRect(site.x - r * 0.92, site.y - r * 0.46, r * 1.84, r * 0.92);
+      ctx.beginPath();
+      ctx.moveTo(site.x - r * 0.92, site.y - r * 0.08);
+      ctx.lineTo(site.x + r * 0.92, site.y - r * 0.08);
+      ctx.moveTo(site.x - r * 0.28, site.y - r * 0.46);
+      ctx.lineTo(site.x - r * 0.28, site.y + r * 0.46);
+      ctx.moveTo(site.x + r * 0.28, site.y - r * 0.46);
+      ctx.lineTo(site.x + r * 0.28, site.y + r * 0.46);
+      ctx.stroke();
+    } else if (site.kind === 'locker') {
+      ctx.fillRect(site.x - r * 0.55, site.y - r * 0.9, r * 1.1, r * 1.8);
+      ctx.strokeRect(site.x - r * 0.55, site.y - r * 0.9, r * 1.1, r * 1.8);
+      ctx.beginPath();
+      ctx.moveTo(site.x, site.y - r * 0.82);
+      ctx.lineTo(site.x, site.y + r * 0.82);
+      ctx.moveTo(site.x - r * 0.34, site.y - r * 0.35);
+      ctx.lineTo(site.x - r * 0.08, site.y - r * 0.35);
+      ctx.moveTo(site.x + r * 0.08, site.y + r * 0.25);
+      ctx.lineTo(site.x + r * 0.34, site.y + r * 0.25);
+      ctx.stroke();
+    } else if (site.kind === 'data') {
+      ctx.beginPath();
+      ctx.arc(site.x, site.y, r * 0.34, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(site.x, site.y - r * 0.34);
+      ctx.lineTo(site.x, site.y - r * 1.05);
+      ctx.moveTo(site.x, site.y - r * 0.82);
+      ctx.lineTo(site.x - r * 0.5, site.y - r * 1.12);
+      ctx.moveTo(site.x, site.y - r * 0.82);
+      ctx.lineTo(site.x + r * 0.5, site.y - r * 1.12);
+      ctx.moveTo(site.x - r * 0.72, site.y + r * 0.52);
+      ctx.lineTo(site.x + r * 0.72, site.y + r * 0.52);
+      ctx.stroke();
+    } else {
+      ctx.fillRect(site.x - r * 0.82, site.y - r * 0.58, r * 1.64, r * 1.16);
+      ctx.strokeRect(site.x - r * 0.82, site.y - r * 0.58, r * 1.64, r * 1.16);
+      ctx.fillRect(site.x - r * 0.52, site.y - r * 0.9, r * 1.04, r * 0.32);
+      ctx.strokeRect(site.x - r * 0.52, site.y - r * 0.9, r * 1.04, r * 0.32);
+      ctx.beginPath();
+      ctx.moveTo(site.x - r * 0.82, site.y);
+      ctx.lineTo(site.x + r * 0.82, site.y);
+      ctx.moveTo(site.x - r * 0.3, site.y - r * 0.58);
+      ctx.lineTo(site.x - r * 0.3, site.y + r * 0.58);
+      ctx.moveTo(site.x + r * 0.3, site.y - r * 0.58);
+      ctx.lineTo(site.x + r * 0.3, site.y + r * 0.58);
+      ctx.stroke();
+    }
+    var poiSprite = site.kind === 'stash' ? 'poi_stash' : (site.kind === 'locker' ? 'poi_locker' : (site.kind === 'data' ? 'poi_data' : 'poi_cache'));
+    PixelSprites.draw(ctx, poiSprite, site.x, site.y, site.kind === 'data' ? 6 : 5.5, { alpha: 0.98 });
+    PixelSprites.draw(ctx, 'debris', site.x - r * 1.15, site.y + r * 0.72, 3, { alpha: 0.45 });
+    PixelSprites.draw(ctx, 'debris', site.x + r * 1.05, site.y - r * 0.62, 2.6, { alpha: 0.35, rotate: 0.7 });
+    ctx.globalAlpha = 0.45 * Math.max(0.55, detailAlpha);
+    ctx.strokeStyle = nearEnemies > 0 ? '#f59e0b' : site.color;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(site.x - r * pulse, site.y - r * 0.72 * pulse, r * 2 * pulse, r * 1.44 * pulse);
+    if (site.contractTarget && !site.cleared) {
+      ctx.globalAlpha = 0.96;
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(site.x - r * 1.08 * pulse, site.y - r * 0.82 * pulse, r * 2.16 * pulse, r * 1.64 * pulse);
+      ctx.globalAlpha = 0.88;
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 12px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', site.x + r * 0.94, site.y - r * 0.58);
+    }
+    ctx.globalAlpha = 0.92 * Math.max(0.6, detailAlpha);
+    ctx.fillStyle = site.accent;
+    ctx.font = 'bold 13px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(site.icon, site.x, site.y + 5);
+    ctx.restore();
+  },
+
   render: function(ctx) {
     if (Game.isOperationRun && Game.isOperationRun()) return;
+    var routeSite = this.nearestSiteFromPlayer();
     for (var i = 0; i < this.sites.length; i++) {
       var site = this.sites[i];
       if (site.cleared) continue;
@@ -4907,44 +5635,40 @@ var ScavengeSites = {
       var detailAlpha = playerDist < 230 ? 1 : (playerDist < 360 ? 0.55 : 0.2);
       var pulse = 1 + Math.sin(Game.time * 2.5 + i) * 0.06;
       ctx.save();
-      ctx.globalAlpha = 0.05 * Math.max(0.4, detailAlpha);
-      ctx.fillStyle = nearEnemies > 0 ? '#f59e0b' : site.color;
-      ctx.beginPath(); ctx.arc(site.x, site.y, site.radius * 1.28, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.18 * Math.max(0.6, detailAlpha);
-      ctx.strokeStyle = site.accent;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(site.x - site.radius * 0.7, site.y);
-      ctx.lineTo(site.x + site.radius * 0.7, site.y);
-      ctx.moveTo(site.x, site.y - site.radius * 0.7);
-      ctx.lineTo(site.x, site.y + site.radius * 0.7);
-      ctx.stroke();
-      ctx.globalAlpha = 0.42 * Math.max(0.55, detailAlpha);
-      ctx.strokeStyle = nearEnemies > 0 ? '#f59e0b' : site.color;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(site.x, site.y, site.radius * pulse, 0, Math.PI * 2); ctx.stroke();
-      ctx.globalAlpha = 0.9 * Math.max(0.6, detailAlpha);
-      ctx.fillStyle = site.accent;
-      ctx.font = 'bold 15px ui-monospace, monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(site.icon, site.x, site.y + 5);
-      if (detailAlpha > 0.25) {
+      this.renderPoiStructure(ctx, site, pulse, nearEnemies, detailAlpha);
+      if (detailAlpha > 0.25 || site.contractTarget) {
         ctx.fillStyle = '#e6f7ff';
         ctx.font = 'bold 9px ui-monospace, monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(site.label, site.x, site.y - site.radius - 12);
+        ctx.fillText(site.contractTarget ? 'CONTRACT TARGET' : site.label, site.x, site.y - site.radius - 12);
         ctx.fillStyle = nearEnemies > 0 ? this.threatPalette(site.threatLevel) : '#94a3b8';
         ctx.font = 'bold 8px ui-monospace, monospace';
-        ctx.fillText((Game.hideoutRank('field_scanner') > 0 ? this.threatDescriptor(site.threatLevel) + ' THREAT' : 'UNKNOWN RISK'), site.x, site.y - site.radius - 1);
+        ctx.fillText((site.intent || 'LOOT') + ' · ' + (Game.hideoutRank('field_scanner') > 0 ? this.threatDescriptor(site.threatLevel) + ' THREAT' : 'UNKNOWN RISK'), site.x, site.y - site.radius - 1);
       }
       if (site.progress > 0) {
         var pct = Math.min(1, site.progress / site.required);
         ctx.globalAlpha = 0.75;
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = site.accent;
         ctx.lineWidth = 3;
+        ctx.strokeRect(site.x - site.radius * 0.72, site.y + site.radius * 0.42, site.radius * 1.44 * pct, 5);
+      }
+      if (routeSite === site && Game.player) {
+        var ang = Utils.angle(Game.player.x, Game.player.y, site.x, site.y);
+        var ax = Game.player.x + Math.cos(ang) * 58;
+        var ay = Game.player.y + Math.sin(ang) * 58;
+        ctx.globalAlpha = 0.86;
+        ctx.fillStyle = site.accent;
+        ctx.save();
+        ctx.translate(ax, ay);
+        ctx.rotate(ang);
         ctx.beginPath();
-        ctx.arc(site.x, site.y, site.radius * 0.68, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
-        ctx.stroke();
+        ctx.moveTo(13, 0);
+        ctx.lineTo(-8, -7);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-8, 7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
       }
       if (detailAlpha > 0.55) {
         ctx.globalAlpha = 0.8;
@@ -4954,6 +5678,183 @@ var ScavengeSites = {
       }
       ctx.restore();
     }
+  }
+};
+
+var FieldContracts = {
+  current: null,
+  targetSite: null,
+  packageSecured: false,
+  optionalSecured: 0,
+  paid: false,
+  ignoredTimer: 0,
+  packageSecuredAt: 0,
+  contracts: [
+    {
+      id: 'black_box',
+      title: 'RECOVER BLACK BOX',
+      targetPoiKind: 'data',
+      targetLabel: 'DATA NEST',
+      packageName: 'BLACK BOX',
+      steps: ['REACH DATA NEST', 'CLEAR SECURITY', 'SEARCH THE SITE', 'SECURE CONTRACT ITEM', 'CALL EXTRACTION', 'EXTRACT WITH THE PACKAGE'],
+      requiredCaches: 1,
+      requiredValue: 0,
+      rewardCredits: 90,
+      riskModifier: 0.45
+    },
+    {
+      id: 'supply_raid',
+      title: 'RAID SUPPLY CACHE',
+      targetPoiKind: 'cache',
+      targetLabel: 'SUPPLY CACHE',
+      packageName: 'SUPPLY CRATE',
+      steps: ['REACH SUPPLY CACHE', 'CLEAR SECURITY', 'SEARCH THE SITE', 'SECURE CONTRACT ITEM', 'CALL EXTRACTION', 'EXTRACT WITH THE PACKAGE'],
+      requiredCaches: 1,
+      requiredValue: 0,
+      rewardCredits: 110,
+      riskModifier: 0.7
+    },
+    {
+      id: 'field_kit',
+      title: 'RESTOCK FIELD KIT',
+      targetPoiKind: 'locker',
+      targetLabel: 'FIELD LOCKER',
+      packageName: 'MED CASE',
+      steps: ['REACH FIELD LOCKER', 'CLEAR SECURITY', 'SEARCH THE SITE', 'SECURE CONTRACT ITEM', 'CALL EXTRACTION', 'EXTRACT WITH THE PACKAGE'],
+      requiredCaches: 1,
+      requiredValue: 0,
+      rewardCredits: 75,
+      riskModifier: 0.3
+    }
+  ],
+
+  reset: function() {
+    this.current = null;
+    this.targetSite = null;
+    this.packageSecured = false;
+    this.optionalSecured = 0;
+    this.paid = false;
+    this.ignoredTimer = 0;
+    this.packageSecuredAt = 0;
+    if (Game.isOperationRun && Game.isOperationRun()) return;
+    this.chooseContract();
+  },
+
+  chooseContract: function() {
+    this.current = Utils.choice(this.contracts);
+    return this.current;
+  },
+
+  bindTargetSite: function(sites) {
+    if (!this.current || !sites || !sites.length) return null;
+    this.targetSite = null;
+    for (var i = 0; i < sites.length; i++) {
+      sites[i].contractTarget = false;
+      if (!this.targetSite && sites[i].kind === this.current.targetPoiKind) this.targetSite = sites[i];
+    }
+    if (!this.targetSite) this.targetSite = sites[0];
+    this.targetSite.contractTarget = true;
+    this.targetSite.contractTitle = this.current.title;
+    return this.targetSite;
+  },
+
+  routeSite: function() {
+    if (this.targetSite && !this.targetSite.cleared && !this.packageSecured) return this.targetSite;
+    return null;
+  },
+
+  onSiteSecured: function(site) {
+    if (!this.current || !site) return;
+    if (site.contractTarget && !this.packageSecured) {
+      this.packageSecured = true;
+      this.packageSecuredAt = World.time || 0;
+      this.targetSite = site;
+      ExtractionZone.spawnTime = Math.min(ExtractionZone.spawnTime, World.time + 2);
+      Game.announce(this.current.packageName + ' SECURED - CALL EXTRACTION');
+      return;
+    }
+    if (this.packageSecured && !site.contractTarget) this.optionalSecured += 1;
+  },
+
+  isContractComplete: function() {
+    return !!(this.current && this.packageSecured);
+  },
+
+  riskHeat: function() {
+    if (!this.current) return 0;
+    var heat = this.packageSecured ? this.current.riskModifier : 0;
+    heat += this.optionalSecured * 0.35;
+    return heat;
+  },
+
+  objectiveText: function() {
+    if (!this.current) return null;
+    var step = 1;
+    var main = this.current.steps[0];
+    var sub = 'CONTRACT 1/4 - BONUS +' + this.current.rewardCredits + 'C if extracted.';
+    var urgent = false;
+    if (this.packageSecured) {
+      step = 4;
+      main = 'CALL EXTRACTION';
+      sub = 'PACKAGE SECURED: ' + this.current.packageName + '. EXTRACT NOW for +' + this.current.rewardCredits + 'C, or PUSH DEEPER for XP, rares, elites, and higher heat.';
+      urgent = true;
+    } else if (this.targetSite && Game.player) {
+      var dist = Math.round(Utils.dist(Game.player.x, Game.player.y, this.targetSite.x, this.targetSite.y));
+      var guards = ScavengeSites.enemyCountNear ? ScavengeSites.enemyCountNear(this.targetSite, 155) : 0;
+      if (dist > this.targetSite.radius) {
+        step = 1;
+        main = 'REACH ' + this.current.targetLabel;
+        sub = dist + 'm away. CONTRACT 1/4 - bonus +' + this.current.rewardCredits + 'C on extraction.';
+      } else if (guards > 0) {
+        step = 2;
+        main = 'CLEAR SECURITY';
+        sub = guards + ' guards blocking search. CONTRACT 2/4 - ' + this.current.packageName + ' is inside.';
+      } else if (this.targetSite.progress < this.targetSite.required) {
+        step = 3;
+        main = 'SEARCH THE SITE';
+        sub = 'Hold the search zone. CONTRACT 3/4 - securing ' + this.current.packageName + '.';
+      } else {
+        step = 4;
+        main = 'SECURE CONTRACT ITEM';
+        sub = 'Package almost secured. Prepare to call extraction.';
+      }
+    }
+    return {
+      kicker: this.current.title,
+      main: main,
+      sub: sub,
+      progress: 'CONTRACT ' + step + '/4',
+      urgent: urgent
+    };
+  },
+
+  rewardReport: function() {
+    if (!this.isContractComplete() || this.paid) return { credits: 0, title: this.current ? this.current.title : null, package: null, optional: this.optionalSecured };
+    this.paid = true;
+    var quickBonus = this.packageSecuredAt && World.time - this.packageSecuredAt < 38 ? 25 : 0;
+    var credits = this.current.rewardCredits + this.optionalSecured * 25 + quickBonus;
+    return { credits: credits, title: this.current.title, package: this.current.packageName, optional: this.optionalSecured, quickBonus: quickBonus };
+  },
+
+  update: function(dt) {
+    if (!this.current || this.packageSecured || !this.targetSite || !Game.player) return;
+    var dist = Utils.dist(Game.player.x, Game.player.y, this.targetSite.x, this.targetSite.y);
+    if (World.time < 28 || dist < 480) {
+      this.ignoredTimer = Math.max(0, this.ignoredTimer - dt);
+      return;
+    }
+    this.ignoredTimer += dt;
+    if (this.ignoredTimer < 16) return;
+    this.ignoredTimer = 0;
+    var pos = World.randomSpawnPoint(this.targetSite.x, this.targetSite.y, 130, 220);
+    var enemy = Enemies.spawn(Utils.choice(this.targetSite.threatMix || ['grunt', 'stalker']), pos.x, pos.y);
+    enemy.scavengeGuard = true;
+    enemy.accent = this.targetSite.color;
+    enemy.anchorX = this.targetSite.x;
+    enemy.anchorY = this.targetSite.y;
+    enemy.guardRadius = 230;
+    enemy.guardLeash = 300;
+    Game.announce('CONTRACT SECURITY REPOSITIONING');
   }
 };
 
@@ -5008,7 +5909,7 @@ var FieldObjectives = {
     VFX.deathRing(this.uplink.x, this.uplink.y, '#fbbf24', 26, true);
     this.triggerAmbush();
     ExtractionZone.spawnTime = Math.min(ExtractionZone.spawnTime, World.time + 8);
-    Game.announce('UPLINK SECURED +' + bonus + '? - EXTRACT WINDOW SOON');
+    Game.announce('UPLINK SECURED +' + bonus + 'C - EXTRACT WINDOW SOON');
   },
 
   update: function(dt) {
@@ -5050,12 +5951,12 @@ var FieldObjectives = {
     ctx.font = 'bold 18px ui-monospace, monospace';
     ctx.textAlign = 'center';
     ctx.fillText('U', this.uplink.x, this.uplink.y + 7);
-    ctx.fillStyle = '#fff7d6';
+    ctx.fillStyle = '#fde68a';
     ctx.font = 'bold 10px ui-monospace, monospace';
     ctx.fillText(this.uplink.label, this.uplink.x, this.uplink.y - this.uplink.radius - 10);
     if (this.uplink.progress > 0) {
       var pct = Math.min(1, this.uplink.progress / this.uplink.required);
-      ctx.strokeStyle = '#ffffff';
+      ctx.strokeStyle = '#fde68a';
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(this.uplink.x, this.uplink.y, this.uplink.radius * 0.68, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
@@ -5089,6 +5990,10 @@ const World = {
     this._eliteDone = false;
     this._lastSpike = 0;
     this.buildObstacles();
+    EnemyDirector.heatTier = 0;
+    EnemyDirector.spawnBudget = 0;
+    EnemyDirector.lastEliteEvent = 0;
+    FieldContracts.reset();
     ScavengeSites.reset();
     FieldObjectives.reset();
   },
@@ -5179,13 +6084,17 @@ const World = {
   },
   currentDifficulty() {
     if (Game.isOperationRun && Game.isOperationRun() && OperationSystem.active) return OperationSystem.enemyScale();
-    return this.zone.difficulty * (1 + this.time / 80);
+    var tune = Game.balanceTuning ? Game.balanceTuning() : { difficulty: 1 };
+    return this.zone.difficulty * (1 + this.time / 80) * tune.difficulty;
   },
   haulHeat() {
     var haulValue = RunInventory.totalValue ? RunInventory.totalValue() : 0;
     var fillRatio = RunInventory.maxSlots ? (RunInventory.items.length / RunInventory.maxSlots) : 0;
     var materialKinds = Object.keys(RunInventory.materialManifest ? RunInventory.materialManifest() : {}).length;
-    return Math.min(4, fillRatio * 1.8 + haulValue / 140 + materialKinds * 0.35 + ScavengeSites.searchedCount * 0.45);
+    var extractionPressure = (ScavengeSites.searchedCount >= ExtractionZone.minSecureSites || haulValue >= ExtractionZone.minLootValue) ? 0.75 : 0;
+    var greedPressure = Math.max(0, ScavengeSites.searchedCount - ExtractionZone.minSecureSites) * 0.45 + (fillRatio >= 0.85 ? 0.55 : 0);
+    var contractPressure = FieldContracts && FieldContracts.riskHeat ? FieldContracts.riskHeat() : 0;
+    return Math.min(4, fillRatio * 1.8 + haulValue / 140 + materialKinds * 0.35 + ScavengeSites.searchedCount * 0.45 + extractionPressure + greedPressure + contractPressure);
   },
   randomSpawnPoint(cx, cy, minDist, maxDist) {
     cx = cx || 0;
@@ -5212,11 +6121,17 @@ const World = {
       return;
     }
     ScavengeSites.update(dt);
+    FieldContracts.update(dt);
     FieldObjectives.update(dt);
+    EnemyDirector.update(dt);
 
     var heat = this.haulHeat();
-    this.spawnInterval = Math.max(2.8, 5.1 - this.time * 0.0048 - heat * 0.24);
-    this.maxEnemies = Math.min(28, 12 + Math.floor(this.time / 34) + Math.floor(heat * 1.2) + Math.max(0, ScavengeSites.activeSitesLeft()));
+    var tune = Game.balanceTuning ? Game.balanceTuning() : { spawnInterval: 1, maxEnemies: 1 };
+    var targetSite = ScavengeSites.nearestActiveSite();
+    var nearPoi = targetSite && targetSite.dist <= 520;
+    var deeper = FieldContracts && FieldContracts.packageSecured;
+    this.spawnInterval = Math.max(nearPoi ? 1.6 : 2.8, 4.2 - this.time * 0.006 - heat * 0.28 - (deeper ? 0.55 : 0)) * tune.spawnInterval;
+    this.maxEnemies = Math.max(nearPoi ? 14 : 8, Math.round(Math.min(nearPoi ? 48 : 28, 18 + Math.floor(this.time / 26) + Math.floor(heat * 2.2) + (deeper ? 10 : 0) + Math.max(0, ScavengeSites.activeSitesLeft())) * tune.maxEnemies));
 
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0 && Enemies.list.length < this.maxEnemies) {
@@ -5241,7 +6156,7 @@ const World = {
         Enemies.spawn(Utils.choice(pool), pos.x, pos.y);
       }
       Game.announce('REINFORCEMENTS MOVING ON ACTIVE SITES');
-      Game.cameraShake(7, 0.3);
+      Game.threatPulse(0.32);
       if (minute % 2 === 0 && heat > 1.4) {
         var ep = this.randomSpawnPoint();
         Enemies.spawn('elite_grunt', ep.x, ep.y);
@@ -5262,13 +6177,11 @@ const World = {
   spawnWave() {
     var heat = this.haulHeat();
     var targetSite = ScavengeSites.nearestActiveSite();
-    if (!targetSite || targetSite.dist > 420) return;
-    var pool = targetSite.site.threatMix || this.zone.enemyPool;
-    var count = 1 + (heat > 2.2 ? 1 : 0) + (targetSite.site.threatLevel >= 4 ? 1 : 0);
-    for (var i = 0; i < count; i++) {
-      var type = Utils.choice(pool);
-      var pos = this.randomSpawnPoint(targetSite.site.x, targetSite.site.y, 120, 190);
-      Enemies.spawn(type, pos.x, pos.y);
+    if (!targetSite || targetSite.dist > 620) return;
+    var wave = EnemyDirector.pickWaveComposition(targetSite.site);
+    for (var i = 0; i < wave.length; i++) {
+      var pos = this.randomSpawnPoint(targetSite.site.x, targetSite.site.y, 120, 230);
+      Enemies.spawn(wave[i], pos.x, pos.y);
     }
   },
   spawnPatrolSweep() {
@@ -5314,6 +6227,17 @@ const World = {
     ctx.strokeStyle = 'rgba(125, 220, 245, 0.18)';
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.35;
+    for (var di = 0; di < 18; di++) {
+      var da = di * 2.399;
+      var dd = 180 + (di * 73) % 760;
+      var dx = Math.cos(da) * dd;
+      var dy = Math.sin(da) * dd;
+      ctx.fillStyle = di % 3 === 0 ? 'rgba(51,65,85,0.28)' : 'rgba(14,34,56,0.24)';
+      ctx.fillRect(dx - 22, dy - 9, 44, 18);
+      if (di % 2 === 0) PixelSprites.draw(ctx, 'debris', dx + 28, dy + 12, 2.3, { alpha: 0.5, rotate: da });
+    }
+    ctx.globalAlpha = 1;
     for (var i = 0; i < this.obstacles.length; i++) {
       var ob = this.obstacles[i];
       ctx.fillStyle = 'rgba(14, 34, 56, 0.92)';
@@ -5391,7 +6315,10 @@ var ExtractionZone = {
 
   update: function(dt) {
     if (Game.isOperationRun && Game.isOperationRun()) return;
-    var enoughLoot = ScavengeSites.searchedCount >= this.minSecureSites || RunInventory.totalValue() >= this.minLootValue;
+    var contractActive = FieldContracts && FieldContracts.current;
+    var enoughLoot = contractActive
+      ? (FieldContracts.isContractComplete && FieldContracts.isContractComplete())
+      : (ScavengeSites.searchedCount >= this.minSecureSites || RunInventory.totalValue() >= this.minLootValue);
     if (this.state === 'idle' && ((World.time >= this.spawnTime && enoughLoot) || World.time >= this.emergencyTime)) this.spawnBeacon();
     if (this.state === 'beacon') {
       var beaconDist = Utils.dist(Game.player.x, Game.player.y, this.beaconX, this.beaconY);
@@ -5428,12 +6355,22 @@ var ExtractionZone = {
     var d = Utils.dist(p.x, p.y, this.x, this.y);
     if (d < this.radius) {
       if (this._lastHP === undefined) this._lastHP = p.hp;
+      var lzPressure = 0;
+      for (var lp = 0; lp < Enemies.list.length; lp++) {
+        if (!Enemies.list[lp].alive) continue;
+        if (Utils.dist(Enemies.list[lp].x, Enemies.list[lp].y, this.x, this.y) < this.radius + 80) lzPressure++;
+      }
       if (p.hp < this._lastHP) {
         this.standTimer = Math.max(0, this.standTimer - 0.4);
         Game.announce('EXTRACTION INTERRUPTED');
       }
       this._lastHP = p.hp;
-      this.standTimer += dt;
+      if (lzPressure > 0) {
+        this.standTimer = Math.max(0, this.standTimer - dt * Math.min(1.4, 0.25 + lzPressure * 0.18));
+        p.tacticalWarning = 'LZ CONTESTED';
+      } else {
+        this.standTimer += dt;
+      }
       if (this.standTimer >= this.standRequired) Game.onExtraction();
       this._extractSpawnTimer = (this._extractSpawnTimer || 0) - dt;
       if (this._extractSpawnTimer <= 0) {
@@ -5489,7 +6426,7 @@ var ExtractionZone = {
         ? (this.beaconTimer / Math.max(0.9, this.beaconRequired - Game.hideoutRank('beacon_relay') * 0.22))
         : (this.standTimer / this.standRequired);
       ctx.globalAlpha = 0.8;
-      ctx.strokeStyle = '#ffffff';
+      ctx.strokeStyle = this.state === 'beacon' ? '#a5f3fc' : '#bbf7d0';
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.arc(bx, by, radius * 0.7, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
@@ -5501,12 +6438,12 @@ var ExtractionZone = {
     ctx.textAlign = 'center';
     ctx.fillText(this.state === 'beacon' ? 'BEACON' : (this.state === 'inbound' ? 'LZ INBOUND' : 'EXTRACT'), bx, by - radius - 8);
     if (inZone) {
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = this.state === 'beacon' ? '#a5f3fc' : '#bbf7d0';
       ctx.fillText(this.state === 'beacon'
         ? Math.ceil(Math.max(0, Math.max(0.9, this.beaconRequired - Game.hideoutRank('beacon_relay') * 0.22) - this.beaconTimer)) + 's'
         : Math.ceil(this.standRequired - this.standTimer) + 's', bx, by + 4);
     } else if (this.state === 'inbound') {
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#bbf7d0';
       ctx.fillText(Math.ceil(this.inboundTimer) + 's', bx, by + 4);
     }
     ctx.restore();
@@ -6099,7 +7036,35 @@ var RunInventory = {
     return { action: 'choose', idx: worstIdx, reason: 'CLOSE CALL: SWAP THE RECOMMENDED SLOT OR KEEP YOUR HAUL' };
   },
 
-  tryAdd: function(lootItem) {
+  lootIntent: function(item) {
+    if (!item) return 'EMPTY';
+    if (item.consumable) return 'SURVIVE';
+    if (item.materialType || item.category === 'material') return 'UPGRADE';
+    return 'SELL';
+  },
+
+  haulIntentSummary: function() {
+    if (!this.items.length) return 'EMPTY HAUL';
+    var counts = { SELL: 0, UPGRADE: 0, SURVIVE: 0 };
+    var best = null;
+    var bestScore = -Infinity;
+    for (var i = 0; i < this.items.length; i++) {
+      var item = this.items[i];
+      var intent = this.lootIntent(item);
+      counts[intent] = (counts[intent] || 0) + 1;
+      var score = this.itemScore(item);
+      if (score > bestScore) {
+        bestScore = score;
+        best = item;
+      }
+    }
+    var lead = 'SELL ' + counts.SELL + ' / UPGRADE ' + counts.UPGRADE + (counts.SURVIVE ? ' / SURVIVE ' + counts.SURVIVE : '');
+    if (best && (best.rarity === 'rare' || best.rarity === 'epic' || best.rarity === 'legendary')) lead += ' · BEST ' + best.name.toUpperCase();
+    return lead;
+  },
+
+  tryAdd: function(lootItem, source) {
+    source = source || 'common';
     // Consumables auto-use if they have a use function
     if (lootItem.consumable && lootItem.use) {
       lootItem.use(Game.player);
@@ -6131,6 +7096,10 @@ var RunInventory = {
       return false;
     }
     // Inventory full — only show choice on close calls
+    if (typeof LootDirector !== 'undefined' && !LootDirector.shouldShowSwapModal(lootItem, decision, source)) {
+      Game.announce('SKIPPED ' + lootItem.name.toUpperCase());
+      return false;
+    }
     this._pendingLoot = lootItem;
     this._selectedSwapIdx = decision.idx;
     UI.showLootChoice(lootItem, decision);
@@ -6231,14 +7200,24 @@ const Game = {
   shakeAmt: 0, shakeTime: 0,
   announceText: '', announceTime: 0,
   runItems: [],  // collected but not equipped
+  mobileMode: false,
+  showPerfOverlay: false,
+  frameMsEma: 16.7,
+  fpsEma: 60,
+  balancePreset: 'standard',
+  damageVignette: 0,
+  threatVignette: 0,
 
   init() {
     this.canvas = Utils.el('#game');
     this.ctx = this.canvas.getContext('2d');
-    this.resize();
-    window.addEventListener('resize', () => this.resize());
-
     this.save = SaveSystem.load();
+    this.balancePreset = this.save.balancePreset || 'standard';
+    PixelSprites.init();
+    this.applyDevicePreset();
+    this.resize();
+    window.addEventListener('resize', () => { this.applyDevicePreset(); this.resize(); });
+
     Input.init();
     AudioBus.init();
 
@@ -6249,8 +7228,48 @@ const Game = {
     // Pre-render idle loop so the canvas is never blank behind menus
     this.idleLoop();
   },
+  applyDevicePreset() {
+    var ua = navigator.userAgent || '';
+    var touchCapable = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    this.mobileMode = /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (touchCapable && Math.min(window.innerWidth, window.innerHeight) < 900);
+    var mode = (this.save && this.save.perfMode) || 'auto';
+    var lowFx = mode === 'on' || (mode === 'auto' && this.mobileMode);
+    LOW_FX_MODE = lowFx;
+    VFX.maxParticles = lowFx ? 140 : 320;
+    VFX.maxRings = lowFx ? 24 : 54;
+  },
+  cyclePerfMode() {
+    var order = ['auto', 'on', 'off'];
+    var current = (this.save && this.save.perfMode) || 'auto';
+    var idx = order.indexOf(current);
+    var next = order[(idx + 1 + order.length) % order.length];
+    this.save.perfMode = next;
+    SaveSystem.save(this.save);
+    this.applyDevicePreset();
+    this.resize();
+    UI.renderMainMenu();
+    this.announce('PERF: ' + next.toUpperCase());
+  },
+  cycleBalancePreset() {
+    var order = ['arcade', 'standard', 'hardcore'];
+    var current = (this.save && this.save.balancePreset) || 'standard';
+    var idx = order.indexOf(current);
+    var next = order[(idx + 1 + order.length) % order.length];
+    this.save.balancePreset = next;
+    this.balancePreset = next;
+    SaveSystem.save(this.save);
+    UI.renderMainMenu();
+    this.announce('TUNE: ' + next.toUpperCase());
+  },
+  balanceTuning() {
+    var mode = (this.save && this.save.balancePreset) || this.balancePreset || 'standard';
+    if (mode === 'arcade') return { difficulty: 0.9, spawnInterval: 1.14, maxEnemies: 0.88 };
+    if (mode === 'hardcore') return { difficulty: 1.12, spawnInterval: 0.9, maxEnemies: 1.14 };
+    return { difficulty: 1, spawnInterval: 1, maxEnemies: 1 };
+  },
   resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dprCap = LOW_FX_MODE ? 1.5 : 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
     this.width = window.innerWidth;
     this.height = window.innerHeight;
     this.canvas.width = this.width * dpr;
@@ -6287,10 +7306,16 @@ const Game = {
     Utils.el('#btnMeta').onclick  = () => { UI.show('metaScreen');  UI.renderMetaScreen(); };
     Utils.el('#btnWorkshop').onclick = () => { UI.show('workshopScreen'); UI.renderWorkshopScreen(); };
     Utils.el('#btnCodex').onclick = () => { UI.show('codexScreen'); UI.renderCodex('enemies'); };
+    var perfBtn = Utils.el('#btnPerfMode');
+    if (perfBtn) perfBtn.onclick = () => this.cyclePerfMode();
+    var balanceBtn = Utils.el('#btnBalanceMode');
+    if (balanceBtn) balanceBtn.onclick = () => this.cycleBalancePreset();
     Utils.el('#btnReset').onclick = () => {
       if (confirm('Reset all progress? This cannot be undone.')) {
         SaveSystem.reset();
         this.save = SaveSystem.load();
+        this.balancePreset = this.save.balancePreset || 'standard';
+        this.applyDevicePreset();
         UI.renderMainMenu();
       }
     };
@@ -6320,6 +7345,14 @@ const Game = {
     };
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this.running) this.togglePause();
+      if (e.key === 'F3') {
+        this.showPerfOverlay = !this.showPerfOverlay;
+        e.preventDefault();
+      }
+      if (e.key === 'F4') {
+        this.cycleBalancePreset();
+        e.preventDefault();
+      }
     });
   },
 
@@ -6343,12 +7376,14 @@ const Game = {
     this.runItems = [];
     this.camX = 0; this.camY = 0;
     this.announceText = ''; this.announceTime = 0;
+    this.frameMsEma = 16.7;
+    this.fpsEma = 60;
 
     World.setZone(this.save.selectedZone);
     World.reset();
     ExtractionZone.reset();
     RunInventory.reset();
-    Enemies.clear(); Projectiles.clear(); Pickups.clear(); VFX.clear();
+    Enemies.clear(); Projectiles.clear(); Pickups.clear(); LootDirector.clear(); VFX.clear();
 
     this.player = new Player(this.save.selectedClass, this.save);
 
@@ -6369,6 +7404,8 @@ const Game = {
     UI.hidePauseMenu();
 
     var extracted = (outcome === 'extracted');
+    var contractReport = extracted && FieldContracts && FieldContracts.rewardReport ? FieldContracts.rewardReport() : { credits: 0 };
+    if (contractReport.credits) this.runCredits += contractReport.credits;
     var lootValue = extracted ? RunInventory.totalValue() : 0;
     var creditMult = extracted ? 1.0 : 0.2;
     var earned = Math.floor(this.runCredits * creditMult) + lootValue;
@@ -6396,9 +7433,10 @@ const Game = {
 
   onExtraction: function() {
     if (!this.running) return;
-    this.triggerSlowMo(0.8, 0.2);
-    VFX.burst(Game.player.x, Game.player.y, '#4ade80', 40, 200);
-    Game.cameraShake(12, 0.4);
+    this.triggerSlowMo(0.35, 0.45);
+    VFX.burst(Game.player.x, Game.player.y, '#4ade80', 18, 160);
+    VFX.deathRing(Game.player.x, Game.player.y, '#4ade80', 42, true);
+    Game.cameraShake(3.5, 0.16);
     this.endRun('extracted');
   },
   onBossKilled(boss) {
@@ -6408,9 +7446,7 @@ const Game = {
       VFX.burst(boss.x, boss.y, '#fbbf24', LOW_FX_MODE ? 10 : 22, 220);
       return;
     }
-    // drop a guaranteed rare+
-    Pickups.spawnItem(boss.x, boss.y);
-    Pickups.spawnItem(boss.x, boss.y);
+    LootDirector.spawnPile('boss', boss.x, boss.y, [RunInventory.rollLoot(3), RunInventory.rollLoot(4)]);
     Pickups.spawnCredits(boss.x, boss.y, 50);
   },
 
@@ -6423,10 +7459,11 @@ const Game = {
 
     // Build a filtered pool — remove uniques already taken
     var filtered = UPGRADES.filter(function(u) {
+      if (Game.isUpgradeUnlocked && !Game.isUpgradeUnlocked(u, p)) return false;
       if (!u.unique) return true;
       // Check if this unique was already taken this run
       return p.takenUpgradeIds.indexOf(u.id) === -1;
-    });
+    }).map(function(u) { return UpgradeDirector.normalize(u); });
 
     // === TASK 4: synergy weighting ===
     // Find tags the player has already invested in
@@ -6441,8 +7478,12 @@ const Game = {
     }
 
     var choices = [];
+    var desiredBands = ['power', 'power', 'utility'];
     for (var ci = 0; ci < 3; ci++) {
-      var bag = filtered.map(function(u) {
+      var band = desiredBands[ci] || 'power';
+      var sourcePool = filtered.filter(function(u) { return band === 'utility' ? u.impactTier <= 2 : u.impactTier >= 3; });
+      if (!sourcePool.length) sourcePool = filtered;
+      var bag = sourcePool.map(function(u) {
         var baseWeight = RARITY[u.rarity].weight;
         // Boost weight if this upgrade shares tags with player's build
         var synBonus = 1;
@@ -6477,12 +7518,22 @@ const Game = {
 
   cameraShake(amt, dur) {
     if (amt <= 0 || dur <= 0) return;
+    amt *= 0.45;
+    dur *= 0.75;
     if (LOW_FX_MODE) {
-      amt *= 0.35;
+      amt *= 0.25;
       dur *= 0.65;
     }
+    amt = Math.min(amt, 5.5);
+    dur = Math.min(dur, 0.22);
     this.shakeAmt = Math.max(this.shakeAmt, amt);
     this.shakeTime = Math.max(this.shakeTime, dur);
+  },
+  playerDamagePulse(amount) {
+    this.damageVignette = Math.min(1, Math.max(this.damageVignette, 0.28 + amount / 120));
+  },
+  threatPulse(amount) {
+    this.threatVignette = Math.min(1, Math.max(this.threatVignette, amount || 0.25));
   },
 
   // === JUICE: micro freeze frame on hit ===
@@ -6509,7 +7560,10 @@ const Game = {
   loop(now) {
     if (!this.running) return;
     try {
-      var dt = (now - this.lastFrame) / 1000;
+      var rawFrameMs = now - this.lastFrame;
+      this.frameMsEma = Utils.lerp(this.frameMsEma, rawFrameMs, 0.1);
+      this.fpsEma = 1000 / Math.max(1, this.frameMsEma);
+      var dt = rawFrameMs / 1000;
       this.lastFrame = now;
       dt = Math.min(dt, 0.05);
 
@@ -6542,12 +7596,15 @@ const Game = {
   update(dt) {
     this.time += dt;
     if (this.announceTime > 0) this.announceTime -= dt;
+    if (this.damageVignette > 0) this.damageVignette = Math.max(0, this.damageVignette - dt * 2.8);
+    if (this.threatVignette > 0) this.threatVignette = Math.max(0, this.threatVignette - dt * 1.8);
     Input.update();
     this.player.update(dt);
     World.update(dt);
     Enemies.update(dt);
     Projectiles.update(dt);
     Pickups.update(dt);
+    LootDirector.update(dt);
     VFX.update(dt);
     ExtractionZone.update(dt);
 
@@ -6575,6 +7632,7 @@ const Game = {
 
     OperationSystem.renderGround(ctx);
     Pickups.render(ctx);
+    LootDirector.render(ctx);
     ScavengeSites.render(ctx);
     FieldObjectives.render(ctx);
     Enemies.render(ctx);
@@ -6585,20 +7643,77 @@ const Game = {
 
     ctx.restore();
 
-    // Announce banner
+    // Compact toast. Full-width banners were blocking combat readability.
     if (this.announceTime > 0 && this.announceText) {
       ctx.save();
-      const a = Math.min(1, this.announceTime / 0.5);
+      const a = Math.min(1, this.announceTime / 0.25);
+      var text = this.announceText.length > 42 ? this.announceText.slice(0, 39) + '...' : this.announceText;
+      var padX = 12;
+      ctx.font = 'bold 11px ui-monospace, monospace';
+      var w = Math.min(this.width - 24, Math.max(210, ctx.measureText ? ctx.measureText(text).width + padX * 2 : 280));
+      var h = 34;
+      var x = this.width - w - 16;
+      var y = 76;
       ctx.globalAlpha = a;
-      ctx.fillStyle = '#0b1a2bcc';
-      ctx.fillRect(0, this.height * 0.25 - 30, this.width, 60);
+      ctx.fillStyle = 'rgba(5,10,18,0.82)';
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = 'rgba(34,211,238,0.46)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, w, h);
       ctx.fillStyle = '#22d3ee';
-      ctx.font = 'bold 20px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(this.announceText, this.width / 2, this.height * 0.25 + 7);
+      ctx.textAlign = 'left';
+      ctx.fillText(text, x + padX, y + 22);
       ctx.restore();
     }
     OperationSystem.renderScreenOverlay(ctx);
+    this.renderFeedbackOverlay(ctx);
+    if (this.showPerfOverlay) this.renderPerfOverlay(ctx);
+  },
+
+  renderFeedbackOverlay(ctx) {
+    if (this.damageVignette <= 0 && this.threatVignette <= 0) return;
+    ctx.save();
+    if (this.damageVignette > 0) {
+      var a = Math.min(0.34, this.damageVignette * 0.34);
+      var g = ctx.createRadialGradient(this.width * 0.5, this.height * 0.5, Math.min(this.width, this.height) * 0.28, this.width * 0.5, this.height * 0.5, Math.max(this.width, this.height) * 0.72);
+      g.addColorStop(0, 'rgba(255,77,109,0)');
+      g.addColorStop(0.72, 'rgba(255,77,109,' + (a * 0.28).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(255,77,109,' + a.toFixed(3) + ')');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
+    if (this.threatVignette > 0) {
+      ctx.globalAlpha = Math.min(0.16, this.threatVignette * 0.16);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, this.width - 20, this.height - 20);
+    }
+    ctx.restore();
+  },
+
+  renderPerfOverlay(ctx) {
+    var lines = [
+      'FPS ' + this.fpsEma.toFixed(1) + ' | ' + this.frameMsEma.toFixed(2) + 'ms',
+      'EN ' + Enemies.list.length + '  PR ' + Projectiles.list.length + '  PK ' + Pickups.list.length,
+      'FX ' + VFX.particles.length + '/' + VFX.maxParticles + '  RINGS ' + VFX.rings.length + '/' + VFX.maxRings,
+      'PREF ' + (((this.save && this.save.perfMode) || 'auto').toUpperCase()) + (LOW_FX_MODE ? ' LOW_FX' : ' FULL_FX'),
+      'TUNE ' + (((this.save && this.save.balancePreset) || 'standard').toUpperCase()) + '  F4 cycle',
+      'F3 hides this overlay',
+    ];
+    ctx.save();
+    var x = 10, y = 10, w = 292, h = 108;
+    ctx.fillStyle = 'rgba(5,10,18,0.76)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(34,211,238,0.42)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+    ctx.font = '12px ui-monospace, monospace';
+    ctx.textAlign = 'left';
+    for (var i = 0; i < lines.length; i++) {
+      ctx.fillStyle = i === 0 ? '#67e8f9' : (i === 3 ? '#86efac' : (i === 4 ? '#fbbf24' : '#e2e8f0'));
+      ctx.fillText(lines[i], x + 10, y + 18 + i * 15);
+    }
+    ctx.restore();
   },
 
   /* ---------------- Idle menu loop (decorative canvas behind menu) ---------------- */
