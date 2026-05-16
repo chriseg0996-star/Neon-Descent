@@ -161,6 +161,14 @@ canvas#game {
   letter-spacing: 0.28em;
   text-transform: uppercase;
 }
+.brand-disclaimer {
+  margin-top: 7px;
+  font-family: var(--mono);
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 
 .menu-shell {
   display: grid;
@@ -1657,6 +1665,7 @@ h3 {
         <div class="brand">
           <div class="brand-mark">◆</div>
           <h1 class="brand-title">NEON<span>DESCENT</span></h1>
+          <div class="brand-disclaimer">A Chris Gdz Games prototype</div>
           <div class="brand-sub">— a dark sci-fi descent —</div>
         </div>
 
@@ -7667,7 +7676,18 @@ const Game = {
     }
     OperationSystem.renderScreenOverlay(ctx);
     this.renderFeedbackOverlay(ctx);
+    this.renderBrandWatermark(ctx);
     if (this.showPerfOverlay) this.renderPerfOverlay(ctx);
+  },
+
+  renderBrandWatermark(ctx) {
+    ctx.save();
+    ctx.globalAlpha = 0.58;
+    ctx.font = 'bold 10px ui-monospace, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText('Chris Gdz Games prototype', this.width - 16, this.height - 14);
+    ctx.restore();
   },
 
   renderFeedbackOverlay(ctx) {
