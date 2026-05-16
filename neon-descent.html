@@ -2225,7 +2225,7 @@ const UI = {
         objectiveSub = 'Landing zone inbound. Rotate to the marked landing zone.';
       } else {
         objectiveMain = 'HOLD TO EXTRACT';
-        objectiveSub = 'Stay inside the LZ and avoid taking hits that interrupt progress.';
+        objectiveSub = 'Hold the LZ. Nearby enemies slow progress; heavy pressure or hits delay it.';
       }
       objectiveUrgent = true;
       if (extractHud) {
@@ -6741,10 +6741,10 @@ const World = {
 
 var ExtractionZone = {
   x: 0, y: 0,
-  radius: 116,
+  radius: 132,
   active: false,
   standTimer: 0,
-  standRequired: 3.5,
+  standRequired: 2.8,
   spawnTime: 32,
   emergencyTime: 72,
   minSecureSites: 3,
@@ -6754,9 +6754,9 @@ var ExtractionZone = {
   state: 'idle',
   beaconX: 0,
   beaconY: 0,
-  beaconRadius: 56,
+  beaconRadius: 72,
   beaconTimer: 0,
-  beaconRequired: 2.3,
+  beaconRequired: 1.8,
   inboundTimer: 0,
 
   reset: function() {
@@ -6771,7 +6771,7 @@ var ExtractionZone = {
   },
 
   spawnBeacon: function() {
-    var pos = World.randomSpawnPoint(Game.player.x, Game.player.y, 260, 520);
+    var pos = World.randomSpawnPoint(Game.player.x, Game.player.y, 180, 360);
     this.beaconX = pos.x;
     this.beaconY = pos.y;
     this.state = 'beacon';
@@ -6781,9 +6781,9 @@ var ExtractionZone = {
 
   armBeacon: function() {
     this.state = 'inbound';
-    this.inboundTimer = Math.max(6.5, 10.5 - Game.hideoutRank('beacon_relay') * 0.95);
+    this.inboundTimer = Math.max(5.2, 8.5 - Game.hideoutRank('beacon_relay') * 0.85);
     var ang = Utils.angle(this.beaconX, this.beaconY, Game.player.x, Game.player.y) + (Math.random() < 0.5 ? 1 : -1) * 0.9;
-    var dist = 190 + Math.random() * 90;
+    var dist = 135 + Math.random() * 70;
     this.x = this.beaconX + Math.cos(ang) * dist;
     this.y = this.beaconY + Math.sin(ang) * dist;
     if (Game.isOperationRun && Game.isOperationRun()) {
@@ -6801,8 +6801,16 @@ var ExtractionZone = {
     this.active = true;
     this.state = 'hold';
     this.standTimer = 0;
-    this._extractSpawnTimer = 0.5;
+    this._extractSpawnTimer = 1.8;
     Game.announce('LANDING ZONE OPEN - HOLD TO EXTRACT');
+  },
+
+  responseCount: function() {
+    var count = 0;
+    for (var i = 0; i < Enemies.list.length; i++) {
+      if (Enemies.list[i].alive && Enemies.list[i].guardLabel === 'LZ RESPONSE') count++;
+    }
+    return count;
   },
 
   update: function(dt) {
@@ -6818,9 +6826,9 @@ var ExtractionZone = {
         var pressure = 0;
         for (var bp = 0; bp < Enemies.list.length; bp++) {
           if (!Enemies.list[bp].alive) continue;
-          if (Utils.dist(Enemies.list[bp].x, Enemies.list[bp].y, this.beaconX, this.beaconY) < 140) pressure++;
+          if (Utils.dist(Enemies.list[bp].x, Enemies.list[bp].y, this.beaconX, this.beaconY) < 118) pressure++;
         }
-        this.beaconTimer += dt * (pressure > 0 ? 0.55 : 1);
+        this.beaconTimer += dt * (pressure > 2 ? 0.65 : 1);
         if (this.beaconTimer >= Math.max(0.9, this.beaconRequired - Game.hideoutRank('beacon_relay') * 0.22)) this.armBeacon();
       } else {
         this.beaconTimer = Math.max(0, this.beaconTimer - dt * 0.45);
@@ -6830,10 +6838,10 @@ var ExtractionZone = {
     if (this.state === 'inbound') {
       this.inboundTimer -= dt;
       this._extractSpawnTimer = (this._extractSpawnTimer || 0) - dt;
-      if (this._extractSpawnTimer <= 0) {
-        this._extractSpawnTimer = 3.1;
-        var bpos = World.randomSpawnPoint(this.x, this.y, 160, 240);
-        var benemy = Enemies.spawn(Utils.choice(['stalker', 'sniper', 'grunt']), bpos.x, bpos.y);
+      if (this._extractSpawnTimer <= 0 && this.responseCount() < 4) {
+        this._extractSpawnTimer = 4.8;
+        var bpos = World.randomSpawnPoint(this.x, this.y, 210, 320);
+        var benemy = Enemies.spawn(Utils.choice(['stalker', 'grunt', 'grunt']), bpos.x, bpos.y);
         benemy.scavengeGuard = true;
         benemy.guardLabel = 'LZ RESPONSE';
         benemy.accent = '#fb7185';
@@ -6850,28 +6858,31 @@ var ExtractionZone = {
       var lzPressure = 0;
       for (var lp = 0; lp < Enemies.list.length; lp++) {
         if (!Enemies.list[lp].alive) continue;
-        if (Utils.dist(Enemies.list[lp].x, Enemies.list[lp].y, this.x, this.y) < this.radius + 80) lzPressure++;
+        if (Utils.dist(Enemies.list[lp].x, Enemies.list[lp].y, this.x, this.y) < this.radius + 36) lzPressure++;
       }
       if (p.hp < this._lastHP) {
-        this.standTimer = Math.max(0, this.standTimer - 0.4);
+        this.standTimer = Math.max(0, this.standTimer - 0.22);
         Game.announce('EXTRACTION INTERRUPTED');
       }
       this._lastHP = p.hp;
-      if (lzPressure > 0) {
-        this.standTimer = Math.max(0, this.standTimer - dt * Math.min(1.4, 0.25 + lzPressure * 0.18));
+      if (lzPressure >= 4) {
+        this.standTimer = Math.max(0, this.standTimer - dt * 0.35);
+        p.tacticalWarning = 'LZ CONTESTED';
+      } else if (lzPressure > 0) {
+        this.standTimer += dt * Math.max(0.35, 0.85 - lzPressure * 0.12);
         p.tacticalWarning = 'LZ CONTESTED';
       } else {
         this.standTimer += dt;
       }
       if (this.standTimer >= this.standRequired) Game.onExtraction();
       this._extractSpawnTimer = (this._extractSpawnTimer || 0) - dt;
-      if (this._extractSpawnTimer <= 0) {
+      if (this._extractSpawnTimer <= 0 && this.responseCount() < 5) {
         var heat = World.haulHeat();
-        this._extractSpawnTimer = Math.max(1.7, 2.8 - heat * 0.18);
-        var spawnCount = 1 + (heat >= 2.5 ? 1 : 0) + (heat >= 3.6 ? 1 : 0);
+        this._extractSpawnTimer = Math.max(3.2, 5.0 - heat * 0.25);
+        var spawnCount = 1 + (heat >= 3.4 ? 1 : 0);
         for (var es = 0; es < spawnCount; es++) {
-          var epos = World.randomSpawnPoint(this.x, this.y, 160, 250);
-          var response = Enemies.spawn(Utils.choice(heat >= 3.2 ? ['stalker', 'sniper', 'bomber'] : ['stalker', 'grunt']), epos.x, epos.y);
+          var epos = World.randomSpawnPoint(this.x, this.y, 220, 340);
+          var response = Enemies.spawn(Utils.choice(heat >= 3.2 ? ['stalker', 'grunt', 'bomber'] : ['stalker', 'grunt', 'grunt']), epos.x, epos.y);
           response.scavengeGuard = true;
           response.guardLabel = 'LZ RESPONSE';
           response.accent = '#fb7185';
