@@ -2203,6 +2203,7 @@ const UI = {
     var compactLootA = 'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + '  VALUE ' + haulValue + '/' + ExtractionZone.minLootValue;
     var compactLootB = (contractObj && contractObj.progress ? contractObj.progress : 'CONTRACT') + '  ' + haulIntent;
     if (!(Game.isOperationRun && Game.isOperationRun())) compactLootB = (contractObj && contractObj.progress ? contractObj.progress : 'CONTRACT') + '  EXT ' + (SectorDirector.extractDistance ? SectorDirector.extractDistance() : 0) + 'm';
+    if (!(Game.isOperationRun && Game.isOperationRun()) && (!ExtractionZone.state || ExtractionZone.state === 'idle')) compactLootB = (contractObj && contractObj.progress ? contractObj.progress : 'CONTRACT') + '  RAID ' + (RaidDirector && RaidDirector.state ? RaidDirector.state.replace('_', ' ').toUpperCase() : 'INFILTRATION');
     if (Utils.el('#lootTierHud')) Utils.el('#lootTierHud').textContent = compactLootA + '\n' + compactLootB;
     var objectiveMain = 'FILL YOUR BACKPACK';
     var objectiveSub = 'Secure ' + secureNeed + ' more cache' + (secureNeed === 1 ? '' : 's') + ' or bank ' + valueNeed + ' more value to unlock extraction.';
@@ -2402,6 +2403,22 @@ Object.assign(Game, {
       return typeScore(a) - typeScore(b) || costA - costB;
     });
     return available[0];
+  },
+
+  nextAffordableUpgradeText() {
+    var hideout = HIDEOUT_UPGRADES.filter(node => this.canPurchaseHideoutNode(node));
+    if (hideout.length) {
+      var priority = ['beacon_relay', 'stash_rack', 'broker_uplink', 'field_scanner'];
+      hideout.sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id));
+      return 'NEXT UPGRADE AVAILABLE: ' + hideout[0].name;
+    }
+    var meta = META_UPGRADES.filter(node => this.canPurchaseMetaNode(node));
+    if (meta.length) {
+      meta.sort((a, b) => a.cost(this.metaNodeRank(a.id)) - b.cost(this.metaNodeRank(b.id)));
+      return 'NEXT UPGRADE AVAILABLE: ' + meta[0].name;
+    }
+    var next = this.nextMetaRecommendation();
+    return next ? 'NEXT GOAL: ' + next.name : '';
   },
 
   materialRowsHtml() {
@@ -2933,6 +2950,7 @@ UI.showGameOver = function(outcome, earned, lootValue, lootItems) {
   var operationReport = Game.lastRunReport && Game.lastRunReport.operation ? Game.lastRunReport.operation : null;
   var scavengeReport = Game.lastRunReport && Game.lastRunReport.scavenge ? Game.lastRunReport.scavenge : null;
   var fieldObjectiveBonus = Game.lastRunReport && Game.lastRunReport.fieldObjectiveBonus ? Game.lastRunReport.fieldObjectiveBonus : 0;
+  var nextUpgradeText = extracted && Game.nextAffordableUpgradeText ? Game.nextAffordableUpgradeText() : '';
   Utils.el('#gameOverSummary').innerHTML =
     (operationReport
       ? '<div class="summary-row"><div class="lbl">KEYSTONE</div><div class="val" style="color:#fbbf24">K+' + operationReport.tier + '</div></div>' +
@@ -2948,7 +2966,9 @@ UI.showGameOver = function(outcome, earned, lootValue, lootItems) {
     (!operationReport && scavengeReport ? '<div class="summary-row"><div class="lbl">FIELD VALUE</div><div class="val" style="color:#22d3ee">' + scavengeReport.securedValue + '★</div></div>' : '') +
     (operationReport ? '<div class="summary-row wide compact"><div class="lbl">RUN NOTES</div><div class="val">' + operationReport.affix + ' · EXECUTION ' + Math.max(0, 100 - operationReport.penalty * 12) + '%</div></div>' : '') +
     (lootValue > 0 && operationReport ? '<div class="summary-row wide compact"><div class="lbl">LOOT VALUE</div><div class="val" style="color:#4ade80">+' + lootValue + '</div></div>' : '') +
-    (bankedMaterials ? '<div class="summary-row wide compact"><div class="lbl">BANKED MATERIALS</div><div class="val" style="color:#4ade80">' + bankedMaterials + '</div></div>' : '') +
+    (extracted ? '<div class="summary-row wide compact"><div class="lbl">LOOT EXTRACTED</div><div class="val" style="color:#4ade80">BACKPACK BANKED</div></div>' : '') +
+    (bankedMaterials ? '<div class="summary-row wide compact"><div class="lbl">MATERIALS BANKED</div><div class="val" style="color:#4ade80">' + bankedMaterials + '</div></div>' : '') +
+    (nextUpgradeText ? '<div class="summary-row wide compact"><div class="lbl">BASE PROGRESS</div><div class="val" style="color:#fbbf24">' + nextUpgradeText + '</div></div>' : '') +
     (rescuedText ? '<div class="summary-row wide compact"><div class="lbl">SALVAGED</div><div class="val">' + rescuedText + '</div></div>' : '') +
     (masteryGain ? '<div class="summary-row wide compact"><div class="lbl">CLASS MASTERY</div><div class="val">' + CLASSES[Game.save.selectedClass].name + ' +' + masteryGain + ' XP</div></div>' : '') +
     lootHtml + lostHtml;
@@ -3451,7 +3471,7 @@ const HIDEOUT_UPGRADES = [
     max: 3,
     desc: 'Adds permanent carry space so good runs can actually cash out.',
     costs: [
-      { credits: 80, materials: { scrap: 5, intel: 1 } },
+      { credits: 55, materials: { scrap: 3 } },
       { credits: 130, materials: { scrap: 8, circuits: 3 } },
       { credits: 190, materials: { scrap: 12, circuits: 5, intel: 2 } }
     ]
@@ -3463,7 +3483,7 @@ const HIDEOUT_UPGRADES = [
     max: 3,
     desc: 'Improves extracted sale value so cargo still matters after credit caps.',
     costs: [
-      { credits: 90, materials: { intel: 2, circuits: 2 } },
+      { credits: 65, materials: { intel: 1, circuits: 1 } },
       { credits: 140, materials: { intel: 4, circuits: 4 } },
       { credits: 210, materials: { intel: 6, circuits: 6 } }
     ]
@@ -3475,7 +3495,7 @@ const HIDEOUT_UPGRADES = [
     max: 3,
     desc: 'Makes extraction beacons arm faster and the landing zone easier to hold.',
     costs: [
-      { credits: 95, materials: { scrap: 4, circuits: 2 } },
+      { credits: 60, materials: { scrap: 3, circuits: 1 } },
       { credits: 150, materials: { scrap: 6, circuits: 4, intel: 2 } },
       { credits: 225, materials: { circuits: 7, intel: 4, biomass: 3 } }
     ]
@@ -4342,6 +4362,12 @@ class Enemy {
     this.ranged = def.ranged;
     this.elite = def.elite;
     this.boss = def.boss;
+    this.intent = 'ambient';
+    this.homeX = x;
+    this.homeY = y;
+    this.patrolPath = null;
+    this.alertLevel = 0;
+    this.lootCarrier = false;
     // === TASK 5: speed variation + wobble + time creep ===
     var timeCreep = 1 + World.time * 0.002; // enemies get 0.2% faster per second
     this.speed = def.speed * Utils.rand(0.85, 1.15) * Math.min(timeCreep, 1.6);
@@ -4422,6 +4448,14 @@ class Enemy {
       if (selfToAnchor > (this.guardRadius || 170) || playerToAnchor > (this.guardLeash || 250)) {
         targetX = this.anchorX;
         targetY = this.anchorY;
+      } else if (this.intent === 'patrol' && this.patrolPath && this.patrolPath.length) {
+        var nextPatrol = this.patrolPath[this._patrolIdx || 0];
+        if (Utils.dist(this.x, this.y, nextPatrol.x, nextPatrol.y) < 28) this._patrolIdx = ((this._patrolIdx || 0) + 1) % this.patrolPath.length;
+        nextPatrol = this.patrolPath[this._patrolIdx || 0];
+        if (playerToAnchor > 180) {
+          targetX = nextPatrol.x;
+          targetY = nextPatrol.y;
+        }
       }
     }
     const dx = targetX - this.x, dy = targetY - this.y;
@@ -4640,12 +4674,12 @@ class Enemy {
       Pickups.spawnCredits(this.x, this.y, Math.ceil(this.credits * metaGoldMult));
     }
 
-    // Loot piles are reserved for elites/bosses so common mobs feed XP flow instead of backpack friction.
-    if (!Game.isOperationRun() && (this.elite || this.guaranteedPile) && !this.boss) {
+    // Loot piles are reserved for hard targets so common mobs feed XP flow instead of backpack friction.
+    if (!Game.isOperationRun() && (this.elite || this.guaranteedPile || this.type === 'hulk' || this.lootCarrier) && !this.boss) {
       var lootTier = Math.min(4, Math.floor(World.time / 60) + 1);
       var drops = [RunInventory.rollLoot(lootTier)];
-      if (Math.random() < 0.55) drops.push(RunInventory.rollLoot(lootTier + 1));
-      LootDirector.spawnPile('elite', this.x, this.y, drops);
+      if (this.lootCarrier || this.elite || Math.random() < 0.45) drops.push(RunInventory.rollLoot(lootTier + (this.lootCarrier ? 2 : 1)));
+      LootDirector.spawnPile(this.lootCarrier ? 'loot_carrier' : (this.type === 'hulk' ? 'hulk' : 'elite'), this.x, this.y, drops);
     }
 
     // Bio-runner lifesteal
@@ -4880,13 +4914,14 @@ const ThreatBudget = {
   caps: function() {
     var heat = EnemyDirector && EnemyDirector.heatTier ? EnemyDirector.heatTier : 0;
     var deeper = FieldContracts && FieldContracts.packageSecured;
+    var overrun = typeof RaidDirector !== 'undefined' && RaidDirector.state === 'overrun';
     return {
-      sniper: deeper ? 3 : 2,
-      bomber: heat >= 3 ? 3 : 2,
-      hulk: heat >= 4 ? 4 : 3,
-      elite: deeper ? 3 : 2,
+      sniper: heat >= 3 || deeper ? 2 : 1,
+      bomber: heat >= 3 || deeper ? 2 : 1,
+      hulk: heat >= 4 ? 3 : 2,
+      elite: overrun ? 2 : 1,
       sniperTelegraph: 1,
-      bomberTelegraph: 2
+      bomberTelegraph: 1
     };
   },
   rewriteSpawnType: function(type) {
@@ -4929,8 +4964,8 @@ const EnemyDirector = {
     var deeper = FieldContracts && FieldContracts.packageSecured;
     this.heatTier = Math.max(0, Math.floor(heat + (deeper ? 1 : 0) + World.time / 130));
     this.spawnBudget += dt * (1.1 + this.heatTier * 0.28 + (deeper ? 0.55 : 0));
-    if (deeper && World.time - this.lastEliteEvent > 92) this.spawnEliteEvent();
-    if (World.time > 70 && World.time - this.lastWorldEvent > Math.max(105, 145 - this.heatTier * 4)) this.spawnWorldEvent();
+    if (deeper && RaidDirector && RaidDirector.state === 'overrun' && World.time - this.lastEliteEvent > 125) this.spawnEliteEvent();
+    if (World.time > 110 && RaidDirector && RaidDirector.state === 'overrun' && World.time - this.lastWorldEvent > 150) this.spawnWorldEvent();
   },
   pickWaveComposition: function(site) {
     var pool = site && site.threatMix ? site.threatMix.slice() : (World.zone.enemyPool || ['grunt']);
@@ -5007,6 +5042,169 @@ const EnemyDirector = {
       }
     }
     Game.threatPulse(0.24);
+  },
+  pickRaidThreat: function(anchorSite, raidState) {
+    var heat = this.heatTier || 0;
+    var pool = anchorSite && anchorSite.threatMix ? anchorSite.threatMix.slice() : ['grunt', 'grunt', 'stalker'];
+    if (raidState === 'infiltration') pool = ['grunt', 'grunt', 'stalker'];
+    if (raidState === 'looting') pool = (anchorSite && anchorSite.threatMix) ? anchorSite.threatMix.slice() : ['grunt', 'grunt', 'stalker', 'hulk'];
+    if (raidState === 'package_secured') pool = ['stalker', 'grunt', 'grunt', heat >= 2 ? 'hulk' : 'stalker'];
+    if (raidState === 'extracting') pool = ['stalker', 'grunt', 'grunt', heat >= 3 ? 'bomber' : 'grunt'];
+    if (raidState === 'overrun') pool = ['stalker', 'hulk', 'grunt', heat >= 3 ? 'sniper' : 'grunt', heat >= 3 ? 'bomber' : 'stalker'];
+    return ThreatBudget.rewriteSpawnType(Utils.choice(pool));
+  },
+  applyIntent: function(enemy, intent, anchorSite) {
+    if (!enemy) return enemy;
+    enemy.intent = intent || enemy.intent || 'ambient';
+    enemy.alertLevel = intent === 'hunter' ? 2 : (intent === 'guard' ? 1 : 0);
+    if (anchorSite) {
+      enemy.scavengeGuard = intent !== 'ambient';
+      enemy.anchorX = anchorSite.x;
+      enemy.anchorY = anchorSite.y;
+      enemy.homeX = anchorSite.x;
+      enemy.homeY = anchorSite.y;
+      enemy.accent = anchorSite.color || enemy.accent;
+      enemy.guardLabel = anchorSite.label || enemy.guardLabel;
+      enemy.guardRadius = intent === 'patrol' ? 310 : 205;
+      enemy.guardLeash = intent === 'hunter' ? 520 : (intent === 'patrol' ? 390 : 290);
+      if (intent === 'patrol') {
+        enemy.patrolPath = [
+          { x: anchorSite.x + Utils.rand(-190, 190), y: anchorSite.y + Utils.rand(-190, 190) },
+          { x: anchorSite.x + Utils.rand(-190, 190), y: anchorSite.y + Utils.rand(-190, 190) },
+          { x: anchorSite.x, y: anchorSite.y }
+        ];
+        enemy._patrolIdx = 0;
+      }
+    }
+    if (intent === 'loot_carrier') {
+      enemy.lootCarrier = true;
+      enemy.guaranteedPile = true;
+      enemy.eliteRole = 'LOOT CARRIER';
+      enemy.accent = '#fbbf24';
+    }
+    return enemy;
+  }
+};
+
+const RaidDirector = {
+  state: 'infiltration',
+  noise: 0,
+  raidTimer: 0,
+  threatLevel: 0,
+  patrolTimer: 10,
+  hunterTimer: 999,
+  lootCarrierTimer: 95,
+  lastStateAnnounce: '',
+
+  reset: function() {
+    this.state = 'infiltration';
+    this.noise = 0;
+    this.raidTimer = 0;
+    this.threatLevel = 0;
+    this.patrolTimer = 12;
+    this.hunterTimer = 999;
+    this.lootCarrierTimer = 105;
+    this.lastStateAnnounce = '';
+  },
+
+  setState: function(nextState) {
+    if (this.state === nextState) return;
+    this.state = nextState;
+    this.lastStateAnnounce = nextState;
+    if (nextState === 'package_secured') Game.announce('PACKAGE SECURED - EXTRACT NOW OR RAID ONE MORE SITE');
+    else if (nextState === 'extracting') Game.announce('EXTRACTION ROUTE HOT');
+    else if (nextState === 'overrun') Game.announce('OVERrun WARNING - EXTRACT OR GET PINNED');
+  },
+
+  update: function(dt) {
+    if (Game.isOperationRun && Game.isOperationRun() || !Game.player) return;
+    this.raidTimer += dt;
+    this.noise = Math.max(0, this.noise - dt * 0.24);
+    var heat = World.haulHeat ? World.haulHeat() : 0;
+    this.threatLevel = Math.min(5, Math.floor(heat + this.raidTimer / 120 + this.noise * 0.25));
+    if (ExtractionZone.state && ExtractionZone.state !== 'idle') this.setState('extracting');
+    else if (FieldContracts && FieldContracts.packageSecured) this.setState(this.raidTimer > 420 || ScavengeSites.searchedCount >= 4 ? 'overrun' : 'package_secured');
+    else if (ScavengeSites.nearestActiveSite && ScavengeSites.nearestActiveSite() && ScavengeSites.nearestActiveSite().dist < 520 && !(World.time < 25 && ScavengeSites.nearestActiveSite().dist > 180)) this.setState('looting');
+    else this.setState('infiltration');
+
+    this.patrolTimer -= dt;
+    if (this.patrolTimer <= 0) {
+      var base = this.state === 'package_secured' ? 13 : (this.state === 'overrun' ? 10 : 20);
+      this.patrolTimer = Math.max(8, base - this.threatLevel * 1.2);
+      var anchor = ScavengeSites.nearestActiveSite ? ScavengeSites.nearestActiveSite() : null;
+      if (anchor && anchor.site) this.spawnPatrol(anchor.site);
+    }
+
+    if (this.state === 'package_secured' || this.state === 'overrun') {
+      this.hunterTimer -= dt;
+      if (this.hunterTimer <= 0) {
+        this.hunterTimer = this.state === 'overrun' ? 12 : 18;
+        this.spawnHunter();
+      }
+    } else {
+      this.hunterTimer = 999;
+    }
+
+    this.lootCarrierTimer -= dt;
+    if (this.lootCarrierTimer <= 0 && this.state !== 'infiltration' && ThreatBudget.counts().elite < ThreatBudget.caps().elite) {
+      this.lootCarrierTimer = 125;
+      var target = ScavengeSites.nearestActiveSite ? ScavengeSites.nearestActiveSite() : null;
+      this.spawnLootCarrier(target ? target.site : null);
+    }
+  },
+
+  shouldSpawnAmbient: function() {
+    if (this.state === 'extracting') return false;
+    if (this.state === 'infiltration') return World.time > 18 && Math.random() < 0.55;
+    if (this.state === 'looting') return Math.random() < 0.72;
+    if (this.state === 'package_secured') return Math.random() < 0.42;
+    return Math.random() < 0.65;
+  },
+
+  spawnPatrol: function(anchorSite) {
+    if (!anchorSite || Enemies.list.length >= World.maxEnemies) return;
+    var count = this.state === 'infiltration' ? 1 : (this.state === 'overrun' ? 3 : 2);
+    for (var i = 0; i < count && Enemies.list.length < World.maxEnemies; i++) {
+      var pos = World.randomSpawnPoint(anchorSite.x, anchorSite.y, 230, 390);
+      var type = EnemyDirector.pickRaidThreat(anchorSite, this.state);
+      if (i === 0 && this.state !== 'infiltration') type = ThreatBudget.rewriteSpawnType('stalker');
+      var enemy = Enemies.spawn(type, pos.x, pos.y);
+      EnemyDirector.applyIntent(enemy, 'patrol', anchorSite);
+      enemy.zoneRole = 'RAID PATROL';
+      enemy.guardLabel = 'PATROL';
+    }
+  },
+
+  spawnHunter: function() {
+    if (!Game.player || Enemies.list.length >= World.maxEnemies) return;
+    var pos = World.randomSpawnPoint(Game.player.x, Game.player.y, 430, 640);
+    var type = ThreatBudget.rewriteSpawnType(Math.random() < 0.72 ? 'stalker' : 'hulk');
+    var enemy = Enemies.spawn(type, pos.x, pos.y);
+    EnemyDirector.applyIntent(enemy, 'hunter', { x: Game.player.x, y: Game.player.y, color: '#fb7185', label: 'HUNTER' });
+    enemy.guardLeash = 620;
+    enemy.zoneRole = 'PACKAGE HUNTER';
+    this.noise += 0.8;
+  },
+
+  spawnLootCarrier: function(anchorSite) {
+    var cx = anchorSite ? anchorSite.x : Game.player.x;
+    var cy = anchorSite ? anchorSite.y : Game.player.y;
+    var pos = World.randomSpawnPoint(cx, cy, 260, 460);
+    var elite = Enemies.spawn('elite_grunt', pos.x, pos.y);
+    EnemyDirector.applyIntent(elite, 'loot_carrier', anchorSite || { x: cx, y: cy, color: '#fbbf24', label: 'LOOT CARRIER' });
+    Game.announce('LOOT CARRIER DETECTED - RARE DROP');
+    Game.threatPulse(0.22);
+  },
+
+  spawnExtractionResponse: function() {
+    if (!Game.player || Enemies.list.length >= World.maxEnemies) return null;
+    var anchor = { x: ExtractionZone.x || Game.player.x, y: ExtractionZone.y || Game.player.y, color: '#fb7185', label: 'LZ RESPONSE' };
+    var pos = World.randomSpawnPoint(anchor.x, anchor.y, 220, 340);
+    var type = EnemyDirector.pickRaidThreat(anchor, 'extracting');
+    var enemy = Enemies.spawn(type, pos.x, pos.y);
+    EnemyDirector.applyIntent(enemy, 'hunter', anchor);
+    enemy.guardLabel = 'LZ RESPONSE';
+    return enemy;
   }
 };
 
@@ -5296,6 +5494,14 @@ const LootDirector = {
     if (RunInventory.isFull && RunInventory.isFull() && item.category === 'vendor' && item.rarity === 'common') return 'skip';
     return 'keep';
   },
+  gearIntent: function(item) {
+    if (!item) return 'LOOT';
+    if (item.rarity === 'legendary' || item.id === 'void' || item.id === 'nanocore' || item.id === 'genevault') return 'RARE CORE';
+    if (item.materialType === 'scrap' || item.category === 'vendor') return 'ARMORY';
+    if (item.materialType === 'biomass' || item.consumable) return 'SURVIVAL';
+    if (item.materialType === 'circuits' || item.materialType === 'intel') return 'TECH';
+    return 'CARGO';
+  },
   shouldShowSwapModal: function(item, decision, source) {
     if (source === 'contract') return true;
     if (!item) return false;
@@ -5305,13 +5511,16 @@ const LootDirector = {
     var parts = [];
     var mats = {};
     var rare = null;
+    var intent = null;
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
       if (it.materialType) mats[it.materialType] = (mats[it.materialType] || 0) + (it.materialQty || 1);
       if (!rare && (it.rarity === 'rare' || it.rarity === 'epic' || it.rarity === 'legendary')) rare = it.name;
+      if (!intent || this.gearIntent(it) === 'RARE CORE') intent = this.gearIntent(it);
     }
     Object.keys(mats).forEach(function(k) { parts.push('+' + mats[k] + ' ' + k.toUpperCase()); });
-    if (rare) parts.push('RARE CARGO');
+    if (rare) parts.unshift('RARE: ' + rare.toUpperCase());
+    if (intent) parts.push(intent);
     return parts.length ? parts.join(' / ') : '+' + items.length + ' LOOT';
   },
   collectPile: function(pile) {
@@ -5800,7 +6009,17 @@ var ScavengeSites = {
     this.totalSecuredValue = 0;
     this.peakHeat = 0;
     if (Game.isOperationRun && Game.isOperationRun()) return;
-    for (var i = 0; i < this.siteDefs.length; i++) this.spawnSite(i > 1 ? 1 : 0, this.siteDefs[i]);
+    var contractKind = FieldContracts && FieldContracts.current ? FieldContracts.current.targetPoiKind : null;
+    var contractDef = contractKind ? this.siteDefs.find(function(def) { return def.kind === contractKind; }) : null;
+    if (contractDef) {
+      var ca = Math.random() * Math.PI * 2;
+      var cd = Utils.rand(300, 460);
+      this.spawnSite(0, contractDef, { x: Math.cos(ca) * cd, y: Math.sin(ca) * cd });
+    }
+    for (var i = 0; i < this.siteDefs.length; i++) {
+      if (contractDef && this.siteDefs[i].kind === contractDef.kind) continue;
+      this.spawnSite(i > 1 ? 1 : 0, this.siteDefs[i]);
+    }
     if (typeof FieldContracts !== 'undefined' && FieldContracts.bindTargetSite) FieldContracts.bindTargetSite(this.sites);
   },
 
@@ -5901,31 +6120,27 @@ var ScavengeSites = {
 
   spawnGuards: function(site) {
     site.guardSpawned = true;
-    var count = Math.max(2, 3 + site.threatLevel + (site.tierBoost > 0 ? 1 : 0) + (site.guardBonus || 0));
+    var count = Math.max(2, Math.min(5, 1 + Math.ceil(site.threatLevel * 0.7) + (site.tierBoost > 0 ? 1 : 0) + Math.floor((site.guardBonus || 0) * 0.5)));
     var pool = site.threatMix || ['grunt', 'stalker', 'sniper'];
     for (var i = 0; i < count; i++) {
       var ang = (Math.PI * 2 / count) * i + Math.random() * 0.4;
       var dist = Utils.rand(70, 130);
-      var guard = Enemies.spawn(Utils.choice(pool), site.x + Math.cos(ang) * dist, site.y + Math.sin(ang) * dist);
-      guard.scavengeGuard = true;
+      var type = i === 0 && site.threatLevel >= 4 ? 'hulk' : Utils.choice(pool);
+      if (i > 1 && (type === 'sniper' || type === 'bomber') && Math.random() < 0.55) type = 'grunt';
+      var guard = Enemies.spawn(type, site.x + Math.cos(ang) * dist, site.y + Math.sin(ang) * dist);
+      EnemyDirector.applyIntent(guard, 'guard', site);
       guard.guardLabel = site.label;
-      guard.accent = site.color;
-      guard.anchorX = site.x;
-      guard.anchorY = site.y;
-      guard.guardRadius = 180 + site.threatLevel * 20;
-      guard.guardLeash = 240 + site.threatLevel * 28;
+      guard.guardRadius = 170 + site.threatLevel * 18;
+      guard.guardLeash = 260 + site.threatLevel * 22;
       guard.zoneRole = i === 0 ? 'GUARD CAPTAIN' : 'GUARD';
     }
-    if (site.threatLevel >= 3 || Math.random() < 0.45 + site.tierBoost * 0.2) {
+    if ((site.contractTarget && site.kind === 'cache') || site.threatLevel >= 5 || Math.random() < 0.16 + site.tierBoost * 0.08) {
       var elite = Enemies.spawn('elite_grunt', site.x + Utils.rand(-110, 110), site.y + Utils.rand(-110, 110));
-      elite.scavengeGuard = true;
+      EnemyDirector.applyIntent(elite, site.contractTarget ? 'guard' : 'loot_carrier', site);
       elite.guardLabel = site.label;
-      elite.accent = site.color;
-      elite.anchorX = site.x;
-      elite.anchorY = site.y;
       elite.guardRadius = 210;
       elite.guardLeash = 270;
-      elite.zoneRole = 'ELITE GUARD';
+      elite.zoneRole = site.contractTarget ? 'ELITE GUARD' : 'LOOT CARRIER';
     }
   },
 
@@ -5965,7 +6180,8 @@ var ScavengeSites = {
       this.rollSiteLoot(site, 0),
       this.rollSiteLoot(site, 1)
     ];
-    if (Math.random() < 0.32 + site.tierBoost * 0.08) drops.push(this.rollSiteLoot(site, 2));
+    if (site.contractTarget || Math.random() < 0.52 + site.tierBoost * 0.1) drops.push(this.rollSiteLoot(site, 2));
+    if (site.tierBoost >= 2 && Math.random() < 0.35) drops.push(this.rollSiteLoot(site, 3));
     var securedValue = 0;
     for (var i = 0; i < drops.length; i++) {
       securedValue += drops[i].vendorValue || drops[i].value || 0;
@@ -5973,6 +6189,10 @@ var ScavengeSites = {
     if (typeof LootDirector !== 'undefined') LootDirector.spawnPile('poi', site.x, site.y, drops);
     this.totalSecuredValue += securedValue;
     if (typeof FieldContracts !== 'undefined' && FieldContracts.onSiteSecured) FieldContracts.onSiteSecured(site);
+    if (typeof RaidDirector !== 'undefined') {
+      RaidDirector.noise += site.contractTarget ? 1.4 : 0.85;
+      if (FieldContracts && FieldContracts.packageSecured) RaidDirector.setState('package_secured');
+    }
     if (Game.player && Game.player.fieldTurret) {
       for (var ti = 0; ti < 4; ti++) {
         var e = Combat.findNearestEnemy(site.x, site.y);
@@ -6242,6 +6462,10 @@ var FieldContracts = {
       this.packageSecuredAt = World.time || 0;
       this.targetSite = site;
       ExtractionZone.spawnTime = Math.min(ExtractionZone.spawnTime, World.time + 2);
+      if (typeof RaidDirector !== 'undefined') {
+        RaidDirector.noise += 1.6;
+        RaidDirector.setState('package_secured');
+      }
       Game.announce(this.current.packageName + ' SECURED - CALL EXTRACTION');
       return;
     }
@@ -6267,8 +6491,8 @@ var FieldContracts = {
     var urgent = false;
     if (this.packageSecured) {
       step = 4;
-      main = 'CALL EXTRACTION';
-      sub = 'PACKAGE SECURED: ' + this.current.packageName + '. EXTRACT NOW for +' + this.current.rewardCredits + 'C, or PUSH DEEPER for XP, rares, elites, and higher heat.';
+      main = 'EXTRACT NOW / RAID ONE MORE SITE';
+      sub = 'PACKAGE SECURED: ' + this.current.packageName + '. Extract for +' + this.current.rewardCredits + 'C or hit one optional POI for better loot and more patrols.';
       urgent = true;
     } else if (this.targetSite && Game.player) {
       var dist = Math.round(Utils.dist(Game.player.x, Game.player.y, this.targetSite.x, this.targetSite.y));
@@ -6468,6 +6692,7 @@ const World = {
     EnemyDirector.spawnBudget = 0;
     EnemyDirector.lastEliteEvent = 0;
     EnemyDirector.lastWorldEvent = 0;
+    RaidDirector.reset();
     FieldContracts.reset();
     ScavengeSites.reset();
     FieldObjectives.reset();
@@ -6482,20 +6707,18 @@ const World = {
   },
   seedVisibleThreats() {
     if (Game.isOperationRun && Game.isOperationRun()) return;
-    for (var i = 0; i < ScavengeSites.sites.length; i++) {
-      if (!ScavengeSites.sites[i].guardSpawned) ScavengeSites.spawnGuards(ScavengeSites.sites[i]);
+    var seeded = 0;
+    for (var i = 0; i < ScavengeSites.sites.length && seeded < 1; i++) {
+      if (ScavengeSites.sites[i].contractTarget || seeded === 0) {
+        if (!ScavengeSites.sites[i].guardSpawned) ScavengeSites.spawnGuards(ScavengeSites.sites[i]);
+        seeded++;
+      }
     }
-    for (var pi = 0; pi < Math.max(2, Math.ceil(ScavengeSites.sites.length * 0.75)); pi++) {
+    for (var pi = 0; pi < 1; pi++) {
       var site = ScavengeSites.sites[pi % ScavengeSites.sites.length];
       var pos = this.randomSpawnPoint(site.x, site.y, 180, 250);
-      var patrol = Enemies.spawn(Utils.choice(['grunt', 'stalker', 'sniper']), pos.x, pos.y);
-      patrol.scavengeGuard = true;
-      patrol.guardLabel = 'PATROL';
-      patrol.accent = site.color;
-      patrol.anchorX = site.x;
-      patrol.anchorY = site.y;
-      patrol.guardRadius = 250;
-      patrol.guardLeash = 320;
+      var patrol = Enemies.spawn(Utils.choice(['grunt', 'stalker']), pos.x, pos.y);
+      EnemyDirector.applyIntent(patrol, 'patrol', site);
       patrol.zoneRole = 'PATROL';
     }
   },
@@ -6605,6 +6828,7 @@ const World = {
     FieldContracts.update(dt);
     FieldObjectives.update(dt);
     EnemyDirector.update(dt);
+    RaidDirector.update(dt);
 
     var heat = this.haulHeat();
     var tune = Game.balanceTuning ? Game.balanceTuning() : { spawnInterval: 1, maxEnemies: 1 };
@@ -6612,43 +6836,37 @@ const World = {
     var nearPoi = targetSite && targetSite.dist <= 620;
     var deeper = FieldContracts && FieldContracts.packageSecured;
     var depthPressure = Math.min(8, SectorDirector.deepest || 0);
-    this.spawnInterval = Math.max(nearPoi ? 1.35 : 1.75, 3.55 - this.time * 0.004 - heat * 0.16 - depthPressure * 0.035 - (deeper ? 0.28 : 0)) * tune.spawnInterval;
-    this.maxEnemies = Math.max(18, Math.round(Math.min(56, 22 + Math.floor(this.time / 34) + Math.floor(heat * 2.1) + depthPressure * 1.6 + (deeper ? 7 : 0) + Math.max(0, ScavengeSites.activeSitesLeft())) * tune.maxEnemies));
+    var raidState = RaidDirector.state || 'infiltration';
+    var statePressure = raidState === 'infiltration' ? -0.35 : (raidState === 'looting' ? 0 : (raidState === 'package_secured' ? 0.45 : (raidState === 'extracting' ? 0.2 : 0.9)));
+    this.spawnInterval = Math.max(2.35, 5.8 - this.time * 0.002 - heat * 0.14 - depthPressure * 0.025 - statePressure) * tune.spawnInterval;
+    this.maxEnemies = Math.max(10, Math.round(Math.min(38, 12 + Math.floor(this.time / 70) + Math.floor(heat * 1.4) + depthPressure * 0.8 + (deeper ? 4 : 0) + (raidState === 'overrun' ? 5 : 0)) * tune.maxEnemies));
 
     this.spawnTimer -= dt;
-    if (this.spawnTimer <= 0 && Enemies.list.length < this.maxEnemies) {
+    if (this.spawnTimer <= 0 && Enemies.list.length < this.maxEnemies && RaidDirector.shouldSpawnAmbient()) {
       this.spawnTimer = this.spawnInterval;
       this.spawnWave();
     }
 
-    this.patrolTimer -= dt;
-    if (this.patrolTimer <= 0) {
-      this.patrolTimer = Math.max(24, 40 - heat * 1.8 - ScavengeSites.searchedCount * 0.55);
-      this.spawnPatrolSweep();
-    }
+    this.patrolTimer = 999;
 
-    var minute = Math.floor(this.time / 95);
+    var minute = Math.floor(this.time / 140);
     if (minute > 0 && minute !== this._lastSpike) {
       this._lastSpike = minute;
-      var surgeCount = 1 + Math.floor(minute / 3) + Math.floor(heat * 0.45);
+      var surgeCount = RaidDirector.state === 'overrun' ? 4 : 2;
       for (var si = 0; si < surgeCount; si++) {
         var siteForSpike = ScavengeSites.nearestActiveSite();
-        var pos = siteForSpike ? this.randomSpawnPoint(siteForSpike.site.x, siteForSpike.site.y, 150, 230) : this.randomSpawnPoint();
-        var pool = siteForSpike ? (siteForSpike.site.threatMix || this.zone.enemyPool) : this.zone.enemyPool;
-        Enemies.spawn(Utils.choice(pool), pos.x, pos.y);
+        if (siteForSpike && siteForSpike.site) RaidDirector.spawnPatrol(siteForSpike.site);
       }
       Game.announce('REINFORCEMENTS MOVING ON ACTIVE SITES');
       Game.threatPulse(0.32);
-      if (minute % 3 === 0 && heat > 1.8 && ThreatBudget.counts().elite < ThreatBudget.caps().elite) {
-        var ep = this.randomSpawnPoint();
-        Enemies.spawn('elite_grunt', ep.x, ep.y);
-        Game.announce('HUNTER TEAM DEPLOYED');
+      if (minute % 2 === 0 && heat > 1.8 && ThreatBudget.counts().elite < ThreatBudget.caps().elite) {
+        RaidDirector.spawnLootCarrier(siteForSpike ? siteForSpike.site : null);
       }
     }
 
-    if (this.time > this.zone.eliteAt && !this._eliteDone) {
+    if (this.time > this.zone.eliteAt + 40 && !this._eliteDone && ThreatBudget.counts().elite < ThreatBudget.caps().elite) {
       this._eliteDone = true;
-      this.spawnEliteWave();
+      RaidDirector.spawnLootCarrier(targetSite ? targetSite.site : null);
     }
 
     if (this.time > this.zone.bossAt && !this.bossSpawned) {
@@ -6659,15 +6877,18 @@ const World = {
   spawnWave() {
     var heat = this.haulHeat();
     var targetSite = ScavengeSites.nearestActiveSite();
-    var anchor = targetSite && targetSite.dist <= 780 ? targetSite.site : Game.player;
-    var wave = EnemyDirector.pickWaveComposition(targetSite ? targetSite.site : null);
-    if (!targetSite || targetSite.dist > 780) {
-      var extra = 1 + Math.floor((SectorDirector.deepest || 0) * 0.18) + Math.floor(heat * 0.25);
-      for (var wi = 0; wi < extra; wi++) wave.push(Math.random() < 0.75 ? 'grunt' : Utils.choice(['stalker', 'bomber']));
+    var anchor = targetSite && targetSite.dist <= 760 ? targetSite.site : Game.player;
+    var wave = [];
+    var raidState = RaidDirector.state || 'infiltration';
+    var count = raidState === 'infiltration' ? 1 : (raidState === 'looting' ? 2 : (raidState === 'package_secured' ? 2 : (raidState === 'overrun' ? 3 : 1)));
+    if (targetSite && targetSite.dist <= 760) count += 1;
+    for (var wi = 0; wi < count; wi++) {
+      wave.push(EnemyDirector.pickRaidThreat(targetSite ? targetSite.site : null, raidState));
     }
     for (var i = 0; i < wave.length; i++) {
-      var pos = this.randomSpawnPoint(anchor.x, anchor.y, 420, 680);
-      Enemies.spawn(wave[i], pos.x, pos.y);
+      var pos = this.randomSpawnPoint(anchor.x, anchor.y, raidState === 'infiltration' ? 500 : 420, raidState === 'infiltration' ? 760 : 650);
+      var enemy = Enemies.spawn(wave[i], pos.x, pos.y);
+      EnemyDirector.applyIntent(enemy, targetSite && targetSite.dist <= 760 ? 'patrol' : 'ambient', targetSite && targetSite.dist <= 760 ? targetSite.site : null);
     }
   },
   spawnPatrolSweep() {
@@ -6776,6 +6997,7 @@ var ExtractionZone = {
     this.beaconY = pos.y;
     this.state = 'beacon';
     this.beaconTimer = 0;
+    if (typeof RaidDirector !== 'undefined') RaidDirector.setState('extracting');
     Game.announce('EXTRACT BEACON AVAILABLE');
   },
 
@@ -6840,11 +7062,8 @@ var ExtractionZone = {
       this._extractSpawnTimer = (this._extractSpawnTimer || 0) - dt;
       if (this._extractSpawnTimer <= 0 && this.responseCount() < 4) {
         this._extractSpawnTimer = 4.8;
-        var bpos = World.randomSpawnPoint(this.x, this.y, 210, 320);
-        var benemy = Enemies.spawn(Utils.choice(['stalker', 'grunt', 'grunt']), bpos.x, bpos.y);
-        benemy.scavengeGuard = true;
-        benemy.guardLabel = 'LZ RESPONSE';
-        benemy.accent = '#fb7185';
+        var benemy = RaidDirector && RaidDirector.spawnExtractionResponse ? RaidDirector.spawnExtractionResponse() : null;
+        if (benemy) benemy.guardLabel = 'LZ RESPONSE';
       }
       if (this.inboundTimer <= 0) this.openLZ();
       return;
@@ -6881,11 +7100,8 @@ var ExtractionZone = {
         this._extractSpawnTimer = Math.max(3.2, 5.0 - heat * 0.25);
         var spawnCount = 1 + (heat >= 3.4 ? 1 : 0);
         for (var es = 0; es < spawnCount; es++) {
-          var epos = World.randomSpawnPoint(this.x, this.y, 220, 340);
-          var response = Enemies.spawn(Utils.choice(heat >= 3.2 ? ['stalker', 'grunt', 'bomber'] : ['stalker', 'grunt', 'grunt']), epos.x, epos.y);
-          response.scavengeGuard = true;
-          response.guardLabel = 'LZ RESPONSE';
-          response.accent = '#fb7185';
+          var response = RaidDirector && RaidDirector.spawnExtractionResponse ? RaidDirector.spawnExtractionResponse() : null;
+          if (response) response.guardLabel = 'LZ RESPONSE';
         }
       }
     } else {
@@ -7435,15 +7651,15 @@ var OperationSystem = {
    Small backpack for extraction loot. Lost on death, banked on extract.
 ===================================================================== */
 var LOOT_TABLE = [
-  { id: 'scrap', name: 'Scrap Metal', icon: '⬡', rarity: 'common', vendorValue: 12, weight: 22, desc: 'Basic armory salvage', category: 'material', materialType: 'scrap', materialQty: 1 },
-  { id: 'circuits', name: 'Circuit Board', icon: '⬢', rarity: 'uncommon', vendorValue: 28, weight: 24, desc: 'Precision parts for tech nodes', category: 'material', materialType: 'circuits', materialQty: 1 },
-  { id: 'biomass', name: 'Biomass Sample', icon: '✿', rarity: 'uncommon', vendorValue: 28, weight: 22, desc: 'Organic sample for mutation work', category: 'material', materialType: 'biomass', materialQty: 1 },
-  { id: 'intel', name: 'Intel Shard', icon: '◇', rarity: 'rare', vendorValue: 58, weight: 18, desc: 'Encrypted route and route-risk data', category: 'material', materialType: 'intel', materialQty: 1 },
-  { id: 'nanocore', name: 'Nanoforge Core', icon: '⬣', rarity: 'epic', vendorValue: 92, weight: 11, desc: 'Dense fabrication core worth real workshop progress', category: 'material', materialType: 'circuits', materialQty: 2 },
-  { id: 'genevault', name: 'Gene Vault', icon: '✺', rarity: 'epic', vendorValue: 92, weight: 11, desc: 'Stabilized biotech reserve for mutation research', category: 'material', materialType: 'biomass', materialQty: 2 },
+  { id: 'scrap', name: 'Scrap Metal', icon: '⬡', rarity: 'common', vendorValue: 12, weight: 28, desc: 'Basic armory salvage', category: 'material', materialType: 'scrap', materialQty: 1 },
+  { id: 'circuits', name: 'Circuit Board', icon: '⬢', rarity: 'uncommon', vendorValue: 28, weight: 28, desc: 'Precision parts for tech nodes', category: 'material', materialType: 'circuits', materialQty: 1 },
+  { id: 'biomass', name: 'Biomass Sample', icon: '✿', rarity: 'uncommon', vendorValue: 28, weight: 25, desc: 'Organic sample for mutation work', category: 'material', materialType: 'biomass', materialQty: 1 },
+  { id: 'intel', name: 'Intel Shard', icon: '◇', rarity: 'rare', vendorValue: 58, weight: 20, desc: 'Encrypted route and route-risk data', category: 'material', materialType: 'intel', materialQty: 1 },
+  { id: 'nanocore', name: 'Nanoforge Core', icon: '⬣', rarity: 'epic', vendorValue: 92, weight: 8, desc: 'Dense fabrication core worth real workshop progress', category: 'material', materialType: 'circuits', materialQty: 2 },
+  { id: 'genevault', name: 'Gene Vault', icon: '✺', rarity: 'epic', vendorValue: 92, weight: 8, desc: 'Stabilized biotech reserve for mutation research', category: 'material', materialType: 'biomass', materialQty: 2 },
   { id: 'void', name: 'Void Relic', icon: '✦', rarity: 'legendary', vendorValue: 150, weight: 6, desc: 'Required for foundry and weapon evolutions', category: 'material', materialType: 'void', materialQty: 1 },
-  { id: 'cache', name: 'Broker Cache', icon: '◉', rarity: 'rare', vendorValue: 88, weight: 15, desc: 'Pure vendor cargo for credits', category: 'vendor' },
-  { id: 'blackbox', name: 'Blacksite Black Box', icon: '▣', rarity: 'epic', vendorValue: 130, weight: 8, desc: 'Recovered command hardware loaded with sellable intel', category: 'vendor' },
+  { id: 'cache', name: 'Broker Cache', icon: '◉', rarity: 'rare', vendorValue: 88, weight: 9, desc: 'Pure vendor cargo for credits', category: 'vendor' },
+  { id: 'blackbox', name: 'Blacksite Black Box', icon: '▣', rarity: 'epic', vendorValue: 130, weight: 5, desc: 'Recovered command hardware loaded with sellable intel', category: 'vendor' },
   { id: 'medkit', name: 'Field Medkit', icon: '✚', rarity: 'uncommon', vendorValue: 18, weight: 10, desc: 'Heal 40 HP on pickup', consumable: true,
     use: function(p) { p.heal(40); } },
   { id: 'stim', name: 'Stim Pack', icon: '⟫', rarity: 'uncommon', vendorValue: 18, weight: 8, desc: '+20% speed for 15s', consumable: true,
