@@ -3265,14 +3265,14 @@ const WEAPONS = {
 const ENEMIES = {
   grunt: {
     id: 'grunt', name: 'Husk Grunt', archetype: 'melee',
-    hp: 12, damage: 6, speed: 70, radius: 13,
+    hp: 16, damage: 8, speed: 82, radius: 13,
     color: '#7f1d1d', accent: '#f87171',
     xp: 3, credits: 0.8, weight: 10, dropChance: 0.02,
     shape: 'circle',
   },
   stalker: {
     id: 'stalker', name: 'Stalker', archetype: 'fast',
-    hp: 7, damage: 8, speed: 200, radius: 9,
+    hp: 10, damage: 11, speed: 220, radius: 9,
     color: '#7c2d12', accent: '#fdba74',
     xp: 4, credits: 1.0, weight: 7, dropChance: 0.03,
     shape: 'triangle',
@@ -3287,7 +3287,7 @@ const ENEMIES = {
   },
   hulk: {
     id: 'hulk', name: 'Iron Hulk', archetype: 'tank',
-    hp: 55, damage: 12, speed: 45, radius: 22,
+    hp: 70, damage: 15, speed: 50, radius: 22,
     color: '#3f0d0d', accent: '#dc2626',
     xp: 12, credits: 3, weight: 3, dropChance: 0.12,
     shape: 'square',
@@ -3668,6 +3668,8 @@ const Input = {
   touchActive: false,
   touchStart: null,
   touchCurrent: null,
+  touchStartedAt: 0,
+  inspectTouchHeld: false,
   joystickEl: null,
   stickEl: null,
   gameActive: false,  // true only during gameplay
@@ -3697,9 +3699,14 @@ const Input = {
     this.move = { x: 0, y: 0 };
     this.abilityQueued = false;
     this.touchActive = false;
+    this.inspectTouchHeld = false;
+    this.touchStartedAt = 0;
     if (this.joystickEl) this.joystickEl.classList.remove('active');
   },
   triggerAbility() { this.abilityQueued = true; },
+  inspectHeld() {
+    return !!this.keys['e'] || !!this.inspectTouchHeld;
+  },
   consumeAbility() {
     var queued = this.abilityQueued;
     this.abilityQueued = false;
@@ -3717,6 +3724,11 @@ const Input = {
       if (len > 0) { dx /= len; dy /= len; }
       this.move.x = dx; this.move.y = dy;
     }
+    if (this.touchActive && this.touchStart && this.touchCurrent) {
+      const heldFor = performance.now() - this.touchStartedAt;
+      const drift = Math.hypot(this.touchCurrent.x - this.touchStart.x, this.touchCurrent.y - this.touchStart.y);
+      this.inspectTouchHeld = heldFor > 520 && drift < 18;
+    }
   },
   onTouchStart(e) {
     // Only handle touches during active gameplay, not on menu screens
@@ -3727,6 +3739,8 @@ const Input = {
     if (t.clientX > window.innerWidth * 0.58) return;
     e.preventDefault();
     this.touchActive = true;
+    this.touchStartedAt = performance.now();
+    this.inspectTouchHeld = false;
     this.touchStart = { x: t.clientX, y: t.clientY };
     this.touchCurrent = { x: t.clientX, y: t.clientY };
     var joySize = 112;
@@ -3752,6 +3766,7 @@ const Input = {
     if (!this.gameActive) return;
     if (!this.touchActive) return;
     this.touchActive = false;
+    this.inspectTouchHeld = false;
     this.move = { x: 0, y: 0 };
     this.joystickEl.classList.remove('active');
     if (this.stickEl) this.stickEl.style.transform = 'translate(-50%, -50%)';
@@ -5179,8 +5194,8 @@ const RaidDirector = {
 
     this.patrolTimer -= dt;
     if (this.patrolTimer <= 0) {
-      var base = this.state === 'package_secured' ? 13 : (this.state === 'overrun' ? 10 : 20);
-      this.patrolTimer = Math.max(8, base - this.threatLevel * 1.2);
+      var base = this.state === 'package_secured' ? 9 : (this.state === 'overrun' ? 7 : (this.state === 'looting' ? 13 : 24));
+      this.patrolTimer = Math.max(this.state === 'infiltration' ? 14 : 6.5, base - this.threatLevel * 1.15);
       var anchor = ScavengeSites.nearestActiveSite ? ScavengeSites.nearestActiveSite() : null;
       if (anchor && anchor.site) this.spawnPatrol(anchor.site);
     }
@@ -5205,15 +5220,15 @@ const RaidDirector = {
 
   shouldSpawnAmbient: function() {
     if (this.state === 'extracting') return false;
-    if (this.state === 'infiltration') return World.time > 18 && Math.random() < 0.55;
-    if (this.state === 'looting') return Math.random() < 0.72;
-    if (this.state === 'package_secured') return Math.random() < 0.42;
-    return Math.random() < 0.65;
+    if (this.state === 'infiltration') return World.time > 24 && Math.random() < 0.45;
+    if (this.state === 'looting') return Math.random() < 0.88;
+    if (this.state === 'package_secured') return Math.random() < 0.82;
+    return Math.random() < 0.9;
   },
 
   spawnPatrol: function(anchorSite) {
     if (!anchorSite || Enemies.list.length >= World.maxEnemies) return;
-    var count = this.state === 'infiltration' ? 1 : (this.state === 'overrun' ? 3 : 2);
+    var count = this.state === 'infiltration' ? 1 : (this.state === 'overrun' ? 4 : (this.state === 'package_secured' ? 3 : 2));
     for (var i = 0; i < count && Enemies.list.length < World.maxEnemies; i++) {
       var pos = World.randomSpawnPoint(anchorSite.x, anchorSite.y, 230, 390);
       var type = EnemyDirector.pickRaidThreat(anchorSite, this.state);
@@ -5533,6 +5548,8 @@ const LootDirector = {
   pendingInspectQueue: [],
   pendingInspectItem: null,
   pendingInspectContext: null,
+  inspectMode: false,
+  nearInspectPile: null,
   spawnPile: function(source, x, y, drops) {
     if (!drops || !drops.length) return null;
     var pile = { source: source || 'poi', x: x, y: y, drops: drops, radius: 26, pulse: Math.random() * 10, life: 90 };
@@ -5579,6 +5596,16 @@ const LootDirector = {
     if (!item) return false;
     return item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary' || source === 'boss';
   },
+  shouldAutoInspect: function(item, source) {
+    if (!item) return false;
+    if (source === 'contract' || item.contractItem) return true;
+    if (item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary') return true;
+    if (RunInventory.isFull && RunInventory.isFull()) {
+      var decision = RunInventory.fullBackpackDecision(item);
+      return decision.action === 'choose' || this.shouldShowSwapModal(item, decision, source);
+    }
+    return false;
+  },
   summarizePickup: function(items) {
     var parts = [];
     var mats = {};
@@ -5595,23 +5622,24 @@ const LootDirector = {
     if (intent) parts.push(intent);
     return parts.length ? parts.join(' / ') : '+' + items.length + ' LOOT';
   },
-  collectPile: function(pile) {
-    return this.inspectPile(pile);
+  collectPile: function(pile, forceInspect) {
+    return this.inspectPile(pile, !!forceInspect);
   },
-  inspectPile: function(pile) {
+  inspectPile: function(pile, forceInspect) {
     var queue = [];
     var auto = [];
+    this.inspectMode = !!forceInspect;
     for (var i = 0; i < pile.drops.length; i++) {
       var item = this.enrichItem(pile.drops[i]);
       var policy = this.autoPolicy(item);
       if (policy === 'use') {
         RunInventory.tryAdd(item, pile.source);
         auto.push(item);
-      } else if (item.isImportant) {
+      } else if (forceInspect || this.shouldAutoInspect(item, pile.source)) {
         queue.push(item);
       } else if (policy !== 'skip') {
-        RunInventory.tryAdd(item, pile.source);
-        auto.push(item);
+        var added = RunInventory.tryAdd(item, pile.source);
+        if (added) auto.push(item);
       }
     }
     if (auto.length) Game.announce(this.summarizePickup(auto));
@@ -5664,11 +5692,18 @@ const LootDirector = {
   },
   update: function(dt) {
     if (!Game.player) return;
+    this.nearInspectPile = null;
+    var nearestDist = Infinity;
     for (var i = 0; i < this.piles.length; i++) {
       var pile = this.piles[i];
       pile.life -= dt;
-      if (Utils.dist(Game.player.x, Game.player.y, pile.x, pile.y) < Game.player.stats.pickupRadius * 0.75) {
-        this.collectPile(pile);
+      var dist = Utils.dist(Game.player.x, Game.player.y, pile.x, pile.y);
+      if (dist < Math.max(92, Game.player.stats.pickupRadius * 0.95) && dist < nearestDist) {
+        this.nearInspectPile = pile;
+        nearestDist = dist;
+      }
+      if (dist < Game.player.stats.pickupRadius * 0.75) {
+        this.collectPile(pile, Input.inspectHeld && Input.inspectHeld());
         pile.life = 0;
       }
     }
@@ -5687,10 +5722,22 @@ const LootDirector = {
       ctx.font = 'bold 8px ui-monospace, monospace';
       ctx.textAlign = 'center';
       ctx.fillText('LOOT PILE', p.x, p.y - 24);
+      if (p === this.nearInspectPile) {
+        ctx.fillStyle = '#a5f3fc';
+        ctx.font = 'bold 8px ui-monospace, monospace';
+        ctx.fillText('HOLD E / HOLD TOUCH TO INSPECT', p.x, p.y + 36);
+      }
       ctx.restore();
     }
   },
-  clear: function() { this.piles = []; this.pendingInspectQueue = []; this.pendingInspectItem = null; this.pendingInspectContext = null; }
+  clear: function() {
+    this.piles = [];
+    this.pendingInspectQueue = [];
+    this.pendingInspectItem = null;
+    this.pendingInspectContext = null;
+    this.inspectMode = false;
+    this.nearInspectPile = null;
+  }
 };
 
 const Pickups = {
@@ -6115,6 +6162,110 @@ const SectorDirector = {
         ctx.restore();
       }
     }
+    ctx.restore();
+  }
+};
+
+const Minimap = {
+  enabled: true,
+  visibleRange: 1200,
+  worldToMap: function(x, y, originX, originY, cx, cy, scale, radius) {
+    var dx = (x - originX) * scale;
+    var dy = (y - originY) * scale;
+    var len = Math.hypot(dx, dy);
+    if (len > radius) {
+      dx = dx / len * radius;
+      dy = dy / len * radius;
+    }
+    return { x: cx + dx, y: cy + dy, edge: len > radius };
+  },
+  drawBlip: function(ctx, pt, color, size, stroke) {
+    ctx.save();
+    ctx.globalAlpha = pt.edge ? 0.58 : 0.92;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, size, 0, Math.PI * 2);
+    ctx.fill();
+    if (stroke) {
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+  render: function(ctx) {
+    if (!this.enabled || !Game.player || (Game.isOperationRun && Game.isOperationRun())) return;
+    var mobile = Game.mobileMode || Math.min(Game.width, Game.height) < 720;
+    var size = mobile ? 92 : 132;
+    var pad = mobile ? 10 : 18;
+    var x = Game.width - size - pad;
+    var y = mobile ? 86 : 74;
+    if (x < 10 || y < 10) return;
+    var cx = x + size * 0.5;
+    var cy = y + size * 0.5;
+    var radius = size * 0.43;
+    var range = this.visibleRange;
+    var scale = radius / range;
+    var px = Game.player.x;
+    var py = Game.player.y;
+
+    ctx.save();
+    ctx.globalAlpha = 0.88;
+    ctx.fillStyle = 'rgba(5,10,18,0.72)';
+    ctx.fillRect(x, y, size, size);
+    ctx.strokeStyle = 'rgba(34,211,238,0.34)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, size, size);
+    ctx.globalAlpha = 0.24;
+    ctx.strokeStyle = '#67e8f9';
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.moveTo(cx - radius, cy);
+    ctx.lineTo(cx + radius, cy);
+    ctx.moveTo(cx, cy - radius);
+    ctx.lineTo(cx, cy + radius);
+    ctx.stroke();
+
+    var sites = ScavengeSites && ScavengeSites.sites ? ScavengeSites.sites : [];
+    for (var i = 0; i < sites.length; i++) {
+      var site = sites[i];
+      if (site.cleared && !site.contractTarget) continue;
+      var sdist = Utils.dist(px, py, site.x, site.y);
+      if (sdist > range * 1.18 && !site.contractTarget) continue;
+      var sp = this.worldToMap(site.x, site.y, px, py, cx, cy, scale, radius);
+      this.drawBlip(ctx, sp, site.contractTarget ? '#f8fafc' : (site.color || '#22d3ee'), site.contractTarget ? 4.4 : 3.2, site.contractTarget ? '#fbbf24' : null);
+    }
+
+    if (ExtractionZone && ExtractionZone.state && ExtractionZone.state !== 'idle') {
+      var ex = ExtractionZone.state === 'beacon' ? ExtractionZone.beaconX : ExtractionZone.x;
+      var ey = ExtractionZone.state === 'beacon' ? ExtractionZone.beaconY : ExtractionZone.y;
+      var ep = this.worldToMap(ex, ey, px, py, cx, cy, scale, radius);
+      this.drawBlip(ctx, ep, ExtractionZone.state === 'beacon' ? '#22d3ee' : '#4ade80', 4.2, '#d9f99d');
+    }
+
+    var shownEnemies = 0;
+    for (var e = 0; e < Enemies.list.length && shownEnemies < (mobile ? 14 : 20); e++) {
+      var enemy = Enemies.list[e];
+      if (!enemy.alive) continue;
+      var ed = Utils.dist(px, py, enemy.x, enemy.y);
+      if (ed > range * 0.62) continue;
+      var mp = this.worldToMap(enemy.x, enemy.y, px, py, cx, cy, scale, radius);
+      this.drawBlip(ctx, mp, enemy.elite ? '#fbbf24' : '#fb7185', enemy.elite ? 3.2 : 2.1, null);
+      shownEnemies++;
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#a5f3fc';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 5);
+    ctx.lineTo(cx + 4, cy + 5);
+    ctx.lineTo(cx - 4, cy + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#67e8f9';
+    ctx.font = 'bold 8px ui-monospace, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('RADAR', x + 7, y + 11);
     ctx.restore();
   }
 };
@@ -6967,9 +7118,9 @@ const World = {
     var deeper = FieldContracts && FieldContracts.packageSecured;
     var depthPressure = Math.min(8, SectorDirector.deepest || 0);
     var raidState = RaidDirector.state || 'infiltration';
-    var statePressure = raidState === 'infiltration' ? -0.35 : (raidState === 'looting' ? 0 : (raidState === 'package_secured' ? 0.45 : (raidState === 'extracting' ? 0.2 : 0.9)));
-    this.spawnInterval = Math.max(2.35, 5.8 - this.time * 0.002 - heat * 0.14 - depthPressure * 0.025 - statePressure) * tune.spawnInterval;
-    this.maxEnemies = Math.max(10, Math.round(Math.min(38, 12 + Math.floor(this.time / 70) + Math.floor(heat * 1.4) + depthPressure * 0.8 + (deeper ? 4 : 0) + (raidState === 'overrun' ? 5 : 0)) * tune.maxEnemies));
+    var statePressure = raidState === 'infiltration' ? -0.45 : (raidState === 'looting' ? 0.35 : (raidState === 'package_secured' ? 0.9 : (raidState === 'extracting' ? 0.35 : 1.25)));
+    this.spawnInterval = Math.max(1.75, 5.9 - this.time * 0.002 - heat * 0.13 - depthPressure * 0.025 - statePressure) * tune.spawnInterval;
+    this.maxEnemies = Math.max(12, Math.round(Math.min(52, 14 + Math.floor(this.time / 70) + Math.floor(heat * 1.5) + depthPressure * 0.9 + (nearPoi ? 3 : 0) + (deeper ? 8 : 0) + (raidState === 'overrun' ? 8 : 0)) * tune.maxEnemies));
 
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0 && Enemies.list.length < this.maxEnemies && RaidDirector.shouldSpawnAmbient()) {
@@ -7010,7 +7161,7 @@ const World = {
     var anchor = targetSite && targetSite.dist <= 760 ? targetSite.site : Game.player;
     var wave = [];
     var raidState = RaidDirector.state || 'infiltration';
-    var count = raidState === 'infiltration' ? 1 : (raidState === 'looting' ? 2 : (raidState === 'package_secured' ? 2 : (raidState === 'overrun' ? 3 : 1)));
+    var count = raidState === 'infiltration' ? 1 : (raidState === 'looting' ? 3 : (raidState === 'package_secured' ? 4 : (raidState === 'overrun' ? 5 : 1)));
     if (targetSite && targetSite.dist <= 760) count += 1;
     for (var wi = 0; wi < count; wi++) {
       wave.push(EnemyDirector.pickRaidThreat(targetSite ? targetSite.site : null, raidState));
@@ -8519,6 +8670,8 @@ const Game = {
     ExtractionZone.render(ctx);
 
     ctx.restore();
+
+    Minimap.render(ctx);
 
     // Compact toast. Full-width banners were blocking combat readability.
     if (this.announceTime > 0 && this.announceText) {
