@@ -1921,7 +1921,7 @@ h3 {
         </div>
         <div class="inv-grid" id="invGrid"></div>
         <div class="inv-footer">
-          <span id="invSlotCount">0/6</span>
+          <span id="invSlotCount">0/10</span>
           <button class="btn" id="btnCloseInv">CLOSE</button>
         </div>
       </div>
@@ -1938,6 +1938,19 @@ h3 {
           <button class="btn" id="btnDropLoot">DISCARD NEW</button>
         </div>
         <div class="inv-grid compact" id="lootInvGrid"></div>
+      </div>
+    </div>
+
+    <!-- ============ LOOT INSPECT (important pickups) ============ -->
+    <div id="lootInspectModal" class="modal hidden">
+      <div class="modal-inner narrow">
+        <h3 id="lootInspectTitle">FIELD LOOT</h3>
+        <div class="loot-new" id="lootInspectCard"></div>
+        <div class="loot-reco" id="lootInspectHint">Review before adding to backpack.</div>
+        <div class="loot-choice-btns">
+          <button class="btn primary" id="btnTakeLoot">TAKE</button>
+          <button class="btn" id="btnSkipLoot">SKIP</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2123,6 +2136,12 @@ const UI = {
     Game.paused = false;
   },
 
+  hideLootInspect() {
+    const el = Utils.el('#lootInspectModal');
+    if (el) el.classList.add('hidden');
+    Game.paused = false;
+  },
+
   updateHUD() {
     if (!Game.player) return;
     const p = Game.player;
@@ -2200,10 +2219,12 @@ const UI = {
       'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + ' - VALUE ' + haulValue + '/' + ExtractionZone.minLootValue + contractProgress + ' - ' + haulIntent;
     if (Utils.el('#lootTierHud') && !(Game.isOperationRun && Game.isOperationRun())) Utils.el('#lootTierHud').textContent =
       'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + ' - VALUE ' + haulValue + '/' + ExtractionZone.minLootValue + contractProgress + ' - EXTRACT ' + (SectorDirector.extractDistance ? SectorDirector.extractDistance() : 0) + 'm - ' + haulIntent;
-    var compactLootA = 'HAUL ' + RunInventory.items.length + '/' + RunInventory.maxSlots + '  VALUE ' + haulValue + '/' + ExtractionZone.minLootValue;
-    var compactLootB = (contractObj && contractObj.progress ? contractObj.progress : 'CONTRACT') + '  ' + haulIntent;
+    var bestLoot = RunInventory.bestItemSummary ? RunInventory.bestItemSummary() : haulIntent;
+    var compactLootA = 'PACK ' + RunInventory.items.length + '/' + RunInventory.maxSlots + '  VALUE ' + haulValue + '/' + ExtractionZone.minLootValue;
+    var compactLootB = 'BEST: ' + bestLoot;
     if (!(Game.isOperationRun && Game.isOperationRun())) compactLootB = (contractObj && contractObj.progress ? contractObj.progress : 'CONTRACT') + '  EXT ' + (SectorDirector.extractDistance ? SectorDirector.extractDistance() : 0) + 'm';
     if (!(Game.isOperationRun && Game.isOperationRun()) && (!ExtractionZone.state || ExtractionZone.state === 'idle')) compactLootB = (contractObj && contractObj.progress ? contractObj.progress : 'CONTRACT') + '  RAID ' + (RaidDirector && RaidDirector.state ? RaidDirector.state.replace('_', ' ').toUpperCase() : 'INFILTRATION');
+    if (!(Game.isOperationRun && Game.isOperationRun()) && RunInventory.items.length > 0 && (!ExtractionZone.state || ExtractionZone.state === 'idle')) compactLootB += '  ' + bestLoot;
     if (Utils.el('#lootTierHud')) Utils.el('#lootTierHud').textContent = compactLootA + '\n' + compactLootB;
     var objectiveMain = 'FILL YOUR BACKPACK';
     var objectiveSub = 'Secure ' + secureNeed + ' more cache' + (secureNeed === 1 ? '' : 's') + ' or bank ' + valueNeed + ' more value to unlock extraction.';
@@ -2942,7 +2963,7 @@ UI.showGameOver = function(outcome, earned, lootValue, lootItems) {
     for (var li = 0; li < lootItems.length; li++) lootHtml += lootItems[li].icon + ' ';
     lootHtml += '</div></div>';
   }
-  var lostHtml = (!positiveOutcome && !Game.isOperationRun()) ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl" style="color:#ff4d6d">LOOT LOST</div><div class="val" style="color:#ff4d6d">ALL</div></div>' : '';
+  var lostHtml = (!positiveOutcome && !Game.isOperationRun()) ? '<div class="summary-row" style="grid-column:1/-1"><div class="lbl" style="color:#ff4d6d">BACKPACK LOST</div><div class="val" style="color:#ff4d6d">ALL FIELD LOOT</div></div>' : '';
   var bankedMaterials = Game.lastRunReport ? Game.materialSummaryText(Game.lastRunReport.materials) : '';
   var masteryGain = Game.lastRunReport && Game.lastRunReport.masteryGain ? Game.lastRunReport.masteryGain : 0;
   var manifestCount = Game.lastRunReport && Game.lastRunReport.materials ? Object.keys(Game.lastRunReport.materials).length : 0;
@@ -2968,7 +2989,7 @@ UI.showGameOver = function(outcome, earned, lootValue, lootItems) {
     (lootValue > 0 && operationReport ? '<div class="summary-row wide compact"><div class="lbl">LOOT VALUE</div><div class="val" style="color:#4ade80">+' + lootValue + '</div></div>' : '') +
     (extracted ? '<div class="summary-row wide compact"><div class="lbl">LOOT EXTRACTED</div><div class="val" style="color:#4ade80">BACKPACK BANKED</div></div>' : '') +
     (bankedMaterials ? '<div class="summary-row wide compact"><div class="lbl">MATERIALS BANKED</div><div class="val" style="color:#4ade80">' + bankedMaterials + '</div></div>' : '') +
-    (nextUpgradeText ? '<div class="summary-row wide compact"><div class="lbl">BASE PROGRESS</div><div class="val" style="color:#fbbf24">' + nextUpgradeText + '</div></div>' : '') +
+    (nextUpgradeText ? '<div class="summary-row wide compact"><div class="lbl">UNLOCK PROGRESS</div><div class="val" style="color:#fbbf24">' + nextUpgradeText + '</div></div>' : '') +
     (rescuedText ? '<div class="summary-row wide compact"><div class="lbl">SALVAGED</div><div class="val">' + rescuedText + '</div></div>' : '') +
     (masteryGain ? '<div class="summary-row wide compact"><div class="lbl">CLASS MASTERY</div><div class="val">' + CLASSES[Game.save.selectedClass].name + ' +' + masteryGain + ' XP</div></div>' : '') +
     lootHtml + lostHtml;
@@ -3026,6 +3047,36 @@ UI.showLootChoice = function(newItem) {
     })(i);
   }
   Utils.el('#lootChoiceModal').classList.remove('hidden');
+};
+
+UI.showLootInspect = function(item, context) {
+  context = context || {};
+  LootDirector.pendingInspectContext = context;
+  LootDirector.pendingInspectItem = item;
+  Game.paused = true;
+  var rarity = RARITY[item.rarity] || RARITY.common;
+  var intent = item.gearIntent || (LootDirector.gearIntent ? LootDirector.gearIntent(item) : 'LOOT');
+  var targets = item.upgradeTargets && item.upgradeTargets.length ? item.upgradeTargets.join(' / ') : 'Workshop progress';
+  var full = RunInventory.isFull && RunInventory.isFull();
+  var decision = full ? RunInventory.fullBackpackDecision(item) : null;
+  var compare = '';
+  if (decision && RunInventory.items[decision.idx]) {
+    var old = RunInventory.items[decision.idx];
+    compare = '<div class="inv-slot-stats" style="color:#fbbf24">SWAP TARGET: ' + old.name + ' (' + RunInventory.itemScore(old) + ') -> ' + item.name + ' (' + RunInventory.itemScore(item) + ')</div>';
+  }
+  Utils.el('#lootInspectTitle').textContent = full ? 'BACKPACK DECISION' : (item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary' ? 'IMPORTANT LOOT' : 'FIELD LOOT');
+  Utils.el('#lootInspectCard').innerHTML =
+    '<div class="inv-slot-name" style="color:' + rarity.color + '">' + item.icon + ' ' + item.name + '</div>' +
+    '<div class="inv-slot-sub">' + item.rarity.toUpperCase() + ' · USE FOR ' + intent + ' · VALUE ' + (item.vendorValue || 0) + '★</div>' +
+    '<div class="inv-slot-stats">UPGRADES: ' + targets + '</div>' +
+    '<div class="inv-slot-stats">' + item.desc + '</div>' +
+    compare;
+  Utils.el('#lootInspectHint').textContent = full
+    ? (decision && decision.action === 'replace' ? 'Recommended: swap your weakest slot.' : 'Backpack full. Keep current haul unless this matters.')
+    : 'This occupies backpack space. Take it only if it helps your next upgrade or sale.';
+  Utils.el('#btnTakeLoot').textContent = full ? (decision && decision.action === 'drop' ? 'SKIP' : 'SWAP') : 'TAKE';
+  Utils.el('#btnSkipLoot').textContent = full ? 'KEEP CURRENT' : 'SKIP';
+  Utils.el('#lootInspectModal').classList.remove('hidden');
 };
 });
 
@@ -4677,8 +4728,7 @@ class Enemy {
     // Loot piles are reserved for hard targets so common mobs feed XP flow instead of backpack friction.
     if (!Game.isOperationRun() && (this.elite || this.guaranteedPile || this.type === 'hulk' || this.lootCarrier) && !this.boss) {
       var lootTier = Math.min(4, Math.floor(World.time / 60) + 1);
-      var drops = [RunInventory.rollLoot(lootTier)];
-      if (this.lootCarrier || this.elite || Math.random() < 0.45) drops.push(RunInventory.rollLoot(lootTier + (this.lootCarrier ? 2 : 1)));
+      var drops = [RunInventory.rollLoot(lootTier + (this.lootCarrier || this.elite ? 1 : 0))];
       LootDirector.spawnPile(this.lootCarrier ? 'loot_carrier' : (this.type === 'hulk' ? 'hulk' : 'elite'), this.x, this.y, drops);
     }
 
@@ -5480,6 +5530,9 @@ const Projectiles = {
 ===================================================================== */
 const LootDirector = {
   piles: [],
+  pendingInspectQueue: [],
+  pendingInspectItem: null,
+  pendingInspectContext: null,
   spawnPile: function(source, x, y, drops) {
     if (!drops || !drops.length) return null;
     var pile = { source: source || 'poi', x: x, y: y, drops: drops, radius: 26, pulse: Math.random() * 10, life: 90 };
@@ -5501,6 +5554,25 @@ const LootDirector = {
     if (item.materialType === 'biomass' || item.consumable) return 'SURVIVAL';
     if (item.materialType === 'circuits' || item.materialType === 'intel') return 'TECH';
     return 'CARGO';
+  },
+  upgradeTargets: function(item) {
+    if (!item) return ['Workshop'];
+    if (item.upgradeTargets) return item.upgradeTargets;
+    if (item.materialType === 'scrap') return ['Armory', 'Stash Rack'];
+    if (item.materialType === 'circuits') return ['Weapon Lab', 'Beacon Relay'];
+    if (item.materialType === 'biomass') return ['Survival', 'Biolab'];
+    if (item.materialType === 'intel') return ['Routes', 'Field Scanner'];
+    if (item.materialType === 'void') return ['Void Foundry', 'Evolutions'];
+    if (item.category === 'vendor') return ['Sell for Credits'];
+    return ['Workshop'];
+  },
+  enrichItem: function(item) {
+    if (!item) return item;
+    item.gearIntent = item.gearIntent || this.gearIntent(item);
+    item.upgradeTargets = item.upgradeTargets || this.upgradeTargets(item);
+    item.stackLabel = item.stackLabel || (item.materialQty > 1 ? ('BUNDLE x' + item.materialQty) : '');
+    item.isImportant = !!(item.materialType || item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary' || item.category === 'vendor');
+    return item;
   },
   shouldShowSwapModal: function(item, decision, source) {
     if (source === 'contract') return true;
@@ -5524,15 +5596,71 @@ const LootDirector = {
     return parts.length ? parts.join(' / ') : '+' + items.length + ' LOOT';
   },
   collectPile: function(pile) {
-    var kept = [];
+    return this.inspectPile(pile);
+  },
+  inspectPile: function(pile) {
+    var queue = [];
+    var auto = [];
     for (var i = 0; i < pile.drops.length; i++) {
-      var item = pile.drops[i];
+      var item = this.enrichItem(pile.drops[i]);
       var policy = this.autoPolicy(item);
-      if (policy === 'skip') continue;
-      if (RunInventory.tryAdd(item, pile.source)) kept.push(item);
+      if (policy === 'use') {
+        RunInventory.tryAdd(item, pile.source);
+        auto.push(item);
+      } else if (item.isImportant) {
+        queue.push(item);
+      } else if (policy !== 'skip') {
+        RunInventory.tryAdd(item, pile.source);
+        auto.push(item);
+      }
     }
-    Game.announce(this.summarizePickup(kept.length ? kept : pile.drops));
-    return kept;
+    if (auto.length) Game.announce(this.summarizePickup(auto));
+    if (queue.length) {
+      this.pendingInspectQueue = queue;
+      this.showNextInspect(pile.source);
+      return queue;
+    }
+    return auto;
+  },
+  showNextInspect: function(source) {
+    if (!this.pendingInspectQueue.length) {
+      UI.hideLootInspect();
+      return;
+    }
+    var item = this.pendingInspectQueue.shift();
+    UI.showLootInspect(item, { source: source || 'pile' });
+  },
+  takeInspected: function() {
+    var item = this.pendingInspectItem;
+    var context = this.pendingInspectContext || {};
+    if (!item) return;
+    if (RunInventory.isFull && RunInventory.isFull()) {
+      var decision = RunInventory.fullBackpackDecision(item);
+      if (decision.action === 'replace' || decision.action === 'choose') {
+        var replaced = RunInventory.items[decision.idx];
+        RunInventory.items[decision.idx] = item;
+        var swapBonus = RunInventory.applyFieldBonus(item);
+        Game.announce('TOOK ' + item.name.toUpperCase() + ' - ' + (item.upgradeTargets ? item.upgradeTargets[0].toUpperCase() : item.gearIntent) + ' / DROPPED ' + replaced.name.toUpperCase() + (swapBonus ? ' · ' + swapBonus : ''));
+      } else {
+        Game.announce('SKIPPED LOW VALUE CARGO');
+      }
+    } else {
+      RunInventory.items.push(item);
+      var fieldBonus = RunInventory.applyFieldBonus(item);
+      AudioBus.play('pickup');
+      Game.announce('TOOK ' + item.name.toUpperCase() + ' - ' + (item.upgradeTargets ? item.upgradeTargets[0].toUpperCase() : item.gearIntent) + (fieldBonus ? ' · ' + fieldBonus : ''));
+    }
+    this.pendingInspectItem = null;
+    this.pendingInspectContext = null;
+    this.showNextInspect(context.source);
+  },
+  skipInspected: function() {
+    var item = this.pendingInspectItem;
+    if (item) Game.announce('SKIPPED ' + item.name.toUpperCase());
+    var context = this.pendingInspectContext || {};
+    this.pendingInspectItem = null;
+    this.pendingInspectContext = null;
+    this.showNextInspect(context.source);
   },
   update: function(dt) {
     if (!Game.player) return;
@@ -5562,7 +5690,7 @@ const LootDirector = {
       ctx.restore();
     }
   },
-  clear: function() { this.piles = []; }
+  clear: function() { this.piles = []; this.pendingInspectQueue = []; this.pendingInspectItem = null; this.pendingInspectContext = null; }
 };
 
 const Pickups = {
@@ -6177,11 +6305,10 @@ var ScavengeSites = {
     var credits = 12 + Math.floor(World.time / 35) + site.tierBoost * 10;
     Game.runCredits += credits;
     var drops = [
-      this.rollSiteLoot(site, 0),
-      this.rollSiteLoot(site, 1)
+      this.rollSiteLoot(site, 0)
     ];
-    if (site.contractTarget || Math.random() < 0.52 + site.tierBoost * 0.1) drops.push(this.rollSiteLoot(site, 2));
-    if (site.tierBoost >= 2 && Math.random() < 0.35) drops.push(this.rollSiteLoot(site, 3));
+    if (!site.contractTarget && Math.random() < 0.28 + site.tierBoost * 0.06) drops.push(this.rollSiteLoot(site, 1));
+    if (site.contractTarget && Math.random() < 0.35) drops.push(this.rollSiteLoot(site, 1));
     var securedValue = 0;
     for (var i = 0; i < drops.length; i++) {
       securedValue += drops[i].vendorValue || drops[i].value || 0;
@@ -6491,8 +6618,10 @@ var FieldContracts = {
     var urgent = false;
     if (this.packageSecured) {
       step = 4;
-      main = 'EXTRACT NOW / RAID ONE MORE SITE';
-      sub = 'PACKAGE SECURED: ' + this.current.packageName + '. Extract for +' + this.current.rewardCredits + 'C or hit one optional POI for better loot and more patrols.';
+      main = 'EXTRACT PACKAGE OR RAID ONE MORE SITE';
+      var riskValue = RunInventory.totalValue ? RunInventory.totalValue() : 0;
+      var riskMats = RunInventory.materialCount ? RunInventory.materialCount() : 0;
+      sub = 'Backpack risk: ' + riskValue + ' value / ' + riskMats + ' materials. Extract for +' + this.current.rewardCredits + 'C or hit one optional POI.';
       urgent = true;
     } else if (this.targetSite && Game.player) {
       var dist = Math.round(Utils.dist(Game.player.x, Game.player.y, this.targetSite.x, this.targetSite.y));
@@ -6790,10 +6919,11 @@ const World = {
     var haulValue = RunInventory.totalValue ? RunInventory.totalValue() : 0;
     var fillRatio = RunInventory.maxSlots ? (RunInventory.items.length / RunInventory.maxSlots) : 0;
     var materialKinds = Object.keys(RunInventory.materialManifest ? RunInventory.materialManifest() : {}).length;
-    var extractionPressure = (ScavengeSites.searchedCount >= ExtractionZone.minSecureSites || haulValue >= ExtractionZone.minLootValue) ? 0.75 : 0;
-    var greedPressure = Math.max(0, ScavengeSites.searchedCount - ExtractionZone.minSecureSites) * 0.45 + (fillRatio >= 0.85 ? 0.55 : 0);
+    var extractionPressure = (ScavengeSites.searchedCount >= ExtractionZone.minSecureSites || haulValue >= ExtractionZone.minLootValue) ? 0.55 : 0;
+    var greedPressure = Math.max(0, ScavengeSites.searchedCount - ExtractionZone.minSecureSites) * 0.55 + (fillRatio >= 0.9 ? 0.25 : 0);
     var contractPressure = FieldContracts && FieldContracts.riskHeat ? FieldContracts.riskHeat() : 0;
-    return Math.min(4, fillRatio * 1.8 + haulValue / 140 + materialKinds * 0.35 + ScavengeSites.searchedCount * 0.45 + extractionPressure + greedPressure + contractPressure);
+    var timePressure = Math.min(0.8, this.time / 520);
+    return Math.min(4, fillRatio * 0.85 + haulValue / 220 + materialKinds * 0.22 + ScavengeSites.searchedCount * 0.35 + extractionPressure + greedPressure + contractPressure + timePressure);
   },
   randomSpawnPoint(cx, cy, minDist, maxDist) {
     cx = cx || 0;
@@ -6969,7 +7099,7 @@ var ExtractionZone = {
   spawnTime: 32,
   emergencyTime: 72,
   minSecureSites: 3,
-  minLootValue: 60,
+  minLootValue: 110,
   relocateInterval: 9999,
   _lastRelocate: 0,
   state: 'idle',
@@ -7651,15 +7781,15 @@ var OperationSystem = {
    Small backpack for extraction loot. Lost on death, banked on extract.
 ===================================================================== */
 var LOOT_TABLE = [
-  { id: 'scrap', name: 'Scrap Metal', icon: '⬡', rarity: 'common', vendorValue: 12, weight: 28, desc: 'Basic armory salvage', category: 'material', materialType: 'scrap', materialQty: 1 },
-  { id: 'circuits', name: 'Circuit Board', icon: '⬢', rarity: 'uncommon', vendorValue: 28, weight: 28, desc: 'Precision parts for tech nodes', category: 'material', materialType: 'circuits', materialQty: 1 },
-  { id: 'biomass', name: 'Biomass Sample', icon: '✿', rarity: 'uncommon', vendorValue: 28, weight: 25, desc: 'Organic sample for mutation work', category: 'material', materialType: 'biomass', materialQty: 1 },
-  { id: 'intel', name: 'Intel Shard', icon: '◇', rarity: 'rare', vendorValue: 58, weight: 20, desc: 'Encrypted route and route-risk data', category: 'material', materialType: 'intel', materialQty: 1 },
-  { id: 'nanocore', name: 'Nanoforge Core', icon: '⬣', rarity: 'epic', vendorValue: 92, weight: 8, desc: 'Dense fabrication core worth real workshop progress', category: 'material', materialType: 'circuits', materialQty: 2 },
-  { id: 'genevault', name: 'Gene Vault', icon: '✺', rarity: 'epic', vendorValue: 92, weight: 8, desc: 'Stabilized biotech reserve for mutation research', category: 'material', materialType: 'biomass', materialQty: 2 },
-  { id: 'void', name: 'Void Relic', icon: '✦', rarity: 'legendary', vendorValue: 150, weight: 6, desc: 'Required for foundry and weapon evolutions', category: 'material', materialType: 'void', materialQty: 1 },
-  { id: 'cache', name: 'Broker Cache', icon: '◉', rarity: 'rare', vendorValue: 88, weight: 9, desc: 'Pure vendor cargo for credits', category: 'vendor' },
-  { id: 'blackbox', name: 'Blacksite Black Box', icon: '▣', rarity: 'epic', vendorValue: 130, weight: 5, desc: 'Recovered command hardware loaded with sellable intel', category: 'vendor' },
+  { id: 'scrap', name: 'Scrap Bundle', icon: '⬡', rarity: 'common', vendorValue: 24, weight: 30, desc: 'USE FOR ARMORY / STASH upgrades', category: 'material', materialType: 'scrap', materialQty: 2, gearIntent: 'ARMORY', upgradeTargets: ['Armory', 'Stash Rack'] },
+  { id: 'circuits', name: 'Circuit Bundle', icon: '⬢', rarity: 'uncommon', vendorValue: 42, weight: 26, desc: 'USE FOR WEAPON LAB / BEACON upgrades', category: 'material', materialType: 'circuits', materialQty: 2, gearIntent: 'TECH', upgradeTargets: ['Weapon Lab', 'Beacon Relay'] },
+  { id: 'biomass', name: 'Biomass Bundle', icon: '✿', rarity: 'uncommon', vendorValue: 42, weight: 22, desc: 'USE FOR SURVIVAL / BIOLAB upgrades', category: 'material', materialType: 'biomass', materialQty: 2, gearIntent: 'SURVIVAL', upgradeTargets: ['Survival', 'Biolab'] },
+  { id: 'intel', name: 'Intel Shard', icon: '◇', rarity: 'rare', vendorValue: 64, weight: 18, desc: 'USE FOR ROUTES / FIELD SCANNER upgrades', category: 'material', materialType: 'intel', materialQty: 1, gearIntent: 'TECH', upgradeTargets: ['Routes', 'Field Scanner'] },
+  { id: 'nanocore', name: 'Nanoforge Core', icon: '⬣', rarity: 'epic', vendorValue: 110, weight: 7, desc: 'RARE CORE for weapon and workshop breakthroughs', category: 'material', materialType: 'circuits', materialQty: 3, gearIntent: 'RARE CORE', upgradeTargets: ['Weapon Lab', 'Rare Crafting'] },
+  { id: 'genevault', name: 'Gene Vault', icon: '✺', rarity: 'epic', vendorValue: 110, weight: 7, desc: 'RARE CORE for survival and biotech upgrades', category: 'material', materialType: 'biomass', materialQty: 3, gearIntent: 'RARE CORE', upgradeTargets: ['Biolab', 'Survival'] },
+  { id: 'void', name: 'Void Relic', icon: '✦', rarity: 'legendary', vendorValue: 170, weight: 5, desc: 'RARE CORE for foundry and weapon evolutions', category: 'material', materialType: 'void', materialQty: 1, gearIntent: 'RARE CORE', upgradeTargets: ['Void Foundry', 'Evolutions'] },
+  { id: 'cache', name: 'Broker Cache', icon: '◉', rarity: 'rare', vendorValue: 95, weight: 7, desc: 'SELL cargo for credits and broker progress', category: 'vendor', gearIntent: 'SELL', upgradeTargets: ['Sell for Credits'] },
+  { id: 'blackbox', name: 'Blacksite Black Box', icon: '▣', rarity: 'epic', vendorValue: 145, weight: 4, desc: 'SELL high-value command hardware', category: 'vendor', gearIntent: 'SELL', upgradeTargets: ['Sell for Credits'] },
   { id: 'medkit', name: 'Field Medkit', icon: '✚', rarity: 'uncommon', vendorValue: 18, weight: 10, desc: 'Heal 40 HP on pickup', consumable: true,
     use: function(p) { p.heal(40); } },
   { id: 'stim', name: 'Stim Pack', icon: '⟫', rarity: 'uncommon', vendorValue: 18, weight: 8, desc: '+20% speed for 15s', consumable: true,
@@ -7670,14 +7800,14 @@ var LOOT_TABLE = [
 
 var RunInventory = {
   items: [],
-  maxSlots: 7,
+  maxSlots: 10,
   _pendingLoot: null,
   _selectedSwapIdx: -1,
   _recommendedSwapIdx: -1,
 
   reset: function() {
     this.items = [];
-    this.maxSlots = 7;
+    this.maxSlots = 10;
     this._pendingLoot = null;
     this._selectedSwapIdx = -1;
     this._recommendedSwapIdx = -1;
@@ -7780,6 +7910,28 @@ var RunInventory = {
     var lead = 'SELL ' + counts.SELL + ' / UPGRADE ' + counts.UPGRADE + (counts.SURVIVE ? ' / SURVIVE ' + counts.SURVIVE : '');
     if (best && (best.rarity === 'rare' || best.rarity === 'epic' || best.rarity === 'legendary')) lead += ' · BEST ' + best.name.toUpperCase();
     return lead;
+  },
+
+  materialCount: function() {
+    var total = 0;
+    for (var i = 0; i < this.items.length; i++) total += this.items[i].materialQty || 0;
+    return total;
+  },
+
+  bestItemSummary: function() {
+    if (!this.items.length) return 'EMPTY';
+    var best = null;
+    var bestScore = -Infinity;
+    for (var i = 0; i < this.items.length; i++) {
+      var score = this.itemScore(this.items[i]);
+      if (score > bestScore) {
+        bestScore = score;
+        best = this.items[i];
+      }
+    }
+    if (!best) return 'EMPTY';
+    var target = best.upgradeTargets && best.upgradeTargets.length ? best.upgradeTargets[0] : (best.gearIntent || this.lootIntent(best));
+    return best.name.toUpperCase() + ' -> ' + String(target).toUpperCase();
   },
 
   tryAdd: function(lootItem, source) {
@@ -7894,6 +8046,10 @@ var RunInventory = {
       category: pick.item.category || 'vendor',
       materialType: pick.item.materialType || null,
       materialQty: pick.item.materialQty || 0,
+      gearIntent: pick.item.gearIntent || null,
+      upgradeTargets: pick.item.upgradeTargets ? pick.item.upgradeTargets.slice() : null,
+      stackLabel: pick.item.materialQty > 1 ? 'BUNDLE x' + pick.item.materialQty : '',
+      isImportant: !!(pick.item.materialType || pick.item.rarity === 'rare' || pick.item.rarity === 'epic' || pick.item.rarity === 'legendary' || pick.item.category === 'vendor'),
       consumable: pick.item.consumable,
       use: pick.item.use,
     };
@@ -8053,6 +8209,8 @@ const Game = {
     Utils.el('#btnInvOpen').onclick = function() { UI.showInventory(); };
     Utils.el('#btnCloseInv').onclick = function() { UI.hideInventory(); };
     Utils.el('#btnDropLoot').onclick = function() { UI.hideLootChoice(); };
+    Utils.el('#btnTakeLoot').onclick = function() { LootDirector.takeInspected(); };
+    Utils.el('#btnSkipLoot').onclick = function() { LootDirector.skipInspected(); };
     Utils.el('#btnRerollUpgrades').onclick = () => this.rerollLevelUpChoices();
     Utils.el('#btnSwapLoot').onclick = function() {
       if (RunInventory._selectedSwapIdx >= 0 && RunInventory._pendingLoot) {
